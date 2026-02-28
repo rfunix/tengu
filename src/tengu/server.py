@@ -638,6 +638,7 @@ mcp.prompt()(pwn_target)
 def main() -> None:
     """Start the Tengu MCP server."""
     import argparse
+
     from tengu.config import get_config
 
     parser = argparse.ArgumentParser(description="Tengu MCP Server")
