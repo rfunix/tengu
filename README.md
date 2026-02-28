@@ -1,5 +1,7 @@
 # Tengu — Pentesting MCP Server
 
+[![CI](https://github.com/rfunix/tengu/actions/workflows/ci.yml/badge.svg)](https://github.com/rfunix/tengu/actions/workflows/ci.yml)
+
 Tengu is an MCP (Model Context Protocol) server that provides an intelligent abstraction layer over industry-standard penetration testing tools (Metasploit, Nmap, Nuclei, SQLMap, Dalfox, Hydra, OWASP ZAP, and more).
 
 ## Quick Start
