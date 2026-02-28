@@ -1,9 +1,15 @@
 # API Reference
 
-Complete reference for all 29 tools, 11 resources, and 14 prompts in Tengu.
+Complete reference for all 56 tools, 19 resources, and 34 prompts in Tengu.
 
 All tools require the target to be in the `[targets].allowed_hosts` allowlist
 configured in `tengu.toml`, unless explicitly noted otherwise.
+
+> **Note**: This document covers all tool categories. The core 29 tools from v0.1.0
+> are fully documented below with parameter tables and example responses. The 27 tools
+> added in v0.2.0 and v0.2.1 are listed in the [v0.2 Tools](#v02-tools) section
+> at the end of this document. Resources added in v0.2.0 are included in the
+> [Resources](#resources) section.
 
 ---
 
@@ -1050,9 +1056,105 @@ Generate a professional penetration test report using Jinja2 templates.
 
 ---
 
+## v0.2 Tools
+
+The following 27 tools were added in v0.2.0 and v0.2.1. All follow the same security
+pipeline: sanitizer → allowlist → rate_limiter → audit → executor.
+
+### OSINT Tools (v0.2.0)
+
+| Tool | Description |
+|------|-------------|
+| `theharvester_scan` | Harvest emails, hostnames, and employee data from public sources (Google, Bing, LinkedIn, Hunter.io, etc.) |
+| `shodan_lookup` | Shodan host intelligence: open ports, banners, CVEs, geolocation, organization |
+| `whatweb_scan` | Web technology fingerprinting: CMS, framework, server software, JavaScript libraries |
+
+### Secrets Scanning Tools (v0.2.0)
+
+| Tool | Description |
+|------|-------------|
+| `trufflehog_scan` | Entropy-based and pattern-based secret scanning for Git repositories and local filesystems |
+| `gitleaks_scan` | Git history scanning for leaked credentials with SARIF output and configurable rule sets |
+
+### Container Security Tool (v0.2.0)
+
+| Tool | Description |
+|------|-------------|
+| `trivy_scan` | Container image and filesystem vulnerability scanning: OS packages, language libraries, misconfigurations |
+
+### Cloud Security Tool (v0.2.0)
+
+| Tool | Description |
+|------|-------------|
+| `scoutsuite_scan` | Multi-cloud security posture assessment for AWS, GCP, and Azure environments |
+
+### API Security Tools (v0.2.0)
+
+| Tool | Description |
+|------|-------------|
+| `arjun_discover` | HTTP parameter discovery for REST API endpoints using heuristics and wordlists |
+| `graphql_security_check` | GraphQL introspection enumeration, injection testing, and authorization bypass detection |
+
+### Active Directory Tools (v0.2.0)
+
+| Tool | Description |
+|------|-------------|
+| `enum4linux_scan` | SMB/CIFS enumeration: shares, users, groups, password policy via enum4linux-ng |
+| `nxc_enum` | NetExec (CrackMapExec successor) for credential testing, SMB enumeration, and lateral movement |
+| `impacket_kerberoast` | Kerberoasting: request service tickets for SPN accounts and extract hashes for offline cracking |
+
+### Wireless Tool (v0.2.0)
+
+| Tool | Description |
+|------|-------------|
+| `aircrack_scan` | Wi-Fi interface management, WPA/WPA2 handshake capture, and offline dictionary cracking |
+
+### IaC Security Tool (v0.2.0)
+
+| Tool | Description |
+|------|-------------|
+| `checkov_scan` | Static analysis of Terraform, CloudFormation, Kubernetes manifests, Helm charts, and Dockerfiles |
+
+### Additional Recon Tools (v0.2.0)
+
+| Tool | Description |
+|------|-------------|
+| `amass_enum` | Active and passive subdomain enumeration with ASN mapping and graph-based relationship discovery |
+| `dnsrecon_scan` | DNS record enumeration, zone transfer attempts, and subdomain brute-force |
+| `subjack_check` | Subdomain takeover detection by identifying dangling CNAME and NS records |
+| `gowitness_screenshot` | Headless Chromium screenshots of discovered web targets for visual triage |
+
+### Additional Web Tools (v0.2.0)
+
+| Tool | Description |
+|------|-------------|
+| `gobuster_scan` | Directory, DNS subdomain, and virtual host brute-forcing |
+| `wpscan_scan` | WordPress vulnerability, plugin, theme, and user enumeration |
+| `testssl_check` | Comprehensive TLS/SSL configuration and vulnerability testing (POODLE, BEAST, ROBOT, etc.) |
+
+### Additional Bruteforce Tool (v0.2.0)
+
+| Tool | Description |
+|------|-------------|
+| `cewl_generate` | Custom wordlist generation by spidering a web target and extracting unique words |
+
+### Stealth Control Tools (v0.2.1)
+
+| Tool | Description |
+|------|-------------|
+| `tor_check` | Verify Tor connectivity and retrieve the current exit node IP address |
+| `tor_new_identity` | Signal Tor control port to rotate the exit circuit and obtain a new IP |
+| `check_anonymity` | Comprehensive anonymity posture check: Tor status, proxy, DNS leaks, WebRTC |
+| `proxy_check` | Verify proxy reachability and detect IP leak conditions |
+| `rotate_identity` | Rotate proxy/user-agent combination and request a new Tor identity atomically |
+
+---
+
 ## Resources
 
 Resources provide read-only reference data. Access via their URI.
+
+### v0.1.0 Resources (11)
 
 | URI | Description | Returns |
 |-----|-------------|---------|
@@ -1067,12 +1169,34 @@ Resources provide read-only reference data. Access via their URI.
 | `tools://catalog` | Live tool availability catalog | JSON array of all tools with install status |
 | `tools://{tool_name}/usage` | Usage guide for a tool | JSON guide with examples and options |
 
+### v0.2.0 Resources (8)
+
+| URI | Description | Returns |
+|-----|-------------|---------|
+| `mitre://attack/tactics` | MITRE ATT&CK Enterprise tactic list | JSON array of all tactics |
+| `mitre://attack/technique/{id}` | Technique detail by ID (e.g. `T1059`) | JSON object with name, description, subtechniques, mitigations |
+| `owasp://api-security/top10` | OWASP API Security Top 10 list | JSON array of all 10 API security categories |
+| `owasp://api-security/top10/{id}` | API security category detail (API1–API10) | JSON object with name, description, examples, prevention |
+| `creds://defaults/{product}` | Default credential database entry for a product | JSON object with username/password pairs |
+| `payloads://{type}` | Curated payload list by type | JSON array of payload strings |
+| `stealth://techniques` | Reference guide for operational security techniques | JSON object with technique descriptions |
+| `stealth://proxy-guide` | Step-by-step proxy and Tor configuration guide | JSON object with configuration steps |
+
 ### `tools://{tool_name}/usage` Available Guides
 
 - `tools://nmap/usage`
 - `tools://nuclei/usage`
 - `tools://sqlmap/usage`
 - `tools://metasploit/usage`
+
+### `payloads://{type}` Available Types
+
+- `payloads://xss`
+- `payloads://sqli`
+- `payloads://lfi`
+- `payloads://ssti`
+- `payloads://xxe`
+- `payloads://open-redirect`
 
 ### OWASP Category IDs (A01–A10)
 
@@ -1259,3 +1383,33 @@ Compare original findings against retest results to measure remediation effectiv
 |----------|------|-------------|
 | `original_findings` | `list[dict]` | Original assessment findings |
 | `retest_results` | `list[dict]` | Retest verification results |
+
+---
+
+### Advanced Workflow Prompts (v0.2.0)
+
+| Prompt | Description | Key Arguments |
+|--------|-------------|---------------|
+| `osint_investigation` | Structured OSINT gathering workflow using theharvester, shodan, and whatweb | `target: str` |
+| `stealth_assessment` | Full engagement with stealth layer active (Tor + proxy + UA rotation) | `target: str`, `scope: str` |
+| `opsec_checklist` | Pre-engagement operational security checklist: anonymity, logging, detection risk | `engagement_type: str` |
+| `api_security_assessment` | OWASP API Security Top 10 assessment using arjun, graphql_security_check, nuclei | `url: str`, `api_type: str` |
+| `ad_assessment` | Active Directory enumeration and attack path analysis: enum4linux, nxc, kerberoast | `target: str`, `domain: str` |
+| `container_assessment` | Container image and runtime security assessment using trivy and checkov | `image: str` |
+| `cloud_assessment` | Cloud infrastructure security posture review using scoutsuite | `provider: str`, `profile: str` |
+| `bug_bounty_workflow` | Scope-aware bug bounty hunting with program-specific constraints | `target: str`, `program_scope: str` |
+| `compliance_assessment` | Compliance-mapped assessment with findings tagged to PCI-DSS, ISO 27001, or NIST controls | `target: str`, `framework: str` |
+| `wireless_assessment` | Wi-Fi reconnaissance, WPA handshake capture, and offline cracking workflow | `interface: str`, `target_ssid: str` |
+
+### Quick Action Prompts (v0.2.1)
+
+| Prompt | Description | Key Arguments |
+|--------|-------------|---------------|
+| `crack_wifi` | Capture a WPA/WPA2 handshake and run an offline dictionary attack | `interface: str`, `bssid: str`, `wordlist: str` |
+| `explore_url` | Rapid single-URL web assessment: headers, cors, ssl, ffuf, nuclei | `url: str` |
+| `go_stealth` | Configure and verify stealth posture before starting an engagement | `proxy_url: str` |
+| `find_secrets` | Scan repositories and file systems for leaked API keys, tokens, and passwords | `target: str` |
+| `map_network` | Fast network discovery and service fingerprinting with nmap and masscan | `cidr: str` |
+| `hunt_subdomains` | Passive and active subdomain enumeration with takeover detection | `domain: str` |
+| `find_vulns` | Template-based vulnerability sweep using nuclei across a target | `target: str`, `severity: str` |
+| `pwn_target` | Full exploitation workflow: recon → vuln scan → exploit → post-exploitation checklist | `target: str` |

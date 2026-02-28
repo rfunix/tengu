@@ -19,10 +19,10 @@ pentesting tools to AI assistants through a clean, secure interface.
 | Logging         | structlog (JSON, structured)                      |
 | Entry point     | `src/tengu/server.py` → `FastMCP("Tengu")`        |
 | Config file     | `tengu.toml` at project root                      |
-| Test suite      | 141 tests, 0 lint errors                          |
-| Tools           | 29 MCP tools                                      |
-| Resources       | 11 MCP resources                                  |
-| Prompts         | 14 MCP prompts                                    |
+| Test suite      | 1931+ tests (growing to ~2050 with round 3), 0 lint errors |
+| Tools           | 56 MCP tools                                      |
+| Resources       | 19 MCP resources                                  |
+| Prompts         | 34 MCP prompts                                    |
 
 ---
 
@@ -88,7 +88,8 @@ src/tengu/
 ├── exceptions.py          # Custom exception hierarchy (TenguError subclasses)
 │
 ├── security/
-│   ├── sanitizer.py       # sanitize_target, sanitize_url, sanitize_port_spec, ...
+│   ├── sanitizer.py       # sanitize_target, sanitize_url, sanitize_port_spec,
+│   │                      # sanitize_repo_url, sanitize_docker_image, sanitize_proxy_url
 │   ├── allowlist.py       # TargetAllowlist, make_allowlist_from_config()
 │   ├── rate_limiter.py    # SlidingWindowRateLimiter, rate_limited context manager
 │   └── audit.py           # AuditLogger, get_audit_logger(), _redact_sensitive()
@@ -98,52 +99,117 @@ src/tengu/
 │   ├── registry.py        # check_all(), check_tool_async(), resolve_tool_path()
 │   └── base.py            # (future: base executor class)
 │
+├── stealth/               # Stealth layer — Tor/proxy, UA rotation, timing jitter
+│   ├── layer.py           # StealthLayer singleton, inject_proxy_flags()
+│   ├── config.py          # StealthConfig Pydantic model
+│   ├── timing.py          # Jitter utilities (random sleep ranges)
+│   ├── user_agents.py     # UA rotation pool
+│   └── http_client.py     # create_http_client() — httpx with proxy + UA injection
+│
 ├── tools/
 │   ├── utility.py         # check_tools, validate_target
-│   ├── recon/
-│   │   ├── nmap.py        # nmap_scan
-│   │   ├── masscan.py     # masscan_scan
-│   │   ├── subfinder.py   # subfinder_enum
-│   │   ├── dns.py         # dns_enumerate
-│   │   └── whois.py       # whois_lookup
-│   ├── web/
-│   │   ├── nuclei.py      # nuclei_scan
-│   │   ├── nikto.py       # nikto_scan
-│   │   ├── ffuf.py        # ffuf_fuzz
-│   │   ├── headers.py     # analyze_headers
-│   │   ├── cors.py        # test_cors
-│   │   └── ssl_tls.py     # ssl_tls_check
-│   ├── injection/
-│   │   ├── sqlmap.py      # sqlmap_scan
-│   │   └── xss.py         # xss_scan
-│   ├── exploit/
-│   │   ├── metasploit.py  # msf_search, msf_module_info, msf_run_module, msf_sessions_list
-│   │   └── searchsploit.py# searchsploit_query
-│   ├── bruteforce/
-│   │   ├── hydra.py       # hydra_attack
-│   │   └── hash_tools.py  # hash_crack, hash_identify
-│   ├── proxy/
-│   │   └── zap.py         # zap_spider, zap_active_scan, zap_get_alerts
-│   ├── analysis/
-│   │   ├── correlate.py   # correlate_findings, score_risk
-│   │   └── cve_tools.py   # cve_lookup, cve_search
-│   └── reporting/
-│       ├── generate.py    # generate_report
-│       └── templates/     # Jinja2 templates (HTML, Markdown)
+│   ├── recon/             # nmap, masscan, subfinder, dns, whois, amass, dnsrecon,
+│   │                      # subjack, gowitness
+│   ├── web/               # nuclei, nikto, ffuf, headers, cors, ssl_tls, gobuster,
+│   │                      # wpscan, testssl
+│   ├── osint/             # theharvester, shodan, whatweb
+│   ├── injection/         # sqlmap, xss
+│   ├── exploit/           # metasploit (msf_search, msf_module_info, msf_run_module,
+│   │                      # msf_sessions_list), searchsploit
+│   ├── bruteforce/        # hydra, hash_tools (hash_crack, hash_identify), cewl
+│   ├── proxy/             # zap (zap_spider, zap_active_scan, zap_get_alerts)
+│   ├── analysis/          # correlate (correlate_findings, score_risk), cve_tools,
+│   │                      # reporting (generate_report)
+│   ├── secrets/           # trufflehog, gitleaks
+│   ├── container/         # trivy
+│   ├── cloud/             # scoutsuite
+│   ├── api/               # arjun, graphql_security_check
+│   ├── ad/                # enum4linux, nxc, impacket (impacket_kerberoast)
+│   ├── wireless/          # aircrack
+│   ├── iac/               # checkov
+│   └── stealth/           # tor_check, tor_new_identity, check_anonymity,
+│                          # proxy_check, rotate_identity
 │
 ├── resources/
 │   ├── owasp.py           # get_top10_list, get_category, get_category_checklist
 │   ├── ptes.py            # get_phases_overview, get_phase
 │   ├── checklists.py      # get_checklist (web-application, api, network)
 │   ├── cve.py             # CVE lookup helpers
-│   └── data/             # Static JSON data files
+│   └── data/              # Static JSON: OWASP, PTES, checklists, MITRE ATT&CK,
+│                          # OWASP API Top 10, default creds, payloads, stealth techniques
 │
 └── prompts/
     ├── pentest_workflow.py # full_pentest, quick_recon, web_app_assessment
     ├── vuln_assessment.py  # assess_injection, assess_access_control, assess_crypto, assess_misconfig
-    └── report_prompts.py   # executive_report, technical_report, full_pentest_report,
-                            # remediation_plan, finding_detail, risk_matrix, retest_report
+    ├── report_prompts.py   # executive_report, technical_report, full_pentest_report,
+    │                       # remediation_plan, finding_detail, risk_matrix, retest_report
+    ├── advanced_workflows.py # osint_investigation, stealth_assessment, opsec_checklist,
+    │                         # api_security_assessment, ad_assessment, container_assessment,
+    │                         # cloud_assessment, bug_bounty_workflow, compliance_assessment,
+    │                         # wireless_assessment
+    └── quick_actions.py    # crack_wifi, explore_url, go_stealth, find_secrets,
+                            # map_network, hunt_subdomains, find_vulns, pwn_target
 ```
+
+---
+
+## Stealth Layer
+
+The stealth layer (`src/tengu/stealth/`) provides optional anonymization and evasion
+capabilities. It is enabled via `tengu.toml` and is fully transparent to tool code —
+tools do not need to check whether stealth mode is active.
+
+### Configuration
+
+```toml
+[stealth]
+enabled = true
+
+[stealth.proxy]
+enabled = true
+url = "socks5h://127.0.0.1:9050"   # Tor SOCKS5 proxy
+```
+
+### What the Stealth Layer Does
+
+| Capability | Module | Details |
+|------------|--------|---------|
+| Proxy injection | `layer.py` → `inject_proxy_flags()` | Appends proxy CLI flags to tool argument lists |
+| User agent rotation | `user_agents.py` | Rotates realistic browser UA strings per request |
+| Timing jitter | `timing.py` | Random sleep ranges between requests to evade rate detection |
+| HTTP client | `http_client.py` | Returns an `httpx.AsyncClient` pre-configured with proxy + UA |
+
+### Proxy Flag Injection (per tool)
+
+| Tool | Flag injected |
+|------|---------------|
+| nmap | `--proxies` |
+| nuclei | `-proxy` |
+| ffuf | `-x` |
+| sqlmap | `--proxy` |
+| subfinder | `--proxy` |
+| nikto | `-useproxy` |
+| gobuster | `--proxy` |
+| wpscan | `--proxy` |
+| curl (internal) | `-x` |
+| httpx (internal) | `proxies=` kwarg |
+
+### HTTP Tools
+
+`analyze_headers` and `test_cors` use `stealth.create_http_client()` automatically
+when stealth mode is enabled — no special handling required in tool code.
+
+### Stealth Tools (MCP-exposed)
+
+Five tools expose stealth controls to the AI:
+
+| Tool | Description |
+|------|-------------|
+| `tor_check` | Verify Tor connectivity and exit node IP |
+| `tor_new_identity` | Signal Tor to rotate the exit node |
+| `check_anonymity` | Comprehensive anonymity posture check |
+| `proxy_check` | Verify proxy reachability and IP leak status |
+| `rotate_identity` | Rotate proxy/UA and request a new Tor identity |
 
 ---
 
@@ -176,6 +242,12 @@ make run                # uv run tengu (stdio transport)
 make run-sse            # uv run tengu --transport sse
 make run-dev            # TENGU_LOG_LEVEL=DEBUG uv run tengu
 make inspect            # npx @modelcontextprotocol/inspector uv run tengu
+
+# Direct run commands (without make)
+# /Users/rfunix/.local/bin/uv run pytest tests/ -q
+# /Users/rfunix/.local/bin/uv run ruff check src/ tests/
+# /Users/rfunix/.local/bin/uv run tengu
+# TENGU_HOST=0.0.0.0 uv run tengu --transport sse   # SSE for remote clients (e.g. Kali)
 
 # Diagnostics
 make doctor             # check which pentest tools are installed
