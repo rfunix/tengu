@@ -26,6 +26,18 @@ from tengu.prompts.osint_workflow import osint_investigation
 # Workflow prompts
 from tengu.prompts.pentest_workflow import full_pentest, quick_recon, web_app_assessment
 
+# Quick action prompts (v0.2.1)
+from tengu.prompts.quick_actions import (
+    crack_wifi,
+    explore_url,
+    find_secrets,
+    find_vulns,
+    go_stealth,
+    hunt_subdomains,
+    map_network,
+    pwn_target,
+)
+
 # Report prompts
 from tengu.prompts.report_prompts import (
     executive_report,
@@ -609,6 +621,16 @@ mcp.prompt()(cloud_assessment)
 mcp.prompt()(bug_bounty_workflow)
 mcp.prompt()(compliance_assessment)
 mcp.prompt()(wireless_assessment)
+
+# Quick action prompts (v0.2.1)
+mcp.prompt()(crack_wifi)
+mcp.prompt()(explore_url)
+mcp.prompt()(go_stealth)
+mcp.prompt()(find_secrets)
+mcp.prompt()(map_network)
+mcp.prompt()(hunt_subdomains)
+mcp.prompt()(find_vulns)
+mcp.prompt()(pwn_target)
 
 
 # ── ENTRY POINT ────────────────────────────────────────────────────────────────
