@@ -362,60 +362,86 @@ make doctor
 
 ### Tools Pre-Installed on Kali
 
-The following tools are included in Kali Linux by default and require no additional
-installation:
+The following tools are available via `apt` on Kali Linux (2025.1+) and are installed
+automatically by `make install-tools`:
 
 | Tool | Package | Tengu Usage |
 |------|---------|------------|
 | nmap | `nmap` | `nmap_scan` |
 | masscan | `masscan` | `masscan_scan` |
+| subfinder | `subfinder` | `subfinder_enum` |
+| amass | `amass` | `amass_enum` |
+| dnsrecon | `dnsrecon` | `dnsrecon_scan` |
 | sqlmap | `sqlmap` | `sqlmap_scan` |
 | nikto | `nikto` | `nikto_scan` |
+| ffuf | `ffuf` | `ffuf_fuzz` |
+| nuclei | `nuclei` | `nuclei_scan` |
+| gobuster | `gobuster` | `gobuster_scan` |
+| wpscan | `wpscan` | `wpscan_scan` |
+| gitleaks | `gitleaks` | `gitleaks_scan` |
+| trivy | `trivy` | `trivy_scan` |
+| zaproxy | `zaproxy` | `zap_*` tools |
+| arjun | `arjun` | `arjun_discover` |
+| enum4linux-ng | `enum4linux-ng` | `enum4linux_scan` |
+| nxc | `nxc` | `nxc_enum` |
+| impacket-scripts | `impacket-scripts` | `impacket_kerberoast` |
 | hydra | `hydra` | `hydra_attack` |
 | john | `john` | `hash_crack` |
 | hashcat | `hashcat` | `hash_crack` |
+| cewl | `cewl` | `cewl_generate` |
 | msfconsole | `metasploit-framework` | `msf_*` tools |
-| aircrack-ng | `aircrack-ng` | (wireless, future) |
 | searchsploit | `exploitdb` | `searchsploit_query` |
-| theHarvester | `theharvester` | (future integration) |
-| amass | `amass` | (future integration) |
-| dnsrecon | `dnsrecon` | (future integration) |
-| gobuster | `gobuster` | (future integration) |
-| wpscan | `wpscan` | (future integration) |
-| tor | `tor` | (future stealth mode) |
-| proxychains4 | `proxychains4` | (future stealth mode) |
-| enum4linux-ng | `enum4linux-ng` | (future integration) |
-| impacket | `python3-impacket` | (future integration) |
+| theHarvester | `theharvester` | `theharvester_scan` |
+| whatweb | `whatweb` | `whatweb_scan` |
+| aircrack-ng | `aircrack-ng` | `aircrack_scan` |
+| tor | `tor` | stealth tools |
+| torsocks | `torsocks` | stealth tools |
+| proxychains4 | `proxychains4` | stealth tools |
+| golang | `golang` | (required for Go-based tools) |
 
 ### Tools That Need Special Installation on Kali
 
-**OWASP ZAP** (for `zap_*` tools):
+Run `./scripts/install-tools.sh --all` to handle all of the below automatically.
+
+**testssl.sh** — Kali installs the binary as `testssl` (no `.sh`); a symlink is required:
 ```bash
-sudo apt install -y zaproxy
-# Or download the latest stable release:
-# https://www.zaproxy.org/download/
+sudo apt install -y testssl.sh
+sudo ln -sf /usr/bin/testssl /usr/local/bin/testssl.sh
 ```
 
-**Go-based tools** (subfinder, nuclei, ffuf, dalfox):
+**trufflehog** — `go install` fails (replace directives); use the official install script:
 ```bash
-# Install Go first
-sudo apt install -y golang-go
+curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh \
+    | sudo sh -s -- -b /usr/local/bin
+```
 
-# subfinder
-go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-
-# nuclei
-go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
-
-# ffuf
-go install github.com/ffuf/ffuf/v2@latest
-
-# dalfox (XSS scanner used by xss_scan)
+**dalfox, gowitness, subjack** — Go tools not yet in apt:
+```bash
 go install github.com/hahwul/dalfox/v2@latest
+go install github.com/sensepost/gowitness@latest
+go install github.com/haccer/subjack@latest
+# Symlink to /usr/local/bin so they are in PATH for all sessions:
+for bin in dalfox gowitness subjack; do
+    sudo ln -sf "$HOME/go/bin/$bin" "/usr/local/bin/$bin"
+done
+```
 
-# Add Go bin to PATH
-echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.bashrc
-source ~/.bashrc
+**checkov, ScoutSuite, prowler** — pip installs to `~/.local/bin`; symlinks needed:
+```bash
+pip3 install --break-system-packages checkov scoutsuite prowler
+sudo ln -sf ~/.local/bin/checkov /usr/local/bin/checkov
+sudo ln -sf ~/.local/bin/scout   /usr/local/bin/scout
+sudo ln -sf ~/.local/bin/prowler /usr/local/bin/prowler
+```
+
+**GetUserSPNs.py** — Kali installs it as `impacket-GetUserSPNs`; create a shim:
+```bash
+sudo ln -sf /usr/bin/impacket-GetUserSPNs /usr/local/bin/GetUserSPNs.py
+```
+
+**zap.sh** — Tengu also checks for `zap.sh`; symlink `zaproxy`:
+```bash
+sudo ln -sf /usr/bin/zaproxy /usr/local/bin/zap.sh
 ```
 
 **WeasyPrint** (for PDF report generation):

@@ -76,6 +76,22 @@ install_go() {
     log_info "Installing Go..."
     if [[ "$OS" == "macos" ]]; then
         pkg_install go
+    elif [[ "$OS" == "debian" ]]; then
+        # Prefer apt (available on Kali and Ubuntu); fall back to manual download
+        sudo apt-get install -y golang-go 2>/dev/null && {
+            export PATH=$PATH:$(go env GOPATH 2>/dev/null || echo "$HOME/go")/bin
+            log_ok "Go installed via apt"
+            return
+        }
+        GO_VERSION="1.22.0"
+        ARCH=$(uname -m)
+        [[ "$ARCH" == "aarch64" ]] && ARCH="arm64" || ARCH="amd64"
+        wget -q "https://go.dev/dl/go${GO_VERSION}.linux-${ARCH}.tar.gz" -O /tmp/go.tar.gz
+        sudo rm -rf /usr/local/go
+        sudo tar -C /usr/local -xzf /tmp/go.tar.gz
+        echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> ~/.bashrc
+        export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
+        rm /tmp/go.tar.gz
     else
         GO_VERSION="1.22.0"
         ARCH=$(uname -m)
@@ -102,7 +118,15 @@ go_install() {
     log_info "Installing $name via go install..."
     install_go
     export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
-    go install "$pkg" && log_ok "$name installed" || log_warn "Failed to install $name"
+    if go install "$pkg"; then
+        log_ok "$name installed"
+        # Symlink to /usr/local/bin so the binary is in PATH for all sessions
+        local gobin
+        gobin="$(go env GOPATH 2>/dev/null || echo "$HOME/go")/bin/$name"
+        [[ -x "$gobin" ]] && sudo ln -sf "$gobin" "/usr/local/bin/$name" || true
+    else
+        log_warn "Failed to install $name"
+    fi
 }
 
 # ── RECON TOOLS ────────────────────────────────────────────────────────────────
@@ -167,6 +191,23 @@ install_nikto() {
 
 install_ffuf() {
     go_install "github.com/ffuf/ffuf/v2@latest" "ffuf"
+}
+
+install_testssl() {
+    if is_installed testssl.sh || is_installed testssl; then
+        log_ok "testssl already installed"
+    else
+        log_info "Installing testssl.sh..."
+        if [[ "$OS" == "macos" ]]; then
+            pkg_install testssl
+        else
+            pkg_install testssl.sh 2>/dev/null || log_warn "testssl.sh not found in apt — install manually from https://testssl.sh"
+        fi
+    fi
+    # On Debian/Kali the binary is called 'testssl', not 'testssl.sh'
+    if is_installed testssl && ! is_installed testssl.sh; then
+        sudo ln -sf "$(command -v testssl)" /usr/local/bin/testssl.sh && log_ok "testssl.sh -> testssl"
+    fi
 }
 
 install_sslyze() {
@@ -271,14 +312,26 @@ install_hashcat() {
 
 # ── PROXY TOOLS ────────────────────────────────────────────────────────────────
 install_zap() {
-    if is_installed zaproxy || is_installed zap.sh; then log_ok "OWASP ZAP already installed"; return; fi
-    log_info "Installing OWASP ZAP..."
-    if [[ "$OS" == "macos" ]]; then
-        brew install --cask zap && log_ok "ZAP installed" || log_warn "ZAP install failed — install manually from https://www.zaproxy.org/"
-    elif command -v snap &>/dev/null; then
-        sudo snap install zaproxy --classic && log_ok "ZAP installed via snap" || log_warn "ZAP install failed"
+    if is_installed zaproxy || is_installed zap.sh; then
+        log_ok "OWASP ZAP already installed"
     else
-        log_warn "Install ZAP manually from: https://www.zaproxy.org/download/"
+        log_info "Installing OWASP ZAP..."
+        if [[ "$OS" == "macos" ]]; then
+            brew install --cask zap && log_ok "ZAP installed" || log_warn "ZAP install failed — install manually from https://www.zaproxy.org/"
+        elif [[ "$OS" == "debian" ]]; then
+            sudo apt-get install -y zaproxy 2>/dev/null && log_ok "ZAP installed via apt" || {
+                command -v snap &>/dev/null && sudo snap install zaproxy --classic \
+                    || log_warn "Install ZAP manually from: https://www.zaproxy.org/download/"
+            }
+        elif command -v snap &>/dev/null; then
+            sudo snap install zaproxy --classic && log_ok "ZAP installed via snap" || log_warn "ZAP install failed"
+        else
+            log_warn "Install ZAP manually from: https://www.zaproxy.org/download/"
+        fi
+    fi
+    # Create zap.sh symlink — some tools look for zap.sh rather than zaproxy
+    if is_installed zaproxy && ! is_installed zap.sh; then
+        sudo ln -sf "$(command -v zaproxy)" /usr/local/bin/zap.sh && log_ok "zap.sh -> zaproxy"
     fi
 }
 
@@ -344,7 +397,10 @@ install_trufflehog() {
     if [[ "$OS" == "macos" ]]; then
         brew install trufflesecurity/trufflehog/trufflehog
     else
-        go_install github.com/trufflesecurity/trufflehog/v3@latest trufflehog
+        # go install fails (replace directives in go.mod) — use official install script
+        curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh \
+            | sudo sh -s -- -b /usr/local/bin \
+            && log_ok "trufflehog installed" || log_warn "trufflehog install failed"
     fi
 }
 
@@ -353,6 +409,9 @@ install_gitleaks() {
     log_info "Installing gitleaks..."
     if [[ "$OS" == "macos" ]]; then
         pkg_install gitleaks
+    elif [[ "$OS" == "debian" ]]; then
+        sudo apt-get install -y gitleaks 2>/dev/null && log_ok "gitleaks installed via apt" \
+            || go_install github.com/gitleaks/gitleaks/v8@latest gitleaks
     else
         go_install github.com/gitleaks/gitleaks/v8@latest gitleaks
     fi
@@ -365,10 +424,14 @@ install_trivy() {
     if [[ "$OS" == "macos" ]]; then
         pkg_install trivy
     elif [[ "$OS" == "debian" ]]; then
-        sudo apt-get install -y wget apt-transport-https gnupg lsb-release
-        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-        echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/trivy.list
-        sudo apt-get update && sudo apt-get install -y trivy
+        # Kali ships trivy in its default repos; fall back to Aqua repo for other Debian
+        sudo apt-get install -y trivy 2>/dev/null && log_ok "trivy installed via apt" || {
+            sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+            wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+            echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" \
+                | sudo tee /etc/apt/sources.list.d/trivy.list
+            sudo apt-get update && sudo apt-get install -y trivy && log_ok "trivy installed via Aqua repo"
+        }
     else
         pkg_install trivy || log_warn "Install trivy manually from https://github.com/aquasecurity/trivy"
     fi
@@ -378,7 +441,11 @@ install_trivy() {
 install_scoutsuite() {
     if is_installed scout; then log_ok "ScoutSuite already installed"; return; fi
     log_info "Installing ScoutSuite..."
-    sudo pip3 install scoutsuite 2>/dev/null && log_ok "ScoutSuite installed" || log_warn "ScoutSuite install failed"
+    pip3 install --break-system-packages scoutsuite 2>/dev/null && {
+        log_ok "ScoutSuite installed"
+        # pip may install to ~/.local/bin which is not always in PATH
+        [[ -x "$HOME/.local/bin/scout" ]] && sudo ln -sf "$HOME/.local/bin/scout" /usr/local/bin/scout || true
+    } || log_warn "ScoutSuite install failed"
 }
 
 install_checkov() {
@@ -387,7 +454,10 @@ install_checkov() {
     if [[ "$OS" == "macos" ]]; then
         pkg_install checkov
     else
-        sudo pip3 install checkov 2>/dev/null && log_ok "checkov installed" || log_warn "checkov install failed"
+        pip3 install --break-system-packages checkov 2>/dev/null && {
+            log_ok "checkov installed"
+            [[ -x "$HOME/.local/bin/checkov" ]] && sudo ln -sf "$HOME/.local/bin/checkov" /usr/local/bin/checkov || true
+        } || log_warn "checkov install failed"
     fi
 }
 
@@ -395,7 +465,16 @@ install_checkov() {
 install_arjun() {
     if is_installed arjun; then log_ok "arjun already installed"; return; fi
     log_info "Installing arjun..."
-    sudo pip3 install arjun 2>/dev/null && log_ok "arjun installed" || log_warn "arjun install failed"
+    if [[ "$OS" == "debian" ]]; then
+        sudo apt-get install -y arjun 2>/dev/null && log_ok "arjun installed via apt" || {
+            pip3 install --break-system-packages arjun 2>/dev/null && {
+                log_ok "arjun installed via pip"
+                [[ -x "$HOME/.local/bin/arjun" ]] && sudo ln -sf "$HOME/.local/bin/arjun" /usr/local/bin/arjun || true
+            } || log_warn "arjun install failed"
+        }
+    else
+        pip3 install --break-system-packages arjun 2>/dev/null && log_ok "arjun installed" || log_warn "arjun install failed"
+    fi
 }
 
 # ── ACTIVE DIRECTORY TOOLS ─────────────────────────────────────────────────────
@@ -424,14 +503,28 @@ install_netexec() {
 }
 
 install_impacket() {
-    if python3 -c "import impacket" 2>/dev/null; then log_ok "impacket already installed"; return; fi
-    log_info "Installing impacket..."
-    if [[ "$OS" == "debian" ]]; then
-        sudo apt-get install -y impacket-scripts 2>/dev/null || (
-            sudo pip3 install impacket && log_ok "impacket installed via pip"
-        )
-    else
-        sudo pip3 install impacket 2>/dev/null && log_ok "impacket installed" || log_warn "impacket install failed"
+    if python3 -c "import impacket" 2>/dev/null; then log_ok "impacket already installed"; else
+        log_info "Installing impacket..."
+        if [[ "$OS" == "debian" ]]; then
+            sudo apt-get install -y impacket-scripts 2>/dev/null || (
+                sudo pip3 install impacket && log_ok "impacket installed via pip"
+            )
+        else
+            sudo pip3 install impacket 2>/dev/null && log_ok "impacket installed" || log_warn "impacket install failed"
+        fi
+    fi
+    # Create GetUserSPNs.py shim — Kali installs it as impacket-GetUserSPNs
+    if ! is_installed GetUserSPNs.py; then
+        if is_installed impacket-GetUserSPNs; then
+            sudo ln -sf "$(command -v impacket-GetUserSPNs)" /usr/local/bin/GetUserSPNs.py \
+                && log_ok "GetUserSPNs.py -> impacket-GetUserSPNs"
+        elif [[ -f /usr/share/doc/python3-impacket/examples/GetUserSPNs.py ]]; then
+            printf '#!/usr/bin/env python3\nimport sys, runpy\nsys.argv[0] = "%s"\nrunpy.run_path("%s", run_name="__main__")\n' \
+                /usr/share/doc/python3-impacket/examples/GetUserSPNs.py \
+                /usr/share/doc/python3-impacket/examples/GetUserSPNs.py \
+                | sudo tee /usr/local/bin/GetUserSPNs.py > /dev/null
+            sudo chmod +x /usr/local/bin/GetUserSPNs.py && log_ok "GetUserSPNs.py wrapper created"
+        fi
     fi
 }
 
@@ -565,6 +658,7 @@ main() {
             install_nuclei
             install_nikto
             install_ffuf
+            install_testssl
             install_sslyze
             install_sqlmap
             install_dalfox
@@ -575,6 +669,19 @@ main() {
             install_hashcat
             install_zap
             install_wordlists
+            install_theharvester
+            install_whatweb
+            install_trufflehog
+            install_gitleaks
+            install_trivy
+            install_scoutsuite
+            install_checkov
+            install_arjun
+            install_enum4linux_ng
+            install_netexec
+            install_impacket
+            install_aircrack_ng
+            install_tor_stealth
             ;;
         --recon)
             log_section "Installing Reconnaissance Tools"
@@ -590,6 +697,7 @@ main() {
             install_nuclei
             install_nikto
             install_ffuf
+            install_testssl
             install_sslyze
             ;;
         --inject)
