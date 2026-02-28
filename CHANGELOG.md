@@ -7,17 +7,124 @@ Tengu uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-## [Unreleased] — v0.2.0
+## [0.2.1] — Quality and Stealth
 
-### Planned
-- SSE transport support for remote MCP connections (macOS → Kali VM)
-- PDF report generation via WeasyPrint
-- Stealth mode configuration (randomized timing, decoy IPs)
-- Plugin system for custom tool wrappers
-- Web UI dashboard for audit log visualization
-- Async CVE cache with NVD API v2 rate limit handling
-- Docker image with all tools pre-installed
-- GitHub Actions CI/CD pipeline
+### Added
+
+**Stealth Tools (5 new MCP tools)**
+- `tor_check` — verify Tor connectivity and retrieve current exit node IP
+- `tor_new_identity` — signal Tor control port to rotate the exit circuit
+- `check_anonymity` — comprehensive anonymity posture check (Tor, proxy, DNS, WebRTC)
+- `proxy_check` — verify proxy reachability and detect IP leak conditions
+- `rotate_identity` — rotate proxy/user-agent and request a new Tor identity atomically
+
+**Quick Action Prompts (8 new prompts in `src/tengu/prompts/quick_actions.py`)**
+- `crack_wifi` — guided Wi-Fi capture and offline WPA/WPA2 crack workflow
+- `explore_url` — rapid single-URL web assessment
+- `go_stealth` — configure and verify stealth posture before an engagement
+- `find_secrets` — scan repositories and file systems for leaked credentials
+- `map_network` — fast network discovery and service fingerprinting
+- `hunt_subdomains` — passive and active subdomain enumeration workflow
+- `find_vulns` — template-based vulnerability sweep across a target
+- `pwn_target` — full exploitation workflow with post-exploitation checklist
+
+### Improved
+
+- **Test coverage**: 1931 tests across 73 test files, 90%+ overall coverage
+- **Lint**: 0 ruff errors across all source and test files; strict type annotations
+  enforced throughout
+- **Reporting**: `generate_report` with Jinja2 templates supporting Markdown, HTML,
+  and PDF (WeasyPrint) output formats
+- **Sanitizer**: added `sanitize_repo_url`, `sanitize_docker_image`,
+  `sanitize_proxy_url` to `security/sanitizer.py`
+- **Mock patterns**: standardized async mock patterns across the test suite
+  (`asyncio_mode = "auto"`, `AsyncMock` for context managers, direct patching of
+  synchronous helpers called via `run_in_executor`)
+
+---
+
+## [0.2.0] — Extended Tool Coverage
+
+### Added
+
+**OSINT Tools (3 new MCP tools)**
+- `theharvester_scan` — email, hostname, and employee data harvesting from public sources
+- `shodan_lookup` — Shodan host lookup with service fingerprinting and CVE correlation
+- `whatweb_scan` — web technology fingerprinting (CMS, framework, server, libraries)
+
+**Secrets Scanning Tools (2 new MCP tools)**
+- `trufflehog_scan` — entropy-based secret scanning for repositories and filesystems
+- `gitleaks_scan` — Git history secret scanning with SARIF output
+
+**Container Security Tool (1 new MCP tool)**
+- `trivy_scan` — container image and filesystem vulnerability scanning (CVE + misconfig)
+
+**Cloud Security Tool (1 new MCP tool)**
+- `scoutsuite_scan` — multi-cloud security posture assessment (AWS, GCP, Azure)
+
+**API Security Tools (2 new MCP tools)**
+- `arjun_discover` — HTTP parameter discovery for API endpoints
+- `graphql_security_check` — GraphQL introspection, injection, and authorization testing
+
+**Active Directory Tools (3 new MCP tools)**
+- `enum4linux_scan` — SMB enumeration: shares, users, groups, password policy
+- `nxc_enum` — NetExec (formerly CrackMapExec) credential testing and enumeration
+- `impacket_kerberoast` — Kerberoasting: request and extract service ticket hashes
+
+**Wireless Tool (1 new MCP tool)**
+- `aircrack_scan` — Wi-Fi monitor mode capture and offline WPA/WPA2 cracking
+
+**IaC Security Tool (1 new MCP tool)**
+- `checkov_scan` — Terraform, CloudFormation, Kubernetes, Dockerfile static analysis
+
+**Additional Recon Tools (4 new MCP tools)**
+- `amass_enum` — active/passive subdomain enumeration with graph-based ASN mapping
+- `dnsrecon_scan` — DNS record enumeration, zone transfer, and brute-force
+- `subjack_check` — subdomain takeover detection across dangling DNS entries
+- `gowitness_screenshot` — headless browser screenshots for discovered web targets
+
+**Additional Web Tools (3 new MCP tools)**
+- `gobuster_scan` — directory, DNS, and virtual host brute-forcing
+- `wpscan_scan` — WordPress vulnerability and plugin enumeration
+- `testssl_check` — comprehensive TLS/SSL configuration testing
+
+**Additional Bruteforce Tool (1 new MCP tool)**
+- `cewl_generate` — custom wordlist generation from web page content
+
+**Resources (8 new MCP resources)**
+- `mitre://attack/tactics` — MITRE ATT&CK Enterprise tactic list
+- `mitre://attack/technique/{id}` — technique detail by ID (e.g. T1059)
+- `owasp://api-security/top10` — OWASP API Security Top 10 list
+- `owasp://api-security/top10/{id}` — API security category detail (API1–API10)
+- `creds://defaults/{product}` — default credential database for common products
+- `payloads://{type}` — curated payload lists by type (xss, sqli, lfi, ssti, etc.)
+- `stealth://techniques` — reference guide for operational security techniques
+- `stealth://proxy-guide` — step-by-step proxy and Tor configuration guide
+
+**Prompts (10 new MCP prompts)**
+- `osint_investigation` — structured open-source intelligence gathering workflow
+- `stealth_assessment` — full engagement with stealth/anonymization controls active
+- `opsec_checklist` — operational security pre-engagement checklist
+- `api_security_assessment` — OWASP API Security Top 10 assessment workflow
+- `ad_assessment` — Active Directory enumeration and attack path workflow
+- `container_assessment` — container image and runtime security assessment
+- `cloud_assessment` — cloud infrastructure security posture review
+- `bug_bounty_workflow` — scope-aware bug bounty hunting workflow
+- `compliance_assessment` — compliance-mapped assessment (PCI-DSS, ISO 27001, NIST)
+- `wireless_assessment` — Wi-Fi reconnaissance, capture, and cracking workflow
+
+**Stealth Layer (`src/tengu/stealth/`)**
+- `layer.py` — `StealthLayer` singleton with `inject_proxy_flags()` for 10 tools
+- `config.py` — `StealthConfig` Pydantic model loaded from `tengu.toml`
+- `timing.py` — configurable random sleep ranges for inter-request jitter
+- `user_agents.py` — realistic browser UA rotation pool
+- `http_client.py` — `create_http_client()` returning `httpx.AsyncClient` with proxy
+  and user-agent pre-configured
+
+**CVE Infrastructure**
+- SQLite-backed CVE cache with 24-hour TTL
+- NVD API v2.0 as primary source with CVE.org as fallback
+- `cve_lookup` and `cve_search` tools wired to the cache layer
 
 ---
 
@@ -41,11 +148,11 @@ abstraction layer over industry-standard pentesting tools.
   `CORSResult`, `SSLResult`, `Evidence`, `Finding`, `PentestReport`, `RiskMatrix`,
   `CVSSMetrics`, `CVERecord`, `ToolStatus`, `ToolsCheckResult`
 
-#### Security Layer (5 layers)
+#### Security Layer (5 layers, mandatory pipeline)
 - **Sanitizer** (`security/sanitizer.py`): `sanitize_target`, `sanitize_url`,
   `sanitize_domain`, `sanitize_cidr`, `sanitize_port_spec`, `sanitize_wordlist_path`,
   `sanitize_hash`, `sanitize_cve_id`, `sanitize_free_text`, `sanitize_scan_type`,
-  `sanitize_severity`. Shell metacharacter regex: `[;&|` + "`$<>(){}[]!\\'\"\\r\\n]`
+  `sanitize_severity`. Shell metacharacter reject list: `[;&|` + "`$<>(){}[]!\\'\"\\r\\n]`
 - **Allowlist** (`security/allowlist.py`): `TargetAllowlist` with CIDR, wildcard,
   and exact hostname matching. Default blocked hosts: localhost, metadata endpoints,
   `*.gov`, `*.mil`, `*.edu`
@@ -164,5 +271,6 @@ abstraction layer over industry-standard pentesting tools.
 
 ---
 
-[Unreleased]: https://github.com/tengu-project/tengu/compare/v0.1.0...HEAD
+[0.2.1]: https://github.com/tengu-project/tengu/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/tengu-project/tengu/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/tengu-project/tengu/releases/tag/v0.1.0
