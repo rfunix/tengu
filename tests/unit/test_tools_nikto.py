@@ -1,10 +1,13 @@
-"""Unit tests for Nikto web scanner output parser."""
+"""Unit tests for Nikto web scanner output parser and async nikto_scan function."""
 
 from __future__ import annotations
 
 import json
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from tengu.tools.web.nikto import _parse_nikto_output
+import pytest
+
+from tengu.tools.web.nikto import _parse_nikto_output, nikto_scan
 
 # ---------------------------------------------------------------------------
 # TestParseNiktoOutput
@@ -94,3 +97,284 @@ class TestParseNiktoOutput:
         text = "+ Outdated jQuery detected"
         result = _parse_nikto_output(text)
         assert result[0]["message"] == "Outdated jQuery detected"
+
+
+# ---------------------------------------------------------------------------
+# Helpers for nikto_scan tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def mock_ctx():
+    ctx = AsyncMock()
+    ctx.report_progress = AsyncMock()
+    return ctx
+
+
+def _make_nikto_config(scan_timeout=300, nikto_path=None):
+    cfg = MagicMock()
+    cfg.tools.defaults.scan_timeout = scan_timeout
+    cfg.tools.paths.nikto = nikto_path
+    return cfg
+
+
+def _make_rate_limited_mock():
+    mock_rl_ctx = MagicMock()
+    mock_rl_ctx.__aenter__ = AsyncMock(return_value=MagicMock())
+    mock_rl_ctx.__aexit__ = AsyncMock(return_value=False)
+    return mock_rl_ctx
+
+
+# ---------------------------------------------------------------------------
+# TestNiktoScan
+# ---------------------------------------------------------------------------
+
+
+class TestNiktoScan:
+    @patch("tengu.tools.web.nikto.get_config")
+    @patch("tengu.tools.web.nikto.make_allowlist_from_config")
+    @patch("tengu.tools.web.nikto.get_audit_logger")
+    async def test_nikto_blocked_url(self, mock_audit_fn, mock_allowlist_fn, mock_config, mock_ctx):
+        mock_config.return_value = _make_nikto_config()
+        mock_allowlist = MagicMock()
+        mock_allowlist.check.side_effect = Exception("Blocked")
+        mock_allowlist_fn.return_value = mock_allowlist
+        mock_audit = AsyncMock()
+        mock_audit.log_target_blocked = AsyncMock()
+        mock_audit_fn.return_value = mock_audit
+
+        with pytest.raises(Exception, match="Blocked"):
+            await nikto_scan(mock_ctx, "https://example.com")
+
+    @patch("tengu.tools.web.nikto.run_command", new_callable=AsyncMock)
+    @patch("tengu.tools.web.nikto.get_config")
+    @patch("tengu.tools.web.nikto.make_allowlist_from_config")
+    @patch("tengu.tools.web.nikto.get_audit_logger")
+    @patch("tengu.tools.web.nikto.resolve_tool_path", return_value="/usr/bin/nikto")
+    @patch("tengu.tools.web.nikto.rate_limited")
+    @patch("tengu.stealth.get_stealth_layer")
+    async def test_nikto_tuning_flag(
+        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+    ):
+        mock_config.return_value = _make_nikto_config()
+        mock_allowlist = MagicMock()
+        mock_allowlist.check.return_value = None
+        mock_allowlist_fn.return_value = mock_allowlist
+        mock_audit = AsyncMock()
+        mock_audit.log_tool_call = AsyncMock()
+        mock_audit_fn.return_value = mock_audit
+        mock_rl.return_value = _make_rate_limited_mock()
+        mock_run.return_value = ("", "", 0)
+        mock_stealth_layer = MagicMock()
+        mock_stealth_layer.enabled = False
+        mock_stealth_layer.proxy_url = None
+        mock_stealth.return_value = mock_stealth_layer
+
+        await nikto_scan(mock_ctx, "https://example.com", tuning="1234")
+        args = mock_run.call_args[0][0]
+        assert "-Tuning" in args
+        t_idx = args.index("-Tuning")
+        assert args[t_idx + 1] == "1234"
+
+    @patch("tengu.tools.web.nikto.run_command", new_callable=AsyncMock)
+    @patch("tengu.tools.web.nikto.get_config")
+    @patch("tengu.tools.web.nikto.make_allowlist_from_config")
+    @patch("tengu.tools.web.nikto.get_audit_logger")
+    @patch("tengu.tools.web.nikto.resolve_tool_path", return_value="/usr/bin/nikto")
+    @patch("tengu.tools.web.nikto.rate_limited")
+    @patch("tengu.stealth.get_stealth_layer")
+    async def test_nikto_ssl_flag(
+        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+    ):
+        mock_config.return_value = _make_nikto_config()
+        mock_allowlist = MagicMock()
+        mock_allowlist.check.return_value = None
+        mock_allowlist_fn.return_value = mock_allowlist
+        mock_audit = AsyncMock()
+        mock_audit.log_tool_call = AsyncMock()
+        mock_audit_fn.return_value = mock_audit
+        mock_rl.return_value = _make_rate_limited_mock()
+        mock_run.return_value = ("", "", 0)
+        mock_stealth_layer = MagicMock()
+        mock_stealth_layer.enabled = False
+        mock_stealth_layer.proxy_url = None
+        mock_stealth.return_value = mock_stealth_layer
+
+        await nikto_scan(mock_ctx, "https://example.com", ssl=True)
+        args = mock_run.call_args[0][0]
+        assert "-ssl" in args
+
+    @patch("tengu.tools.web.nikto.run_command", new_callable=AsyncMock)
+    @patch("tengu.tools.web.nikto.get_config")
+    @patch("tengu.tools.web.nikto.make_allowlist_from_config")
+    @patch("tengu.tools.web.nikto.get_audit_logger")
+    @patch("tengu.tools.web.nikto.resolve_tool_path", return_value="/usr/bin/nikto")
+    @patch("tengu.tools.web.nikto.rate_limited")
+    @patch("tengu.stealth.get_stealth_layer")
+    async def test_nikto_custom_port(
+        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+    ):
+        mock_config.return_value = _make_nikto_config()
+        mock_allowlist = MagicMock()
+        mock_allowlist.check.return_value = None
+        mock_allowlist_fn.return_value = mock_allowlist
+        mock_audit = AsyncMock()
+        mock_audit.log_tool_call = AsyncMock()
+        mock_audit_fn.return_value = mock_audit
+        mock_rl.return_value = _make_rate_limited_mock()
+        mock_run.return_value = ("", "", 0)
+        mock_stealth_layer = MagicMock()
+        mock_stealth_layer.enabled = False
+        mock_stealth_layer.proxy_url = None
+        mock_stealth.return_value = mock_stealth_layer
+
+        await nikto_scan(mock_ctx, "https://example.com", port=8080)
+        args = mock_run.call_args[0][0]
+        assert "-port" in args
+        p_idx = args.index("-port")
+        assert args[p_idx + 1] == "8080"
+
+    @patch("tengu.tools.web.nikto.run_command", new_callable=AsyncMock)
+    @patch("tengu.tools.web.nikto.get_config")
+    @patch("tengu.tools.web.nikto.make_allowlist_from_config")
+    @patch("tengu.tools.web.nikto.get_audit_logger")
+    @patch("tengu.tools.web.nikto.resolve_tool_path", return_value="/usr/bin/nikto")
+    @patch("tengu.tools.web.nikto.rate_limited")
+    @patch("tengu.stealth.get_stealth_layer")
+    async def test_nikto_stealth_proxy(
+        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+    ):
+        mock_config.return_value = _make_nikto_config()
+        mock_allowlist = MagicMock()
+        mock_allowlist.check.return_value = None
+        mock_allowlist_fn.return_value = mock_allowlist
+        mock_audit = AsyncMock()
+        mock_audit.log_tool_call = AsyncMock()
+        mock_audit_fn.return_value = mock_audit
+        mock_rl.return_value = _make_rate_limited_mock()
+        mock_run.return_value = ("", "", 0)
+
+        mock_stealth_layer = MagicMock()
+        mock_stealth_layer.enabled = True
+        mock_stealth_layer.proxy_url = "http://127.0.0.1:8080"
+        mock_stealth_layer.inject_proxy_flags.side_effect = lambda tool, args: args + ["-useproxy", "http://127.0.0.1:8080"]
+        mock_stealth.return_value = mock_stealth_layer
+
+        await nikto_scan(mock_ctx, "https://example.com")
+        args = mock_run.call_args[0][0]
+        assert "-useproxy" in args
+
+    @patch("tengu.tools.web.nikto.run_command", new_callable=AsyncMock)
+    @patch("tengu.tools.web.nikto.get_config")
+    @patch("tengu.tools.web.nikto.make_allowlist_from_config")
+    @patch("tengu.tools.web.nikto.get_audit_logger")
+    @patch("tengu.tools.web.nikto.resolve_tool_path", return_value="/usr/bin/nikto")
+    @patch("tengu.tools.web.nikto.rate_limited")
+    @patch("tengu.stealth.get_stealth_layer")
+    async def test_nikto_output_parsing(
+        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+    ):
+        mock_config.return_value = _make_nikto_config()
+        mock_allowlist = MagicMock()
+        mock_allowlist.check.return_value = None
+        mock_allowlist_fn.return_value = mock_allowlist
+        mock_audit = AsyncMock()
+        mock_audit.log_tool_call = AsyncMock()
+        mock_audit_fn.return_value = mock_audit
+        mock_rl.return_value = _make_rate_limited_mock()
+        mock_stealth_layer = MagicMock()
+        mock_stealth_layer.enabled = False
+        mock_stealth_layer.proxy_url = None
+        mock_stealth.return_value = mock_stealth_layer
+
+        nikto_json = _make_nikto_json([_make_vuln(msg="Apache server version disclosure")])
+        mock_run.return_value = (nikto_json, "", 0)
+
+        result = await nikto_scan(mock_ctx, "https://example.com")
+        assert result["findings_count"] == 1
+        assert result["findings"][0]["message"] == "Apache server version disclosure"
+
+    @patch("tengu.tools.web.nikto.run_command", new_callable=AsyncMock)
+    @patch("tengu.tools.web.nikto.get_config")
+    @patch("tengu.tools.web.nikto.make_allowlist_from_config")
+    @patch("tengu.tools.web.nikto.get_audit_logger")
+    @patch("tengu.tools.web.nikto.resolve_tool_path", return_value="/usr/bin/nikto")
+    @patch("tengu.tools.web.nikto.rate_limited")
+    @patch("tengu.stealth.get_stealth_layer")
+    async def test_nikto_default_scan(
+        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+    ):
+        mock_config.return_value = _make_nikto_config()
+        mock_allowlist = MagicMock()
+        mock_allowlist.check.return_value = None
+        mock_allowlist_fn.return_value = mock_allowlist
+        mock_audit = AsyncMock()
+        mock_audit.log_tool_call = AsyncMock()
+        mock_audit_fn.return_value = mock_audit
+        mock_rl.return_value = _make_rate_limited_mock()
+        mock_run.return_value = ("", "", 0)
+        mock_stealth_layer = MagicMock()
+        mock_stealth_layer.enabled = False
+        mock_stealth_layer.proxy_url = None
+        mock_stealth.return_value = mock_stealth_layer
+
+        result = await nikto_scan(mock_ctx, "https://example.com")
+        args = mock_run.call_args[0][0]
+        # Nikto requires -h flag
+        assert "-h" in args
+        assert result["tool"] == "nikto"
+
+    @patch("tengu.tools.web.nikto.run_command", new_callable=AsyncMock)
+    @patch("tengu.tools.web.nikto.get_config")
+    @patch("tengu.tools.web.nikto.make_allowlist_from_config")
+    @patch("tengu.tools.web.nikto.get_audit_logger")
+    @patch("tengu.tools.web.nikto.resolve_tool_path", return_value="/usr/bin/nikto")
+    @patch("tengu.tools.web.nikto.rate_limited")
+    @patch("tengu.stealth.get_stealth_layer")
+    async def test_nikto_run_error(
+        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+    ):
+        mock_config.return_value = _make_nikto_config()
+        mock_allowlist = MagicMock()
+        mock_allowlist.check.return_value = None
+        mock_allowlist_fn.return_value = mock_allowlist
+        mock_audit = AsyncMock()
+        mock_audit.log_tool_call = AsyncMock()
+        mock_audit_fn.return_value = mock_audit
+        mock_rl.return_value = _make_rate_limited_mock()
+        mock_stealth_layer = MagicMock()
+        mock_stealth_layer.enabled = False
+        mock_stealth_layer.proxy_url = None
+        mock_stealth.return_value = mock_stealth_layer
+
+        mock_run.side_effect = Exception("nikto not found")
+
+        with pytest.raises(Exception, match="nikto not found"):
+            await nikto_scan(mock_ctx, "https://example.com")
+
+    @patch("tengu.tools.web.nikto.run_command", new_callable=AsyncMock)
+    @patch("tengu.tools.web.nikto.get_config")
+    @patch("tengu.tools.web.nikto.make_allowlist_from_config")
+    @patch("tengu.tools.web.nikto.get_audit_logger")
+    @patch("tengu.tools.web.nikto.resolve_tool_path", return_value="/usr/bin/nikto")
+    @patch("tengu.tools.web.nikto.rate_limited")
+    @patch("tengu.stealth.get_stealth_layer")
+    async def test_nikto_tool_key(
+        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+    ):
+        mock_config.return_value = _make_nikto_config()
+        mock_allowlist = MagicMock()
+        mock_allowlist.check.return_value = None
+        mock_allowlist_fn.return_value = mock_allowlist
+        mock_audit = AsyncMock()
+        mock_audit.log_tool_call = AsyncMock()
+        mock_audit_fn.return_value = mock_audit
+        mock_rl.return_value = _make_rate_limited_mock()
+        mock_run.return_value = ("", "", 0)
+        mock_stealth_layer = MagicMock()
+        mock_stealth_layer.enabled = False
+        mock_stealth_layer.proxy_url = None
+        mock_stealth.return_value = mock_stealth_layer
+
+        result = await nikto_scan(mock_ctx, "https://example.com")
+        assert result["tool"] == "nikto"
