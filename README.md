@@ -1,5 +1,9 @@
 # Tengu — Pentesting MCP Server
 
+<p align="center">
+  <img src="assets/Tengu.png" alt="Tengu" width="480"/>
+</p>
+
 [![CI](https://github.com/rfunix/tengu/actions/workflows/ci.yml/badge.svg)](https://github.com/rfunix/tengu/actions/workflows/ci.yml)
 
 Tengu is an MCP (Model Context Protocol) server that provides an intelligent abstraction layer over industry-standard penetration testing tools. Integrates with Claude Code and Claude Desktop to enable AI-assisted pentesting workflows.
