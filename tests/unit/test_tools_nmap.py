@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
 from tengu.tools.recon.nmap import (
     _SCAN_TYPE_FLAGS,
     _parse_nmap_xml,
@@ -179,3 +183,200 @@ class TestScanTypeFlags:
     def test_all_scan_types_present(self):
         for scan_type in ("syn", "connect", "udp", "version", "ping", "fast"):
             assert scan_type in _SCAN_TYPE_FLAGS
+
+
+# ---------------------------------------------------------------------------
+# TestNmapScan — async integration tests
+# ---------------------------------------------------------------------------
+
+
+_MINIMAL_NMAP_XML = '<?xml version="1.0"?><nmaprun></nmaprun>'
+_NMAP_XML_WITH_HOST = (
+    '<?xml version="1.0"?><nmaprun>'
+    '<host><status state="up"/>'
+    '<address addr="192.168.1.1" addrtype="ipv4"/>'
+    '<hostnames/>'
+    '<ports>'
+    '<port protocol="tcp" portid="80"><state state="open"/><service name="http"/></port>'
+    '</ports>'
+    '</host>'
+    '</nmaprun>'
+)
+
+
+def _make_nmap_ctx():
+    ctx = AsyncMock()
+    ctx.report_progress = AsyncMock()
+    return ctx
+
+
+def _setup_nmap_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl, mock_stealth):
+    cfg = MagicMock()
+    cfg.tools.paths.nmap = "/usr/bin/nmap"
+    cfg.tools.defaults.scan_timeout = 60
+    mock_config.return_value = cfg
+
+    al = MagicMock()
+    al.check = MagicMock()
+    mock_allowlist.return_value = al
+
+    audit = MagicMock()
+    audit.log_tool_call = AsyncMock()
+    audit.log_target_blocked = AsyncMock()
+    mock_audit.return_value = audit
+
+    rl_ctx = MagicMock()
+    rl_ctx.__aenter__ = AsyncMock(return_value=MagicMock())
+    rl_ctx.__aexit__ = AsyncMock(return_value=False)
+    mock_rl.return_value = rl_ctx
+
+    stealth = MagicMock()
+    stealth.enabled = False
+    stealth.proxy_url = None
+    mock_stealth.return_value = stealth
+
+    mock_run.return_value = (_MINIMAL_NMAP_XML, "", 0)
+
+    return al, audit
+
+
+@patch("tengu.stealth.get_stealth_layer")
+@patch("tengu.tools.recon.nmap.rate_limited")
+@patch("tengu.tools.recon.nmap.resolve_tool_path", return_value="/usr/bin/nmap")
+@patch("tengu.tools.recon.nmap.get_audit_logger")
+@patch("tengu.tools.recon.nmap.make_allowlist_from_config")
+@patch("tengu.tools.recon.nmap.get_config")
+@patch("tengu.tools.recon.nmap.run_command", new_callable=AsyncMock)
+class TestNmapScan:
+    """Async tests for nmap_scan()."""
+
+    async def test_nmap_blocked_target(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl, mock_stealth
+    ):
+        """Allowlist rejection propagates as an exception."""
+        al, _ = _setup_nmap_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl, mock_stealth)
+        al.check.side_effect = ValueError("not allowed")
+        ctx = _make_nmap_ctx()
+
+        from tengu.tools.recon.nmap import nmap_scan
+
+        with pytest.raises(ValueError, match="not allowed"):
+            await nmap_scan(ctx, "192.168.1.1")
+
+    async def test_nmap_timing_flag(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl, mock_stealth
+    ):
+        """timing='T4' results in -T4 flag in args."""
+        _setup_nmap_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl, mock_stealth)
+        ctx = _make_nmap_ctx()
+
+        from tengu.tools.recon.nmap import nmap_scan
+
+        await nmap_scan(ctx, "192.168.1.1", timing="T4")
+
+        call_args = mock_run.call_args[0][0]
+        assert "-T4" in call_args
+
+    async def test_nmap_os_detection(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl, mock_stealth
+    ):
+        """os_detection=True adds -O flag."""
+        _setup_nmap_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl, mock_stealth)
+        ctx = _make_nmap_ctx()
+
+        from tengu.tools.recon.nmap import nmap_scan
+
+        await nmap_scan(ctx, "192.168.1.1", os_detection=True)
+
+        call_args = mock_run.call_args[0][0]
+        assert "-O" in call_args
+
+    async def test_nmap_scripts(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl, mock_stealth
+    ):
+        """scripts='vuln,http-title' results in --script flag in args."""
+        _setup_nmap_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl, mock_stealth)
+        ctx = _make_nmap_ctx()
+
+        from tengu.tools.recon.nmap import nmap_scan
+
+        await nmap_scan(ctx, "192.168.1.1", scripts="vuln,http-title")
+
+        call_args = mock_run.call_args[0][0]
+        assert "--script" in call_args
+
+    async def test_nmap_stealth_proxy(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl, mock_stealth
+    ):
+        """When stealth enabled, inject_proxy_flags is called."""
+        _setup_nmap_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl, mock_stealth)
+        stealth = MagicMock()
+        stealth.enabled = True
+        stealth.proxy_url = "socks5://127.0.0.1:9050"
+        stealth.inject_proxy_flags = MagicMock(side_effect=lambda tool, args: args + ["--proxies", "socks5://127.0.0.1:9050"])
+        mock_stealth.return_value = stealth
+        ctx = _make_nmap_ctx()
+
+        from tengu.tools.recon.nmap import nmap_scan
+
+        await nmap_scan(ctx, "192.168.1.1")
+
+        stealth.inject_proxy_flags.assert_called_once()
+
+    async def test_nmap_custom_ports(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl, mock_stealth
+    ):
+        """Custom ports appear in -p flag."""
+        _setup_nmap_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl, mock_stealth)
+        ctx = _make_nmap_ctx()
+
+        from tengu.tools.recon.nmap import nmap_scan
+
+        await nmap_scan(ctx, "192.168.1.1", ports="80,443")
+
+        call_args = mock_run.call_args[0][0]
+        assert "-p" in call_args
+        idx = call_args.index("-p")
+        assert "80" in call_args[idx + 1]
+
+    async def test_nmap_scan_type_flags(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl, mock_stealth
+    ):
+        """scan_type='syn' results in -sS flag in args."""
+        _setup_nmap_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl, mock_stealth)
+        ctx = _make_nmap_ctx()
+
+        from tengu.tools.recon.nmap import nmap_scan
+
+        await nmap_scan(ctx, "192.168.1.1", scan_type="syn")
+
+        call_args = mock_run.call_args[0][0]
+        assert "-sS" in call_args
+
+    async def test_nmap_output_has_hosts(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl, mock_stealth
+    ):
+        """Valid XML output with host results in hosts_found > 0."""
+        _setup_nmap_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl, mock_stealth)
+        mock_run.return_value = (_NMAP_XML_WITH_HOST, "", 0)
+        ctx = _make_nmap_ctx()
+
+        from tengu.tools.recon.nmap import nmap_scan
+
+        result = await nmap_scan(ctx, "192.168.1.1")
+
+        assert result["hosts_found"] == 1
+        assert result["hosts"][0]["address"] == "192.168.1.1"
+
+    async def test_nmap_tool_key(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl, mock_stealth
+    ):
+        """Result 'tool' key equals 'nmap'."""
+        _setup_nmap_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl, mock_stealth)
+        ctx = _make_nmap_ctx()
+
+        from tengu.tools.recon.nmap import nmap_scan
+
+        result = await nmap_scan(ctx, "192.168.1.1")
+
+        assert result["tool"] == "nmap"

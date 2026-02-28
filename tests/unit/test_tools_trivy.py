@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -197,3 +198,154 @@ class TestParseTrivyOutput:
         output = _make_trivy_output([entry])
         result = _parse_trivy_output(output)
         assert result["severity_counts"]["UNKNOWN"] >= 1
+
+
+# ---------------------------------------------------------------------------
+# TestTrivyScan — async integration tests
+# ---------------------------------------------------------------------------
+
+
+def _make_trivy_ctx():
+    ctx = AsyncMock()
+    ctx.report_progress = AsyncMock()
+    return ctx
+
+
+def _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl):
+    cfg = MagicMock()
+    cfg.tools.defaults.scan_timeout = 60
+    mock_config.return_value = cfg
+
+    audit = MagicMock()
+    audit.log_tool_call = AsyncMock()
+    audit.log_target_blocked = AsyncMock()
+    mock_audit.return_value = audit
+
+    rl_ctx = MagicMock()
+    rl_ctx.__aenter__ = AsyncMock(return_value=MagicMock())
+    rl_ctx.__aexit__ = AsyncMock(return_value=False)
+    mock_rl.return_value = rl_ctx
+
+    mock_run.return_value = ("", "", 0)
+    return audit
+
+
+@patch("tengu.tools.container.trivy.sanitize_wordlist_path", side_effect=lambda p: p)
+@patch("tengu.tools.container.trivy.rate_limited")
+@patch("tengu.tools.container.trivy.resolve_tool_path", return_value="/usr/bin/trivy")
+@patch("tengu.tools.container.trivy.get_audit_logger")
+@patch("tengu.tools.container.trivy.get_config")
+@patch("tengu.tools.container.trivy.run_command", new_callable=AsyncMock)
+class TestTrivyScan:
+    """Async tests for trivy_scan()."""
+
+    async def test_trivy_image_scan(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+        """scan_type='image' passes 'image' subcommand to run_command."""
+        _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
+        ctx = _make_trivy_ctx()
+
+        from tengu.tools.container.trivy import trivy_scan
+
+        await trivy_scan(ctx, "nginx:latest", scan_type="image")
+
+        call_args = mock_run.call_args[0][0]
+        assert "image" in call_args
+
+    async def test_trivy_repo_scan(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+        """scan_type='repo' passes 'repo' subcommand."""
+        _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
+        ctx = _make_trivy_ctx()
+
+        from tengu.tools.container.trivy import trivy_scan
+
+        with patch("tengu.security.sanitizer.sanitize_url", side_effect=lambda u: u):
+            await trivy_scan(ctx, "https://github.com/test/repo", scan_type="repo")
+
+        call_args = mock_run.call_args[0][0]
+        assert "repo" in call_args
+
+    async def test_trivy_filesystem_scan(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+        """scan_type='fs' passes 'fs' subcommand."""
+        _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
+        ctx = _make_trivy_ctx()
+
+        from tengu.tools.container.trivy import trivy_scan
+
+        await trivy_scan(ctx, "/tmp", scan_type="fs")
+
+        call_args = mock_run.call_args[0][0]
+        assert "fs" in call_args
+
+    async def test_trivy_invalid_scan_type(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+        """Invalid scan_type returns error dict without calling run_command."""
+        _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
+        ctx = _make_trivy_ctx()
+
+        from tengu.tools.container.trivy import trivy_scan
+
+        result = await trivy_scan(ctx, "nginx:latest", scan_type="invalid")
+
+        assert "error" in result
+        mock_run.assert_not_called()
+
+    async def test_trivy_severity_filter(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+        """severity filter appears in --severity flag."""
+        _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
+        ctx = _make_trivy_ctx()
+
+        from tengu.tools.container.trivy import trivy_scan
+
+        await trivy_scan(ctx, "nginx:latest", scan_type="image", severity="HIGH,CRITICAL")
+
+        call_args = mock_run.call_args[0][0]
+        assert "--severity" in call_args
+        idx = call_args.index("--severity")
+        assert "HIGH" in call_args[idx + 1]
+
+    async def test_trivy_output_parsed(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+        """JSON output is parsed into vulnerability list."""
+        _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
+        vuln = _make_vuln(severity="CRITICAL")
+        entry = _make_result_entry(vulns=[vuln])
+        mock_run.return_value = (_make_trivy_output([entry]), "", 0)
+        ctx = _make_trivy_ctx()
+
+        from tengu.tools.container.trivy import trivy_scan
+
+        result = await trivy_scan(ctx, "nginx:latest", scan_type="image")
+
+        assert result["total_vulnerabilities"] == 1
+
+    async def test_trivy_no_vulns(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+        """Empty output → total_vulnerabilities=0."""
+        _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
+        mock_run.return_value = ("", "", 0)
+        ctx = _make_trivy_ctx()
+
+        from tengu.tools.container.trivy import trivy_scan
+
+        result = await trivy_scan(ctx, "nginx:latest", scan_type="image")
+
+        assert result["total_vulnerabilities"] == 0
+
+    async def test_trivy_tool_key(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+        """Result 'tool' key equals 'trivy'."""
+        _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
+        ctx = _make_trivy_ctx()
+
+        from tengu.tools.container.trivy import trivy_scan
+
+        result = await trivy_scan(ctx, "nginx:latest", scan_type="image")
+
+        assert result["tool"] == "trivy"
+
+    async def test_trivy_audit_logged(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+        """audit.log_tool_call is called during execution."""
+        audit = _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
+        ctx = _make_trivy_ctx()
+
+        from tengu.tools.container.trivy import trivy_scan
+
+        await trivy_scan(ctx, "nginx:latest", scan_type="image")
+
+        assert audit.log_tool_call.call_count >= 1

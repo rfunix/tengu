@@ -157,3 +157,135 @@ class TestModuleImport:
     def test_fastmcp_imported(self):
         """FastMCP is importable from server module namespace."""
         assert FastMCP is not None
+
+
+# ---------------------------------------------------------------------------
+# TestServerResourceHandlers — direct calls to resource handler functions
+# ---------------------------------------------------------------------------
+
+
+class TestServerResourceHandlers:
+    """Call resource handler functions directly to test their behavior."""
+
+    def test_owasp_category_valid_id(self):
+        """Valid OWASP category ID returns JSON with id field."""
+        import json as _json
+
+        result = server.resource_owasp_category("A01")
+        data = _json.loads(result)
+        assert "error" not in data
+        assert data.get("id") == "A01"
+
+    def test_owasp_category_invalid_id(self):
+        """Invalid OWASP category ID returns JSON with error field."""
+        import json as _json
+
+        result = server.resource_owasp_category("X99")
+        data = _json.loads(result)
+        assert "error" in data
+
+    def test_owasp_checklist_valid_id(self):
+        """Valid category ID + checklist returns JSON with how_to_test."""
+        import json as _json
+
+        result = server.resource_owasp_checklist("A01")
+        data = _json.loads(result)
+        assert "error" not in data
+        # Checklist must have at minimum the id field
+        assert data.get("id") == "A01"
+
+    def test_owasp_checklist_invalid_id(self):
+        """Invalid category ID for checklist returns JSON with error."""
+        import json as _json
+
+        result = server.resource_owasp_checklist("X99")
+        data = _json.loads(result)
+        assert "error" in data
+
+    def test_ptes_phase_valid(self):
+        """Phase number 1-7 returns JSON phase data."""
+        import json as _json
+
+        result = server.resource_ptes_phase("1")
+        data = _json.loads(result)
+        assert "error" not in data
+        assert data.get("number") == 1
+
+    def test_ptes_phase_invalid_number(self):
+        """Phase 99 returns JSON with error field."""
+        import json as _json
+
+        result = server.resource_ptes_phase("99")
+        data = _json.loads(result)
+        assert "error" in data
+
+    def test_ptes_phase_invalid_string(self):
+        """Non-integer phase string returns JSON with error field."""
+        import json as _json
+
+        result = server.resource_ptes_phase("notanumber")
+        data = _json.loads(result)
+        assert "error" in data
+
+    def test_tool_usage_valid_nmap(self):
+        """'nmap' tool usage guide returns JSON with name field."""
+        import json as _json
+
+        result = server.resource_tool_usage("nmap")
+        data = _json.loads(result)
+        assert "error" not in data
+        assert data.get("name") == "nmap"
+
+    def test_tool_usage_invalid_tool(self):
+        """Unknown tool name returns JSON with error and available list."""
+        import json as _json
+
+        result = server.resource_tool_usage("unknowntool9999")
+        data = _json.loads(result)
+        assert "error" in data
+        assert "available" in data
+
+    def test_payloads_xss_type(self):
+        """payload_type='xss' returns xss payloads or error if data missing."""
+        import json as _json
+
+        result = server.resource_payloads("xss")
+        data = _json.loads(result)
+        # Either returns the XSS payloads or an error if data file is missing
+        assert isinstance(data, (dict, list))
+
+    def test_payloads_sqli_type(self):
+        """payload_type='sqli' returns sqli payloads or error if data missing."""
+        import json as _json
+
+        result = server.resource_payloads("sqli")
+        data = _json.loads(result)
+        assert isinstance(data, (dict, list))
+
+    def test_owasp_top10_list(self):
+        """resource_owasp_top10 returns JSON with categories list."""
+        import json as _json
+
+        result = server.resource_owasp_top10()
+        data = _json.loads(result)
+        assert "categories" in data
+        assert len(data["categories"]) > 0
+
+    def test_ptes_overview(self):
+        """resource_ptes_overview returns JSON with phases list."""
+        import json as _json
+
+        result = server.resource_ptes_overview()
+        data = _json.loads(result)
+        assert "phases" in data
+        assert len(data["phases"]) == 7
+
+    def test_mitre_technique_sanitizes_id(self):
+        """Technique ID with special chars is sanitized (no injection)."""
+        import json as _json
+
+        # Injection attempt — should be sanitized
+        result = server.resource_mitre_technique("T1566; rm -rf /")
+        data = _json.loads(result)
+        # Result is either a valid technique or an error — never a crash
+        assert isinstance(data, dict)
