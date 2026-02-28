@@ -7,7 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from tengu.tools.web.cors import _TEST_ORIGINS, _assess_severity, test_cors
+from tengu.tools.web.cors import _TEST_ORIGINS, _assess_severity
+from tengu.tools.web.cors import test_cors as cors_test
 
 # ---------------------------------------------------------------------------
 # TestAssessSeverity
@@ -107,7 +108,7 @@ class TestTestCors:
         mock_audit_fn.return_value = mock_audit
 
         with pytest.raises(Exception, match="Not allowed"):
-            await test_cors(mock_ctx, "https://example.com")
+            await cors_test(mock_ctx, "https://example.com")
 
         mock_audit.log_target_blocked.assert_awaited_once()
 
@@ -128,7 +129,7 @@ class TestTestCors:
         mock_stealth_layer, mock_client = _make_stealth_client(safe_resp)
         mock_stealth_fn.return_value = mock_stealth_layer
 
-        result = await test_cors(mock_ctx, "https://example.com")
+        result = await cors_test(mock_ctx, "https://example.com")
         assert result["vulnerable"] is False
         assert result["issues"] == []
 
@@ -161,7 +162,7 @@ class TestTestCors:
         mock_stealth_layer.create_http_client.return_value = mock_client
         mock_stealth_fn.return_value = mock_stealth_layer
 
-        result = await test_cors(mock_ctx, "https://example.com")
+        result = await cors_test(mock_ctx, "https://example.com")
         assert result["vulnerable"] is True
         assert len(result["issues"]) > 0
 
@@ -193,7 +194,7 @@ class TestTestCors:
         mock_stealth_layer.create_http_client.return_value = mock_client
         mock_stealth_fn.return_value = mock_stealth_layer
 
-        result = await test_cors(mock_ctx, "https://example.com")
+        result = await cors_test(mock_ctx, "https://example.com")
         assert result["vulnerable"] is True
         assert result["severity"] == "critical"
         # There should be a CRITICAL issue in the issues list
@@ -230,7 +231,7 @@ class TestTestCors:
         mock_stealth_layer.create_http_client.return_value = mock_client
         mock_stealth_fn.return_value = mock_stealth_layer
 
-        result = await test_cors(mock_ctx, "https://example.com")
+        result = await cors_test(mock_ctx, "https://example.com")
         assert result["vulnerable"] is True
         assert any("null" in issue.lower() for issue in result["issues"])
 
@@ -250,7 +251,7 @@ class TestTestCors:
         mock_stealth_layer, mock_client = _make_stealth_client(wildcard_resp)
         mock_stealth_fn.return_value = mock_stealth_layer
 
-        result = await test_cors(mock_ctx, "https://example.com")
+        result = await cors_test(mock_ctx, "https://example.com")
         assert result["vulnerable"] is True
 
     @patch("tengu.stealth.get_stealth_layer")
@@ -275,7 +276,7 @@ class TestTestCors:
         mock_stealth_layer.create_http_client.return_value = mock_client
         mock_stealth_fn.return_value = mock_stealth_layer
 
-        result = await test_cors(mock_ctx, "https://example.com")
+        result = await cors_test(mock_ctx, "https://example.com")
         # No crash; no results since all failed
         assert result["tool"] == "test_cors"
         assert result["vulnerable"] is False
@@ -296,7 +297,7 @@ class TestTestCors:
         mock_stealth_layer, mock_client = _make_stealth_client(safe_resp)
         mock_stealth_fn.return_value = mock_stealth_layer
 
-        await test_cors(mock_ctx, "https://example.com", custom_origins=["https://custom.com"])
+        await cors_test(mock_ctx, "https://example.com", custom_origins=["https://custom.com"])
         # Verify that options was called more than the default number of test origins
         call_count = mock_client.options.call_count
         assert call_count >= len(_TEST_ORIGINS) + 1
@@ -318,7 +319,7 @@ class TestTestCors:
         mock_stealth_layer, mock_client = _make_stealth_client(vuln_resp)
         mock_stealth_fn.return_value = mock_stealth_layer
 
-        result = await test_cors(mock_ctx, "https://example.com")
+        result = await cors_test(mock_ctx, "https://example.com")
         assert result["vulnerable"] is True
         assert result["remediation"] is not None
 
@@ -338,7 +339,7 @@ class TestTestCors:
         mock_stealth_layer, mock_client = _make_stealth_client(safe_resp)
         mock_stealth_fn.return_value = mock_stealth_layer
 
-        result = await test_cors(mock_ctx, "https://example.com")
+        result = await cors_test(mock_ctx, "https://example.com")
         assert result["remediation"] is None
 
     @patch("tengu.stealth.get_stealth_layer")
@@ -357,5 +358,5 @@ class TestTestCors:
         mock_stealth_layer, mock_client = _make_stealth_client(safe_resp)
         mock_stealth_fn.return_value = mock_stealth_layer
 
-        result = await test_cors(mock_ctx, "https://example.com")
+        result = await cors_test(mock_ctx, "https://example.com")
         assert result["tool"] == "test_cors"

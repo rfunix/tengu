@@ -154,9 +154,8 @@ class TestSslTlsCheck:
         mock_audit.log_target_blocked = AsyncMock()
         mock_audit_fn.return_value = mock_audit
 
-        with patch.dict(sys.modules, _mock_sslyze_modules()):
-            with pytest.raises(Exception, match="Not in allowlist"):
-                await ssl_tls_check(mock_ctx, "example.com")
+        with patch.dict(sys.modules, _mock_sslyze_modules()), pytest.raises(Exception, match="Not in allowlist"):
+            await ssl_tls_check(mock_ctx, "example.com")
 
     @patch("tengu.tools.web.ssl_tls.make_allowlist_from_config")
     @patch("tengu.tools.web.ssl_tls.get_audit_logger")
@@ -169,19 +168,21 @@ class TestSslTlsCheck:
         mock_audit.log_tool_call = AsyncMock()
         mock_audit_fn.return_value = mock_audit
 
-        with patch.dict(sys.modules, _mock_sslyze_modules()):
-            with patch("tengu.tools.web.ssl_tls.asyncio.wait_for", new_callable=AsyncMock) as mock_wait:
-                with patch("tengu.tools.web.ssl_tls._build_ssl_result") as mock_build:
-                    mock_ssl_result = SSLResult(host="example.com", port=443)
-                    mock_ssl_result.protocols = ["TLSv1.2", "TLSv1.3"]
-                    mock_ssl_result.certificate_valid = True
-                    mock_ssl_result.grade = "A+"
-                    mock_build.return_value = mock_ssl_result
-                    mock_wait.return_value = MagicMock()
+        with (
+            patch.dict(sys.modules, _mock_sslyze_modules()),
+            patch("tengu.tools.web.ssl_tls.asyncio.wait_for", new_callable=AsyncMock) as mock_wait,
+            patch("tengu.tools.web.ssl_tls._build_ssl_result") as mock_build,
+        ):
+            mock_ssl_result = SSLResult(host="example.com", port=443)
+            mock_ssl_result.protocols = ["TLSv1.2", "TLSv1.3"]
+            mock_ssl_result.certificate_valid = True
+            mock_ssl_result.grade = "A+"
+            mock_build.return_value = mock_ssl_result
+            mock_wait.return_value = MagicMock()
 
-                    result = await ssl_tls_check(mock_ctx, "example.com", port=99999)
-                    # port out of range → clamped to 443
-                    assert result["port"] == 443
+            result = await ssl_tls_check(mock_ctx, "example.com", port=99999)
+            # port out of range → clamped to 443
+            assert result["port"] == 443
 
     @patch("tengu.tools.web.ssl_tls.make_allowlist_from_config")
     @patch("tengu.tools.web.ssl_tls.get_audit_logger")
@@ -219,12 +220,14 @@ class TestSslTlsCheck:
         mock_audit.log_tool_call = AsyncMock()
         mock_audit_fn.return_value = mock_audit
 
-        with patch.dict(sys.modules, _mock_sslyze_modules()):
-            with patch("tengu.tools.web.ssl_tls.asyncio.wait_for", new_callable=AsyncMock) as mock_wait:
-                mock_wait.side_effect = TimeoutError("timed out")
-                result = await ssl_tls_check(mock_ctx, "example.com")
-                assert "error" in result
-                assert "timed out" in result["error"].lower()
+        with (
+            patch.dict(sys.modules, _mock_sslyze_modules()),
+            patch("tengu.tools.web.ssl_tls.asyncio.wait_for", new_callable=AsyncMock) as mock_wait,
+        ):
+            mock_wait.side_effect = TimeoutError("timed out")
+            result = await ssl_tls_check(mock_ctx, "example.com")
+            assert "error" in result
+            assert "timed out" in result["error"].lower()
 
     @patch("tengu.tools.web.ssl_tls.make_allowlist_from_config")
     @patch("tengu.tools.web.ssl_tls.get_audit_logger")
@@ -237,11 +240,13 @@ class TestSslTlsCheck:
         mock_audit.log_tool_call = AsyncMock()
         mock_audit_fn.return_value = mock_audit
 
-        with patch.dict(sys.modules, _mock_sslyze_modules()):
-            with patch("tengu.tools.web.ssl_tls.asyncio.wait_for", new_callable=AsyncMock) as mock_wait:
-                mock_wait.side_effect = Exception("connection refused")
-                result = await ssl_tls_check(mock_ctx, "example.com")
-                assert "error" in result
+        with (
+            patch.dict(sys.modules, _mock_sslyze_modules()),
+            patch("tengu.tools.web.ssl_tls.asyncio.wait_for", new_callable=AsyncMock) as mock_wait,
+        ):
+            mock_wait.side_effect = Exception("connection refused")
+            result = await ssl_tls_check(mock_ctx, "example.com")
+            assert "error" in result
 
     @patch("tengu.tools.web.ssl_tls._build_ssl_result")
     @patch("tengu.tools.web.ssl_tls.make_allowlist_from_config")
@@ -264,10 +269,12 @@ class TestSslTlsCheck:
         mock_ssl_result.grade = "A"
         mock_build.return_value = mock_ssl_result
 
-        with patch.dict(sys.modules, _mock_sslyze_modules()):
-            with patch("tengu.tools.web.ssl_tls.asyncio.wait_for", new_callable=AsyncMock) as mock_wait:
-                mock_wait.return_value = MagicMock()
-                result = await ssl_tls_check(mock_ctx, "example.com", port=443)
+        with (
+            patch.dict(sys.modules, _mock_sslyze_modules()),
+            patch("tengu.tools.web.ssl_tls.asyncio.wait_for", new_callable=AsyncMock) as mock_wait,
+        ):
+            mock_wait.return_value = MagicMock()
+            result = await ssl_tls_check(mock_ctx, "example.com", port=443)
 
         assert result["tool"] == "ssl_tls_check"
         assert result["grade"] == "A"
@@ -292,10 +299,12 @@ class TestSslTlsCheck:
         mock_ssl_result.grade = "F"
         mock_build.return_value = mock_ssl_result
 
-        with patch.dict(sys.modules, _mock_sslyze_modules()):
-            with patch("tengu.tools.web.ssl_tls.asyncio.wait_for", new_callable=AsyncMock) as mock_wait:
-                mock_wait.return_value = MagicMock()
-                result = await ssl_tls_check(mock_ctx, "example.com")
+        with (
+            patch.dict(sys.modules, _mock_sslyze_modules()),
+            patch("tengu.tools.web.ssl_tls.asyncio.wait_for", new_callable=AsyncMock) as mock_wait,
+        ):
+            mock_wait.return_value = MagicMock()
+            result = await ssl_tls_check(mock_ctx, "example.com")
 
         assert result["weak_protocols"] == ["TLSv1.0"]
         assert result["grade"] == "F"
@@ -320,10 +329,12 @@ class TestSslTlsCheck:
         mock_ssl_result.grade = "F"
         mock_build.return_value = mock_ssl_result
 
-        with patch.dict(sys.modules, _mock_sslyze_modules()):
-            with patch("tengu.tools.web.ssl_tls.asyncio.wait_for", new_callable=AsyncMock) as mock_wait:
-                mock_wait.return_value = MagicMock()
-                result = await ssl_tls_check(mock_ctx, "example.com")
+        with (
+            patch.dict(sys.modules, _mock_sslyze_modules()),
+            patch("tengu.tools.web.ssl_tls.asyncio.wait_for", new_callable=AsyncMock) as mock_wait,
+        ):
+            mock_wait.return_value = MagicMock()
+            result = await ssl_tls_check(mock_ctx, "example.com")
 
         assert "Heartbleed" in result["vulnerabilities"][0]
 
@@ -347,10 +358,12 @@ class TestSslTlsCheck:
         mock_ssl_result.grade = "A+"
         mock_build.return_value = mock_ssl_result
 
-        with patch.dict(sys.modules, _mock_sslyze_modules()):
-            with patch("tengu.tools.web.ssl_tls.asyncio.wait_for", new_callable=AsyncMock) as mock_wait:
-                mock_wait.return_value = MagicMock()
-                result = await ssl_tls_check(mock_ctx, "example.com")
+        with (
+            patch.dict(sys.modules, _mock_sslyze_modules()),
+            patch("tengu.tools.web.ssl_tls.asyncio.wait_for", new_callable=AsyncMock) as mock_wait,
+        ):
+            mock_wait.return_value = MagicMock()
+            result = await ssl_tls_check(mock_ctx, "example.com")
 
         assert result["port"] == 443
 
