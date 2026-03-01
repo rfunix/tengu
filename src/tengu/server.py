@@ -102,6 +102,7 @@ from tengu.tools.recon.amass import amass_enum
 from tengu.tools.recon.dns import dns_enumerate
 from tengu.tools.recon.dnsrecon import dnsrecon_scan
 from tengu.tools.recon.gowitness import gowitness_screenshot
+from tengu.tools.recon.httrack import httrack_mirror
 from tengu.tools.recon.masscan import masscan_scan
 from tengu.tools.recon.nmap import nmap_scan
 from tengu.tools.recon.subfinder import subfinder_enum
@@ -188,6 +189,7 @@ mcp.tool()(amass_enum)
 mcp.tool()(dnsrecon_scan)
 mcp.tool()(subjack_check)
 mcp.tool()(gowitness_screenshot)
+mcp.tool()(httrack_mirror)
 
 # Web scanning tools (v0.1)
 mcp.tool()(nuclei_scan)

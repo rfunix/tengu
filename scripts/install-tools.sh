@@ -162,6 +162,13 @@ install_amass() {
     go_install "github.com/owasp-amass/amass/v4/...@master" "amass"
 }
 
+install_httrack() {
+    if is_installed httrack; then log_ok "httrack already installed"; return; fi
+    log_info "Installing httrack..."
+    pkg_install httrack
+    is_installed httrack && log_ok "httrack installed" || log_warn "httrack installation may have failed"
+}
+
 # ── WEB SCANNING TOOLS ─────────────────────────────────────────────────────────
 install_nuclei() {
     if is_installed nuclei; then
@@ -655,6 +662,7 @@ main() {
             install_masscan
             install_subfinder
             install_amass
+            install_httrack
             install_nuclei
             install_nikto
             install_ffuf
@@ -690,6 +698,7 @@ main() {
             install_masscan
             install_subfinder
             install_amass
+            install_httrack
             ;;
         --web)
             log_section "Installing Web Scanning Tools"

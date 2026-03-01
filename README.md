@@ -19,13 +19,13 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
   <a href="https://python.org"><img src="https://img.shields.io/badge/python-3.12+-blue.svg" alt="Python"></a>
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-compatible-green.svg" alt="MCP"></a>
-  <img src="https://img.shields.io/badge/tools-56-orange.svg" alt="Tools">
+  <img src="https://img.shields.io/badge/tools-57-orange.svg" alt="Tools">
   <img src="https://img.shields.io/badge/version-0.2.1-brightgreen.svg" alt="Version">
 </p>
 
 ---
 
-**Tengu** is an MCP server that turns Claude into a penetration testing copilot. It orchestrates 56 security tools — from Nmap to Metasploit — with built-in safety controls, audit logging, and professional reporting.
+**Tengu** is an MCP server that turns Claude into a penetration testing copilot. It orchestrates 57 security tools — from Nmap to Metasploit — with built-in safety controls, audit logging, and professional reporting.
 
 - **What is it?** An MCP server that connects Claude to industry-standard pentest tools
 - **Why use it?** Automates recon and scanning while keeping the human in control of exploits
@@ -33,7 +33,7 @@
 
 ### Key Features
 
-- **56 Tools** — Nmap, Metasploit, SQLMap, Nuclei, Hydra, Burp-compatible ZAP, and more
+- **57 Tools** — Nmap, Metasploit, SQLMap, Nuclei, Hydra, Burp-compatible ZAP, and more
 - **AI-Orchestrated** — Claude decides the next tool based on previous findings
 - **Safety First** — Allowlist, rate limiting, audit logs, and human-in-the-loop for destructive actions
 - **Auto Reports** — Correlate findings and generate professional pentest reports (MD/HTML/PDF)
@@ -136,7 +136,7 @@ allowed_hosts = ["192.168.1.0/24", "example.com"]
 
 | Category | Tools | Count |
 |----------|-------|-------|
-| Reconnaissance | Nmap, Masscan, Amass, Subfinder, theHarvester, WhatWeb, Gowitness | 7 |
+| Reconnaissance | Nmap, Masscan, Amass, Subfinder, theHarvester, WhatWeb, Gowitness, HTTrack | 8 |
 | Web Scanning | Nikto, Nuclei, FFUF, Gobuster, WPScan, Arjun, OWASP ZAP | 7 |
 | SSL / TLS | sslyze, testssl.sh, HTTP headers analysis, CORS tester | 4 |
 | DNS | DNS Enumerate, DNSRecon, Subjack, WHOIS | 4 |
@@ -154,7 +154,7 @@ allowed_hosts = ["192.168.1.0/24", "example.com"]
 | Utility | Tool checker, target validator | 2 |
 
 <details>
-<summary>Full tool list (56 tools)</summary>
+<summary>Full tool list (57 tools)</summary>
 
 ### Reconnaissance
 | Tool | Description |
@@ -168,6 +168,7 @@ allowed_hosts = ["192.168.1.0/24", "example.com"]
 | `whois_lookup` | WHOIS domain and IP lookup |
 | `subjack_check` | Subdomain takeover detection |
 | `gowitness_screenshot` | Web screenshot capture for documentation |
+| `httrack_mirror` | Full website mirror for offline analysis and forensics |
 
 ### Web Scanning
 | Tool | Description |

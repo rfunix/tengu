@@ -19,8 +19,8 @@ pentesting tools to AI assistants through a clean, secure interface.
 | Logging         | structlog (JSON, structured)                      |
 | Entry point     | `src/tengu/server.py` → `FastMCP("Tengu")`        |
 | Config file     | `tengu.toml` at project root                      |
-| Test suite      | 1931+ tests (growing to ~2050 with round 3), 0 lint errors |
-| Tools           | 56 MCP tools                                      |
+| Test suite      | 1931+ tests, 0 lint errors |
+| Tools           | 57 MCP tools                                      |
 | Resources       | 19 MCP resources                                  |
 | Prompts         | 34 MCP prompts                                    |
 
@@ -109,7 +109,7 @@ src/tengu/
 ├── tools/
 │   ├── utility.py         # check_tools, validate_target
 │   ├── recon/             # nmap, masscan, subfinder, dns, whois, amass, dnsrecon,
-│   │                      # subjack, gowitness
+│   │                      # subjack, gowitness, httrack
 │   ├── web/               # nuclei, nikto, ffuf, headers, cors, ssl_tls, gobuster,
 │   │                      # wpscan, testssl
 │   ├── osint/             # theharvester, shodan, whatweb

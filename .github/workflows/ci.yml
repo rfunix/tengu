@@ -21,6 +21,8 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
@@ -31,5 +33,25 @@ jobs:
       - name: Lint (ruff)
         run: uv run ruff check src/ tests/
 
-      - name: Test (pytest)
-        run: uv run pytest tests/unit tests/security -v --tb=short
+      - name: Format check (ruff)
+        run: uv run ruff format --check src/ tests/
+
+      - name: Type check (mypy)
+        run: uv run mypy src/
+
+      - name: Test with coverage (pytest)
+        run: |
+          uv run pytest tests/unit tests/security \
+            --cov=src/tengu \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            --cov-fail-under=80 \
+            -v --tb=short
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: matrix.python-version == '3.12'
+        with:
+          name: coverage-report
+          path: coverage.xml
+          retention-days: 7

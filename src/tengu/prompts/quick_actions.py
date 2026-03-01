@@ -110,6 +110,12 @@ def explore_url(url: str, depth: str = "normal") -> str:
 ## Phase 6 — API and GraphQL (deep only)
 15. Check for GraphQL: `graphql_security_check(url="{url}/graphql")`
 16. `arjun_discover(url="{url}/api")` — API parameter discovery
+
+## Phase 7 — Offline Content Analysis (deep only)
+17. `httrack_mirror(target="{url}", depth=2, include_assets=False)` — mirror HTML/JS for offline inspection
+    - Review `interesting_findings` in the result: hardcoded API keys, credentials, dev comments, internal URLs
+    - The mirrored JS bundle captures secrets that never appear in git repos (compiled/minified frontend code)
+    - Output dir: /tmp/httrack — search with `grep -r -e api_key -e secret -e token /tmp/httrack/`
 """ if depth == "deep" else ""}
 ## Scoring
 - After all scans: `score_risk(findings=[...])` — prioritize by CVSS
@@ -120,7 +126,7 @@ def explore_url(url: str, depth: str = "normal") -> str:
 |-------|-----------|
 | quick | analyze_headers, test_cors, ssl_tls_check, whatweb_scan |
 | normal | + ffuf_fuzz, gobuster_scan, nuclei_scan, nikto_scan |
-| deep | + sqlmap_scan, xss_scan, arjun_discover, graphql_security_check |"""
+| deep | + sqlmap_scan, xss_scan, arjun_discover, graphql_security_check, httrack_mirror |"""
 
 
 def go_stealth(proxy_url: str = "") -> str:
@@ -244,6 +250,16 @@ def find_secrets(target: str, scan_type: str = "git") -> str:
 - Search for additional secret locations:
   - `ffuf_fuzz(url="<target-url>/FUZZ", wordlist="...")` — exposed `.env`, `.git`, config files
   - Check: `/.git/config`, `/.env`, `/config.json`, `/appsettings.json`
+
+## Phase 5 — Web Frontend Secret Hunting
+If the target has a web interface, many apps bundle secrets into compiled/minified JavaScript
+that never appear in git history. Mirror the site to capture what's actually served:
+
+- `httrack_mirror(target="<target-web-url>", depth=2, include_assets=False)` — download all HTML/JS
+  - Check `interesting_findings` in the result for automatic pattern matches
+  - Manual sweep: `grep -r -e api_key -e apiKey -e secret -e token -e password -e Authorization /tmp/httrack/`
+  - Look for: React/Vue/Angular config objects, webpack bundle exports, inline `<script>` blocks
+  - Use `depth=1` for SPAs (single-page apps load everything on the first page)
 
 ## Severity Reference
 | Finding | Severity | Action |
