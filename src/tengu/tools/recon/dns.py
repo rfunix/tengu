@@ -7,6 +7,7 @@ from typing import Literal
 import dns.asyncresolver
 import dns.exception
 import dns.rdatatype
+import dns.resolver
 import structlog
 from fastmcp import Context
 
@@ -89,9 +90,9 @@ async def dns_enumerate(
                     value=str(rdata),
                     ttl=answers.ttl,
                 ))
-        except dns.exception.NXDOMAIN:
+        except dns.resolver.NXDOMAIN:
             errors[rtype] = "NXDOMAIN"
-        except dns.exception.NoAnswer:
+        except dns.resolver.NoAnswer:
             pass  # Record type simply doesn't exist
         except dns.exception.Timeout:
             errors[rtype] = "timeout"
