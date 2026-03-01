@@ -12,6 +12,7 @@ def create_stealth_client(
     proxy_url: str | None = None,
     user_agent: str | None = None,
     timeout: float = 30.0,
+    follow_redirects: bool = True,
     **kwargs,
 ) -> httpx.AsyncClient:
     """Create an httpx AsyncClient configured for stealth operation.
@@ -31,7 +32,7 @@ def create_stealth_client(
     client_kwargs: dict = {
         "timeout": timeout,
         "headers": headers,
-        "follow_redirects": True,
+        "follow_redirects": follow_redirects,
     }
 
     if proxy_url:

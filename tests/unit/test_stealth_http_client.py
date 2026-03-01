@@ -34,6 +34,10 @@ class TestCreateStealthClient:
         client = create_stealth_client()
         assert client.follow_redirects is True
 
+    def test_follow_redirects_can_be_disabled(self):
+        client = create_stealth_client(follow_redirects=False)
+        assert client.follow_redirects is False
+
     def test_no_proxy_by_default(self):
         client = create_stealth_client()
         # Client should be created without crashing even with no proxy
