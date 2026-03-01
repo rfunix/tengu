@@ -1,4 +1,5 @@
 """Unit tests for testssl_check: tool discovery, validation, and JSON parsing."""
+
 from __future__ import annotations
 
 import asyncio
@@ -48,8 +49,16 @@ def ctx():
     return _make_ctx()
 
 
-async def _run_testssl_async(ctx, host="example.com", port=443, severity_threshold="LOW",
-                             stdout="[]", returncode=0, which_side_effect=None, blocked=False):
+async def _run_testssl_async(
+    ctx,
+    host="example.com",
+    port=443,
+    severity_threshold="LOW",
+    stdout="[]",
+    returncode=0,
+    which_side_effect=None,
+    blocked=False,
+):
     """Run testssl_check under full mock."""
     from tengu.tools.web.testssl import testssl_check
 
@@ -242,9 +251,17 @@ class TestTestsslReturnStructure:
     def test_return_keys_present(self, ctx):
         result = _run_testssl(ctx)
         expected_keys = {
-            "tool", "host", "port", "command", "duration_seconds",
-            "findings_count", "vulnerabilities_count",
-            "supported_protocols", "vulnerabilities", "all_findings", "raw_output",
+            "tool",
+            "host",
+            "port",
+            "command",
+            "duration_seconds",
+            "findings_count",
+            "vulnerabilities_count",
+            "supported_protocols",
+            "vulnerabilities",
+            "all_findings",
+            "raw_output",
         }
         assert expected_keys.issubset(result.keys())
 

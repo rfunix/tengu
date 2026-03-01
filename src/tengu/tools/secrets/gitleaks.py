@@ -22,12 +22,12 @@ _VALID_REPORT_FORMATS = {"json", "csv", "sarif"}
 
 
 async def gitleaks_scan(
-    ctx: Context,  # type: ignore[type-arg]
+    ctx: Context,
     target: str,
     scan_type: str = "detect",
     report_format: str = "json",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Scan a repository or directory for secrets and credentials using Gitleaks.
 
     Args:
@@ -47,7 +47,11 @@ async def gitleaks_scan(
     """
     cfg = get_config()
     audit = get_audit_logger()
-    params: dict[str, object] = {"target": target, "scan_type": scan_type, "report_format": report_format}
+    params: dict[str, object] = {
+        "target": target,
+        "scan_type": scan_type,
+        "report_format": report_format,
+    }
 
     # Validate scan_type
     scan_type = scan_type.strip().lower()
@@ -71,10 +75,14 @@ async def gitleaks_scan(
     args: list[str] = [
         tool_path,
         scan_type,
-        "--source", target,
-        "--report-format", report_format,
-        "--report-path", "/dev/stdout",
-        "--exit-code", "0",
+        "--source",
+        target,
+        "--report-format",
+        report_format,
+        "--report-path",
+        "/dev/stdout",
+        "--exit-code",
+        "0",
     ]
 
     await ctx.report_progress(0, 100, f"Starting Gitleaks {scan_type} scan on {target}...")
@@ -96,7 +104,9 @@ async def gitleaks_scan(
     findings = _parse_gitleaks_output(stdout, report_format)
 
     await ctx.report_progress(100, 100, "Gitleaks scan complete")
-    await audit.log_tool_call("gitleaks", target, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        "gitleaks", target, params, result="completed", duration_seconds=duration
+    )
 
     return {
         "tool": "gitleaks",
@@ -111,9 +121,9 @@ async def gitleaks_scan(
     }
 
 
-def _parse_gitleaks_output(output: str, report_format: str) -> list[dict]:  # type: ignore[type-arg]
+def _parse_gitleaks_output(output: str, report_format: str) -> list[dict]:
     """Parse Gitleaks output into structured findings."""
-    findings: list[dict] = []  # type: ignore[type-arg]
+    findings: list[dict] = []
 
     if not output.strip():
         return findings
@@ -134,18 +144,20 @@ def _parse_gitleaks_output(output: str, report_format: str) -> list[dict]:  # ty
             secret_raw = item.get("Secret", item.get("secret", ""))
             redacted = _redact_secret(str(secret_raw))
 
-            findings.append({
-                "rule": item.get("RuleID", item.get("ruleID", "unknown")),
-                "description": item.get("Description", item.get("description", "")),
-                "file": item.get("File", item.get("file", "")),
-                "line": item.get("StartLine", item.get("startLine", 0)),
-                "commit": item.get("Commit", item.get("commit", "")),
-                "author": item.get("Author", item.get("author", "")),
-                "date": item.get("Date", item.get("date", "")),
-                "match": item.get("Match", item.get("match", "")),
-                "secret_redacted": redacted,
-                "severity": "high",
-            })
+            findings.append(
+                {
+                    "rule": item.get("RuleID", item.get("ruleID", "unknown")),
+                    "description": item.get("Description", item.get("description", "")),
+                    "file": item.get("File", item.get("file", "")),
+                    "line": item.get("StartLine", item.get("startLine", 0)),
+                    "commit": item.get("Commit", item.get("commit", "")),
+                    "author": item.get("Author", item.get("author", "")),
+                    "date": item.get("Date", item.get("date", "")),
+                    "match": item.get("Match", item.get("match", "")),
+                    "secret_redacted": redacted,
+                    "severity": "high",
+                }
+            )
 
     return findings
 

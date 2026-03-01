@@ -1,4 +1,5 @@
 """Unit tests for wpscan_scan: validation, sanitization, and JSON parsing."""
+
 from __future__ import annotations
 
 import asyncio
@@ -46,8 +47,16 @@ def ctx():
     return _make_ctx()
 
 
-async def _run_wpscan_async(ctx, url="http://wordpress.example.com", enumerate="vp,vt,u",
-                            api_token="", threads=5, stdout="", returncode=0, blocked=False):
+async def _run_wpscan_async(
+    ctx,
+    url="http://wordpress.example.com",
+    enumerate="vp,vt,u",
+    api_token="",
+    threads=5,
+    stdout="",
+    returncode=0,
+    blocked=False,
+):
     """Run wpscan_scan under full mock."""
     from tengu.tools.web.wpscan import wpscan_scan
 
@@ -65,8 +74,9 @@ async def _run_wpscan_async(ctx, url="http://wordpress.example.com", enumerate="
         patch(f"{_MOD}.make_allowlist_from_config", return_value=_make_allowlist_mock(blocked)),
         patch(f"{_MOD}.run_command", new=AsyncMock(return_value=(stdout, "", returncode))),
     ):
-        return await wpscan_scan(ctx, url, enumerate=enumerate,
-                                 api_token=api_token, threads=threads)
+        return await wpscan_scan(
+            ctx, url, enumerate=enumerate, api_token=api_token, threads=threads
+        )
 
 
 def _run_wpscan(ctx, **kwargs):
@@ -232,9 +242,20 @@ class TestWpscanReturnStructure:
     def test_return_keys_present(self, ctx):
         result = _run_wpscan(ctx)
         expected_keys = {
-            "tool", "url", "command", "duration_seconds", "wordpress_version",
-            "plugins_found", "themes_found", "users_found", "vulnerabilities_found",
-            "plugins", "themes", "users", "vulnerabilities", "raw_output",
+            "tool",
+            "url",
+            "command",
+            "duration_seconds",
+            "wordpress_version",
+            "plugins_found",
+            "themes_found",
+            "users_found",
+            "vulnerabilities_found",
+            "plugins",
+            "themes",
+            "users",
+            "vulnerabilities",
+            "raw_output",
         }
         assert expected_keys.issubset(result.keys())
 

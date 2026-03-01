@@ -1,4 +1,5 @@
 """Compliance-focused security assessment prompts."""
+
 from __future__ import annotations
 
 

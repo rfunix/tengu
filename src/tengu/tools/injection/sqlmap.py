@@ -24,7 +24,7 @@ logger = structlog.get_logger(__name__)
 
 
 async def sqlmap_scan(
-    ctx: Context,  # type: ignore[type-arg]
+    ctx: Context,
     url: str,
     method: str = "GET",
     data: str = "",
@@ -34,7 +34,7 @@ async def sqlmap_scan(
     dbms: str = "",
     batch: bool = True,
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Test a URL for SQL injection vulnerabilities using SQLMap.
 
     SQLMap automates the detection and exploitation of SQL injection flaws.
@@ -89,8 +89,10 @@ async def sqlmap_scan(
 
     args = [
         tool_path,
-        "-u", url,
-        "--method", method,
+        "-u",
+        url,
+        "--method",
+        method,
         f"--level={level}",
         f"--risk={risk}",
         "--output-dir=/tmp/sqlmap_tengu",
@@ -127,6 +129,7 @@ async def sqlmap_scan(
 
     # Stealth: inject --proxy flag if proxy is active
     from tengu.stealth import get_stealth_layer
+
     stealth = get_stealth_layer()
     if stealth.enabled and stealth.proxy_url:
         args = stealth.inject_proxy_flags("sqlmap", args)
@@ -165,7 +168,7 @@ async def sqlmap_scan(
     }
 
 
-def _parse_sqlmap_output(output: str) -> dict:  # type: ignore[type-arg]
+def _parse_sqlmap_output(output: str) -> dict:
     """Parse SQLMap stdout for key findings."""
     result: dict[str, object] = {
         "vulnerable_params": [],

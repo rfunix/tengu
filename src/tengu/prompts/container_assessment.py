@@ -1,4 +1,5 @@
 """Container and Kubernetes security assessment prompts."""
+
 from __future__ import annotations
 
 
@@ -53,7 +54,11 @@ def cloud_assessment(provider: str, scope: str = "full", compliance: str = "") -
         scope: Assessment scope — full, iam, network, storage, compute, serverless.
         compliance: Compliance framework — cis, pci-dss, hipaa, soc2, gdpr.
     """
-    compliance_note = f"\n## Compliance Framework: {compliance.upper()}\n- Map all findings to {compliance} requirements\n- Generate compliance report after assessment" if compliance else ""
+    compliance_note = (
+        f"\n## Compliance Framework: {compliance.upper()}\n- Map all findings to {compliance} requirements\n- Generate compliance report after assessment"
+        if compliance
+        else ""
+    )
 
     return f"""# Cloud Security Assessment: {provider.upper()}
 
@@ -85,6 +90,6 @@ def cloud_assessment(provider: str, scope: str = "full", compliance: str = "") -
 15. Verify log retention policies
 
 ## Provider-Specific Checks ({provider.upper()})
-{'- AWS: Check for IMDSv1 (prefer IMDSv2), check Lambda permissions, check RDS public access' if provider == 'aws' else ''}
-{'- Azure: Check for classic resources, verify Defender for Cloud, check Azure AD conditional access' if provider == 'azure' else ''}
-{'- GCP: Check for OS login disabled, verify org policies, check default service account usage' if provider == 'gcp' else ''}"""
+{"- AWS: Check for IMDSv1 (prefer IMDSv2), check Lambda permissions, check RDS public access" if provider == "aws" else ""}
+{"- Azure: Check for classic resources, verify Defender for Cloud, check Azure AD conditional access" if provider == "azure" else ""}
+{"- GCP: Check for OS login disabled, verify org policies, check default service account usage" if provider == "gcp" else ""}"""

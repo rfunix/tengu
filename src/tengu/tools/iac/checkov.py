@@ -1,4 +1,5 @@
 """Checkov IaC security scanner wrapper — Terraform, Kubernetes, Docker, CloudFormation."""
+
 from __future__ import annotations
 
 import json
@@ -54,8 +55,16 @@ async def checkov_scan(
     path = sanitize_wordlist_path(path)
 
     valid_frameworks = {
-        "all", "terraform", "kubernetes", "dockerfile", "cloudformation",
-        "arm", "bicep", "github_actions", "helm", "kustomize",
+        "all",
+        "terraform",
+        "kubernetes",
+        "dockerfile",
+        "cloudformation",
+        "arm",
+        "bicep",
+        "github_actions",
+        "helm",
+        "kustomize",
     }
     if framework not in valid_frameworks:
         framework = "all"
@@ -68,8 +77,10 @@ async def checkov_scan(
 
     args = [
         tool_path,
-        "-d", path,
-        "--output", "json",
+        "-d",
+        path,
+        "--output",
+        "json",
         "--quiet",
         "--compact",
     ]
@@ -114,21 +125,25 @@ async def checkov_scan(
 
         for check in results.get("failed_checks", []):
             failed += 1
-            findings.append({
-                "check_id": check.get("check_id"),
-                "check_type": check.get("check_type"),
-                "resource": check.get("resource"),
-                "file": check.get("repo_file_path"),
-                "line_range": check.get("file_line_range"),
-                "severity": check.get("severity", "MEDIUM"),
-                "guideline": check.get("guideline"),
-            })
+            findings.append(
+                {
+                    "check_id": check.get("check_id"),
+                    "check_type": check.get("check_type"),
+                    "resource": check.get("resource"),
+                    "file": check.get("repo_file_path"),
+                    "line_range": check.get("file_line_range"),
+                    "severity": check.get("severity", "MEDIUM"),
+                    "guideline": check.get("guideline"),
+                }
+            )
 
     except (json.JSONDecodeError, KeyError, AttributeError):
         pass
 
     await ctx.report_progress(100, 100, "Checkov scan complete")
-    await audit.log_tool_call("checkov", path, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        "checkov", path, params, result="completed", duration_seconds=duration
+    )
 
     return {
         "tool": "checkov",

@@ -1,4 +1,5 @@
 """testssl.sh SSL/TLS analysis tool wrapper."""
+
 from __future__ import annotations
 
 import json
@@ -61,6 +62,7 @@ async def testssl_check(
     # Try testssl.sh first, then testssl
     tool_path = None
     import shutil
+
     for name in ("testssl.sh", "testssl"):
         path = shutil.which(name)
         if path:
@@ -69,6 +71,7 @@ async def testssl_check(
 
     if tool_path is None:
         from tengu.exceptions import ToolNotFoundError
+
         raise ToolNotFoundError("testssl.sh")
 
     effective_timeout = timeout or cfg.tools.defaults.scan_timeout
@@ -76,9 +79,11 @@ async def testssl_check(
     args = [
         tool_path,
         "--jsonfile=/dev/stdout",
-        "--severity", severity_threshold,
+        "--severity",
+        severity_threshold,
         "--quiet",
-        "--color", "0",
+        "--color",
+        "0",
         f"{host}:{port}",
     ]
 
@@ -125,7 +130,9 @@ async def testssl_check(
         pass
 
     await ctx.report_progress(100, 100, "testssl.sh complete")
-    await audit.log_tool_call("testssl", host, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        "testssl", host, params, result="completed", duration_seconds=duration
+    )
 
     return {
         "tool": "testssl",

@@ -70,24 +70,30 @@ class TestTargetInjection:
 
 
 class TestPortInjection:
-    @pytest.mark.parametrize("payload", [
-        "80; ls",
-        "80 && id",
-        "80|cat /etc/passwd",
-        "`id`",
-        "$(id)",
-    ])
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            "80; ls",
+            "80 && id",
+            "80|cat /etc/passwd",
+            "`id`",
+            "$(id)",
+        ],
+    )
     def test_port_spec_rejects_injection(self, payload: str):
         with pytest.raises(InvalidInputError):
             sanitize_port_spec(payload)
 
 
 class TestHashInjection:
-    @pytest.mark.parametrize("payload", [
-        "d41d8cd98f00b204e9800998ecf8427e; rm -rf /",
-        "abc$(id)",
-        "abc`id`",
-    ])
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            "d41d8cd98f00b204e9800998ecf8427e; rm -rf /",
+            "abc$(id)",
+            "abc`id`",
+        ],
+    )
     def test_hash_rejects_injection(self, payload: str):
         with pytest.raises(InvalidInputError):
             sanitize_hash(payload)
@@ -115,11 +121,14 @@ class TestFreeTextSanitization:
 
 
 class TestCIDRInjection:
-    @pytest.mark.parametrize("payload", [
-        "192.168.1.0/24; rm -rf /",
-        "192.168.1.0/24`id`",
-        "192.168.1.0/24$(whoami)",
-    ])
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            "192.168.1.0/24; rm -rf /",
+            "192.168.1.0/24`id`",
+            "192.168.1.0/24$(whoami)",
+        ],
+    )
     def test_cidr_rejects_injection(self, payload: str):
         with pytest.raises((InvalidInputError, ValueError)):
             sanitize_cidr(payload)

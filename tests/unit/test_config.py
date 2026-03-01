@@ -31,9 +31,7 @@ blocked_hosts = ["evil.com"]
 max_scans_per_minute = 5
 max_concurrent_scans = 2
 """
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".toml", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(toml_content)
             f.flush()
             cfg = load_config(f.name)
@@ -66,9 +64,7 @@ max_concurrent_scans = 2
 [targets]
 blocked_hosts = ["myevilsite.com"]
 """
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".toml", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(toml_content)
             f.flush()
             cfg = load_config(f.name)
@@ -84,9 +80,7 @@ blocked_hosts = ["myevilsite.com"]
 [targets]
 allowed_hosts = ["127.0.0.1", "localhost"]
 """
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".toml", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(toml_content)
             f.flush()
             cfg = load_config(f.name)

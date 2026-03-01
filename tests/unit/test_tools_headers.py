@@ -71,7 +71,9 @@ class TestSecurityHeadersConfig:
             assert hdr["recommendation"]
 
     def test_hsts_is_required(self):
-        hsts = next((h for h in _SECURITY_HEADERS if h["name"] == "Strict-Transport-Security"), None)
+        hsts = next(
+            (h for h in _SECURITY_HEADERS if h["name"] == "Strict-Transport-Security"), None
+        )
         assert hsts is not None
         assert hsts["required"] is True
 
@@ -167,7 +169,9 @@ class TestAnalyzeHeaders:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.headers.make_allowlist_from_config")
     @patch("tengu.tools.web.headers.get_audit_logger")
-    async def test_analyze_headers_blocked_url(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_analyze_headers_blocked_url(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.side_effect = Exception("Target blocked")
         mock_allowlist_fn.return_value = mock_allowlist
@@ -182,7 +186,9 @@ class TestAnalyzeHeaders:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.headers.make_allowlist_from_config")
     @patch("tengu.tools.web.headers.get_audit_logger")
-    async def test_analyze_headers_request_error(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_analyze_headers_request_error(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -207,7 +213,9 @@ class TestAnalyzeHeaders:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.headers.make_allowlist_from_config")
     @patch("tengu.tools.web.headers.get_audit_logger")
-    async def test_analyze_headers_all_present_score_100(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_analyze_headers_all_present_score_100(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -227,7 +235,9 @@ class TestAnalyzeHeaders:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.headers.make_allowlist_from_config")
     @patch("tengu.tools.web.headers.get_audit_logger")
-    async def test_analyze_headers_none_present_score_0(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_analyze_headers_none_present_score_0(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -247,7 +257,9 @@ class TestAnalyzeHeaders:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.headers.make_allowlist_from_config")
     @patch("tengu.tools.web.headers.get_audit_logger")
-    async def test_analyze_headers_info_disclosure_detected(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_analyze_headers_info_disclosure_detected(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -269,7 +281,9 @@ class TestAnalyzeHeaders:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.headers.make_allowlist_from_config")
     @patch("tengu.tools.web.headers.get_audit_logger")
-    async def test_analyze_headers_missing_headers_list(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_analyze_headers_missing_headers_list(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -288,7 +302,9 @@ class TestAnalyzeHeaders:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.headers.make_allowlist_from_config")
     @patch("tengu.tools.web.headers.get_audit_logger")
-    async def test_analyze_headers_tool_key(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_analyze_headers_tool_key(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -307,7 +323,9 @@ class TestAnalyzeHeaders:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.headers.make_allowlist_from_config")
     @patch("tengu.tools.web.headers.get_audit_logger")
-    async def test_analyze_headers_status_code_returned(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_analyze_headers_status_code_returned(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -327,7 +345,9 @@ class TestAnalyzeHeaders:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.headers.make_allowlist_from_config")
     @patch("tengu.tools.web.headers.get_audit_logger")
-    async def test_analyze_headers_no_disclosure_when_clean(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_analyze_headers_no_disclosure_when_clean(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -347,7 +367,9 @@ class TestAnalyzeHeaders:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.headers.make_allowlist_from_config")
     @patch("tengu.tools.web.headers.get_audit_logger")
-    async def test_analyze_headers_security_headers_list_returned(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_analyze_headers_security_headers_list_returned(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist

@@ -34,11 +34,7 @@ async def resolve_doh(
 
             answers = data.get("Answer", [])
             # Type 1 = A (IPv4), Type 28 = AAAA (IPv6)
-            return [
-                answer["data"]
-                for answer in answers
-                if answer.get("type") in (1, 28)
-            ]
+            return [answer["data"] for answer in answers if answer.get("type") in (1, 28)]
         except Exception as exc:
             logger.warning(
                 "DoH resolution failed",

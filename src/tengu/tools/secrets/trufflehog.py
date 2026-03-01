@@ -23,12 +23,12 @@ _VALID_SCAN_TYPES = {"git", "filesystem", "github"}
 
 
 async def trufflehog_scan(
-    ctx: Context,  # type: ignore[type-arg]
+    ctx: Context,
     target: str,
     scan_type: str = "git",
     branch: str = "",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Scan for leaked secrets and credentials using TruffleHog.
 
     Args:
@@ -59,9 +59,13 @@ async def trufflehog_scan(
         elif target.startswith("git@"):
             # SSH git URL — validate format only (no shell metacharacters)
             import re
-            if re.search(r'[;&|`$<>()\{\}\[\]!\\\'\"\r\n\s]', target):
+
+            if re.search(r"[;&|`$<>()\{\}\[\]!\\\'\"\r\n\s]", target):
                 from tengu.exceptions import InvalidInputError
-                raise InvalidInputError("target", target, "SSH git URL contains forbidden characters")
+
+                raise InvalidInputError(
+                    "target", target, "SSH git URL contains forbidden characters"
+                )
         else:
             # GitHub org/user slug or similar — treat as free text
             target = sanitize_free_text(target, field="target", max_length=200)
@@ -111,7 +115,9 @@ async def trufflehog_scan(
     findings = _parse_trufflehog_output(stdout)
 
     await ctx.report_progress(100, 100, "TruffleHog scan complete")
-    await audit.log_tool_call("trufflehog", target, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        "trufflehog", target, params, result="completed", duration_seconds=duration
+    )
 
     return {
         "tool": "trufflehog",
@@ -127,9 +133,9 @@ async def trufflehog_scan(
     }
 
 
-def _parse_trufflehog_output(output: str) -> list[dict]:  # type: ignore[type-arg]
+def _parse_trufflehog_output(output: str) -> list[dict]:
     """Parse TruffleHog JSON-lines output into structured findings."""
-    findings: list[dict] = []  # type: ignore[type-arg]
+    findings: list[dict] = []
 
     for line in output.splitlines():
         line = line.strip()
@@ -160,15 +166,17 @@ def _parse_trufflehog_output(output: str) -> list[dict]:  # type: ignore[type-ar
         # Redact the raw secret value partially for safety
         redacted_raw = _redact_secret(str(raw))
 
-        findings.append({
-            "detector": detector,
-            "verified": verified,
-            "severity": "high" if verified else "info",
-            "description": f"Detected {detector} credential{'(verified)' if verified else '(unverified)'}",
-            "source": source_info,
-            "secret_redacted": redacted_raw,
-            "raw_entry": entry,
-        })
+        findings.append(
+            {
+                "detector": detector,
+                "verified": verified,
+                "severity": "high" if verified else "info",
+                "description": f"Detected {detector} credential{'(verified)' if verified else '(unverified)'}",
+                "source": source_info,
+                "secret_redacted": redacted_raw,
+                "raw_entry": entry,
+            }
+        )
 
     return findings
 

@@ -159,14 +159,10 @@ class TestParseScoutsuiteReport:
         data = {
             "services": {
                 "s3": {
-                    "findings": {
-                        "f1": {"flagged_items": 5, "level": "danger", "description": "A"}
-                    }
+                    "findings": {"f1": {"flagged_items": 5, "level": "danger", "description": "A"}}
                 },
                 "iam": {
-                    "findings": {
-                        "f2": {"flagged_items": 3, "level": "warning", "description": "B"}
-                    }
+                    "findings": {"f2": {"flagged_items": 3, "level": "warning", "description": "B"}}
                 },
             }
         }
@@ -276,7 +272,10 @@ class TestScoutsuiteScan:
             patch("tengu.tools.cloud.scoutsuite.resolve_tool_path", return_value="scout"),
             patch("tengu.tools.cloud.scoutsuite.rate_limited", return_value=mock_rl),
             patch("tengu.tools.cloud.scoutsuite.run_command", side_effect=fake_run),
-            patch("tengu.tools.cloud.scoutsuite._parse_scoutsuite_report", return_value={"parsed": False}),
+            patch(
+                "tengu.tools.cloud.scoutsuite._parse_scoutsuite_report",
+                return_value={"parsed": False},
+            ),
         ):
             result = await scoutsuite_scan(mock_ctx, "aws")
 
@@ -301,7 +300,10 @@ class TestScoutsuiteScan:
             patch("tengu.tools.cloud.scoutsuite.resolve_tool_path", return_value="scout"),
             patch("tengu.tools.cloud.scoutsuite.rate_limited", return_value=mock_rl),
             patch("tengu.tools.cloud.scoutsuite.run_command", side_effect=fake_run),
-            patch("tengu.tools.cloud.scoutsuite._parse_scoutsuite_report", return_value={"parsed": False}),
+            patch(
+                "tengu.tools.cloud.scoutsuite._parse_scoutsuite_report",
+                return_value={"parsed": False},
+            ),
         ):
             await scoutsuite_scan(mock_ctx, "aws", profile="myprofile")
 
@@ -324,7 +326,10 @@ class TestScoutsuiteScan:
             patch("tengu.tools.cloud.scoutsuite.resolve_tool_path", return_value="scout"),
             patch("tengu.tools.cloud.scoutsuite.rate_limited", return_value=mock_rl),
             patch("tengu.tools.cloud.scoutsuite.run_command", side_effect=fake_run),
-            patch("tengu.tools.cloud.scoutsuite._parse_scoutsuite_report", return_value={"parsed": False}),
+            patch(
+                "tengu.tools.cloud.scoutsuite._parse_scoutsuite_report",
+                return_value={"parsed": False},
+            ),
         ):
             await scoutsuite_scan(mock_ctx, "gcp", project="my-gcp-project")
 
@@ -347,7 +352,10 @@ class TestScoutsuiteScan:
             patch("tengu.tools.cloud.scoutsuite.resolve_tool_path", return_value="scout"),
             patch("tengu.tools.cloud.scoutsuite.rate_limited", return_value=mock_rl),
             patch("tengu.tools.cloud.scoutsuite.run_command", side_effect=fake_run),
-            patch("tengu.tools.cloud.scoutsuite._parse_scoutsuite_report", return_value={"parsed": False}),
+            patch(
+                "tengu.tools.cloud.scoutsuite._parse_scoutsuite_report",
+                return_value={"parsed": False},
+            ),
         ):
             await scoutsuite_scan(mock_ctx, "azure", subscription="sub-1234")
 
@@ -365,7 +373,11 @@ class TestScoutsuiteScan:
             patch("tengu.tools.cloud.scoutsuite.get_audit_logger", return_value=mock_audit),
             patch("tengu.tools.cloud.scoutsuite.resolve_tool_path", return_value="scout"),
             patch("tengu.tools.cloud.scoutsuite.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.cloud.scoutsuite.run_command", new_callable=AsyncMock, side_effect=RuntimeError("command failed")),
+            patch(
+                "tengu.tools.cloud.scoutsuite.run_command",
+                new_callable=AsyncMock,
+                side_effect=RuntimeError("command failed"),
+            ),
             pytest.raises(RuntimeError, match="command failed"),
         ):
             await scoutsuite_scan(mock_ctx, "aws")
@@ -379,12 +391,27 @@ class TestScoutsuiteScan:
             patch("tengu.tools.cloud.scoutsuite.get_audit_logger", return_value=mock_audit),
             patch("tengu.tools.cloud.scoutsuite.resolve_tool_path", return_value="scout"),
             patch("tengu.tools.cloud.scoutsuite.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.cloud.scoutsuite.run_command", new_callable=AsyncMock, return_value=("", "", 0)),
-            patch("tengu.tools.cloud.scoutsuite._parse_scoutsuite_report", return_value={"parsed": False}),
+            patch(
+                "tengu.tools.cloud.scoutsuite.run_command",
+                new_callable=AsyncMock,
+                return_value=("", "", 0),
+            ),
+            patch(
+                "tengu.tools.cloud.scoutsuite._parse_scoutsuite_report",
+                return_value={"parsed": False},
+            ),
         ):
             result = await scoutsuite_scan(mock_ctx, "aws")
 
-        for key in ("tool", "provider", "report_dir", "command", "duration_seconds", "summary", "raw_output_excerpt"):
+        for key in (
+            "tool",
+            "provider",
+            "report_dir",
+            "command",
+            "duration_seconds",
+            "summary",
+            "raw_output_excerpt",
+        ):
             assert key in result, f"Missing key: {key}"
 
     async def test_raw_output_truncated_to_3000_chars(self, mock_ctx):
@@ -397,8 +424,15 @@ class TestScoutsuiteScan:
             patch("tengu.tools.cloud.scoutsuite.get_audit_logger", return_value=mock_audit),
             patch("tengu.tools.cloud.scoutsuite.resolve_tool_path", return_value="scout"),
             patch("tengu.tools.cloud.scoutsuite.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.cloud.scoutsuite.run_command", new_callable=AsyncMock, return_value=(long_stdout, "", 0)),
-            patch("tengu.tools.cloud.scoutsuite._parse_scoutsuite_report", return_value={"parsed": False}),
+            patch(
+                "tengu.tools.cloud.scoutsuite.run_command",
+                new_callable=AsyncMock,
+                return_value=(long_stdout, "", 0),
+            ),
+            patch(
+                "tengu.tools.cloud.scoutsuite._parse_scoutsuite_report",
+                return_value={"parsed": False},
+            ),
         ):
             result = await scoutsuite_scan(mock_ctx, "aws")
 
@@ -420,7 +454,10 @@ class TestScoutsuiteScan:
             patch("tengu.tools.cloud.scoutsuite.resolve_tool_path", return_value="scout"),
             patch("tengu.tools.cloud.scoutsuite.rate_limited", return_value=mock_rl),
             patch("tengu.tools.cloud.scoutsuite.run_command", side_effect=fake_run),
-            patch("tengu.tools.cloud.scoutsuite._parse_scoutsuite_report", return_value={"parsed": False}),
+            patch(
+                "tengu.tools.cloud.scoutsuite._parse_scoutsuite_report",
+                return_value={"parsed": False},
+            ),
         ):
             await scoutsuite_scan(mock_ctx, "aws", timeout=1800)
 
@@ -442,7 +479,10 @@ class TestScoutsuiteScan:
             patch("tengu.tools.cloud.scoutsuite.resolve_tool_path", return_value="scout"),
             patch("tengu.tools.cloud.scoutsuite.rate_limited", return_value=mock_rl),
             patch("tengu.tools.cloud.scoutsuite.run_command", side_effect=fake_run),
-            patch("tengu.tools.cloud.scoutsuite._parse_scoutsuite_report", return_value={"parsed": False}),
+            patch(
+                "tengu.tools.cloud.scoutsuite._parse_scoutsuite_report",
+                return_value={"parsed": False},
+            ),
         ):
             await scoutsuite_scan(mock_ctx, "aws")
 
@@ -457,8 +497,15 @@ class TestScoutsuiteScan:
             patch("tengu.tools.cloud.scoutsuite.get_audit_logger", return_value=mock_audit),
             patch("tengu.tools.cloud.scoutsuite.resolve_tool_path", return_value="scout"),
             patch("tengu.tools.cloud.scoutsuite.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.cloud.scoutsuite.run_command", new_callable=AsyncMock, return_value=("", "", 0)),
-            patch("tengu.tools.cloud.scoutsuite._parse_scoutsuite_report", return_value={"parsed": False}),
+            patch(
+                "tengu.tools.cloud.scoutsuite.run_command",
+                new_callable=AsyncMock,
+                return_value=("", "", 0),
+            ),
+            patch(
+                "tengu.tools.cloud.scoutsuite._parse_scoutsuite_report",
+                return_value={"parsed": False},
+            ),
         ):
             result = await scoutsuite_scan(mock_ctx, "gcp")
 

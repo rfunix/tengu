@@ -50,7 +50,9 @@ class ScanTimeoutError(TenguError):
 class RateLimitError(TenguError):
     """Rate limit reached."""
 
-    def __init__(self, message: str = "Rate limit reached. Please wait before making another request.") -> None:
+    def __init__(
+        self, message: str = "Rate limit reached. Please wait before making another request."
+    ) -> None:
         super().__init__(message)
 
 

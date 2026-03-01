@@ -1,4 +1,5 @@
 """Unit tests for the subjack_check async tool."""
+
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
@@ -146,8 +147,16 @@ class TestSubjackCheck:
     async def test_returns_correct_structure(self):
         mocks = _make_fixtures()
         result = await _call_subjack(mocks)
-        for key in ("tool", "domain", "command", "duration_seconds",
-                    "vulnerable_count", "vulnerable_subdomains", "raw_output", "errors"):
+        for key in (
+            "tool",
+            "domain",
+            "command",
+            "duration_seconds",
+            "vulnerable_count",
+            "vulnerable_subdomains",
+            "raw_output",
+            "errors",
+        ):
             assert key in result, f"Missing key: {key}"
         assert result["tool"] == "subjack"
 

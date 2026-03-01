@@ -1,4 +1,5 @@
 """Unit tests for the whois_lookup async tool."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -139,8 +140,19 @@ class TestWhoisLookup:
     async def test_returns_correct_structure(self):
         mocks = _make_fixtures()
         result = await _call_whois(mocks)
-        for key in ("tool", "target", "registrar", "creation_date", "expiration_date",
-                    "name_servers", "status", "emails", "org", "country", "raw_excerpt"):
+        for key in (
+            "tool",
+            "target",
+            "registrar",
+            "creation_date",
+            "expiration_date",
+            "name_servers",
+            "status",
+            "emails",
+            "org",
+            "country",
+            "raw_excerpt",
+        ):
             assert key in result, f"Missing key: {key}"
 
     async def test_none_name_servers_returns_empty_list(self):

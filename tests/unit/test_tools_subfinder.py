@@ -77,7 +77,9 @@ class TestParseSubfinderOutput:
 class TestSubfinderEnum:
     """Async tests for subfinder_enum()."""
 
-    def _setup_mocks(self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl, mock_stealth):
+    def _setup_mocks(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl, mock_stealth
+    ):
         # Config
         cfg = MagicMock()
         cfg.tools.paths.subfinder = "/usr/bin/subfinder"
@@ -179,7 +181,9 @@ class TestSubfinderEnum:
         stealth = MagicMock()
         stealth.enabled = True
         stealth.proxy_url = "socks5://127.0.0.1:9050"
-        stealth.inject_proxy_flags = MagicMock(side_effect=lambda tool, args: args + ["-proxy", "socks5://127.0.0.1:9050"])
+        stealth.inject_proxy_flags = MagicMock(
+            side_effect=lambda tool, args: args + ["-proxy", "socks5://127.0.0.1:9050"]
+        )
         mock_stealth.return_value = stealth
 
         ctx = self._make_ctx()

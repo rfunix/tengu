@@ -90,9 +90,17 @@ class TestXssScan:
         mock_audit = AsyncMock()
         mock_audit.log_tool_call = AsyncMock()
 
-        xss_output = json.dumps([
-            {"type": "Reflected", "param": "q", "payload": "<script>alert(1)</script>", "evidence": "reflected", "poc": ""}
-        ])
+        xss_output = json.dumps(
+            [
+                {
+                    "type": "Reflected",
+                    "param": "q",
+                    "payload": "<script>alert(1)</script>",
+                    "evidence": "reflected",
+                    "poc": "",
+                }
+            ]
+        )
 
         with (
             patch("tengu.tools.injection.xss.get_config", return_value=_mock_config()),
@@ -100,7 +108,9 @@ class TestXssScan:
             patch("tengu.tools.injection.xss.resolve_tool_path", return_value="/usr/bin/dalfox"),
             patch("tengu.tools.injection.xss.rate_limited", return_value=mock_rl_ctx),
             patch("tengu.tools.injection.xss.make_allowlist_from_config") as mock_allowlist,
-            patch("tengu.tools.injection.xss.run_command", AsyncMock(return_value=(xss_output, "", 0))),
+            patch(
+                "tengu.tools.injection.xss.run_command", AsyncMock(return_value=(xss_output, "", 0))
+            ),
         ):
             mock_allowlist.return_value.check.return_value = None
             result = await xss_scan(mock_ctx, "https://vuln.example.com/search")
@@ -116,9 +126,9 @@ class TestXssScan:
         mock_audit = AsyncMock()
         mock_audit.log_tool_call = AsyncMock()
 
-        xss_output = json.dumps([
-            {"type": "DOM", "param": "search", "payload": "xss", "evidence": "", "poc": ""}
-        ])
+        xss_output = json.dumps(
+            [{"type": "DOM", "param": "search", "payload": "xss", "evidence": "", "poc": ""}]
+        )
 
         with (
             patch("tengu.tools.injection.xss.get_config", return_value=_mock_config()),
@@ -126,7 +136,9 @@ class TestXssScan:
             patch("tengu.tools.injection.xss.resolve_tool_path", return_value="/usr/bin/dalfox"),
             patch("tengu.tools.injection.xss.rate_limited", return_value=mock_rl_ctx),
             patch("tengu.tools.injection.xss.make_allowlist_from_config") as mock_allowlist,
-            patch("tengu.tools.injection.xss.run_command", AsyncMock(return_value=(xss_output, "", 0))),
+            patch(
+                "tengu.tools.injection.xss.run_command", AsyncMock(return_value=(xss_output, "", 0))
+            ),
         ):
             mock_allowlist.return_value.check.return_value = None
             result = await xss_scan(mock_ctx, "https://vuln.example.com/search")
@@ -176,7 +188,9 @@ class TestXssScan:
             patch("tengu.tools.injection.xss.run_command", fake_run),
         ):
             mock_allowlist.return_value.check.return_value = None
-            await xss_scan(mock_ctx, "https://example.com/", cookie="session=abc\r\nX-Injected: evil")
+            await xss_scan(
+                mock_ctx, "https://example.com/", cookie="session=abc\r\nX-Injected: evil"
+            )
 
         # Cookie value passed should not contain CRLF
         if "--cookie" in captured_args:
@@ -274,6 +288,7 @@ class TestXssScan:
             result = await xss_scan(mock_ctx, "https://clean.example.com/")
 
         assert result["remediation"] is None
+
 
 # ---------------------------------------------------------------------------
 # TestParseDalfoxOutput

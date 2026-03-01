@@ -37,9 +37,7 @@ class TestProxyCheck:
         mock_resp_https.status_code = 200
 
         mock_client = AsyncMock()
-        mock_client.get = AsyncMock(
-            side_effect=[mock_resp_ip, mock_resp_headers, mock_resp_https]
-        )
+        mock_client.get = AsyncMock(side_effect=[mock_resp_ip, mock_resp_headers, mock_resp_https])
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
@@ -63,9 +61,7 @@ class TestProxyCheck:
         mock_resp_https.status_code = 200
 
         mock_client = AsyncMock()
-        mock_client.get = AsyncMock(
-            side_effect=[mock_resp_ip, mock_resp_headers, mock_resp_https]
-        )
+        mock_client.get = AsyncMock(side_effect=[mock_resp_ip, mock_resp_headers, mock_resp_https])
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
@@ -107,9 +103,7 @@ class TestProxyCheck:
         mock_resp_https.status_code = 200
 
         mock_client = AsyncMock()
-        mock_client.get = AsyncMock(
-            side_effect=[mock_resp_ip, mock_resp_headers, mock_resp_https]
-        )
+        mock_client.get = AsyncMock(side_effect=[mock_resp_ip, mock_resp_headers, mock_resp_https])
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
@@ -136,9 +130,7 @@ class TestProxyCheck:
         mock_resp_https.status_code = 404  # HTTPS fails — stays transparent
 
         mock_client = AsyncMock()
-        mock_client.get = AsyncMock(
-            side_effect=[mock_resp_ip, mock_resp_headers, mock_resp_https]
-        )
+        mock_client.get = AsyncMock(side_effect=[mock_resp_ip, mock_resp_headers, mock_resp_https])
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
@@ -162,9 +154,7 @@ class TestProxyCheck:
         mock_resp_https.status_code = 200
 
         mock_client = AsyncMock()
-        mock_client.get = AsyncMock(
-            side_effect=[mock_resp_ip, mock_resp_headers, mock_resp_https]
-        )
+        mock_client.get = AsyncMock(side_effect=[mock_resp_ip, mock_resp_headers, mock_resp_https])
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
@@ -198,9 +188,7 @@ class TestProxyCheck:
         mock_resp_https.status_code = 200
 
         mock_client = AsyncMock()
-        mock_client.get = AsyncMock(
-            side_effect=[mock_resp_ip, mock_resp_headers, mock_resp_https]
-        )
+        mock_client.get = AsyncMock(side_effect=[mock_resp_ip, mock_resp_headers, mock_resp_https])
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
 

@@ -1,4 +1,5 @@
 """Unit tests for the whatweb_scan async tool (webtech fingerprinting)."""
+
 from __future__ import annotations
 
 import json
@@ -153,8 +154,17 @@ class TestWhatweb:
     async def test_returns_correct_structure(self):
         mocks = _make_fixtures()
         result = await _call_whatweb(mocks)
-        for key in ("tool", "target", "http_status", "aggression", "command",
-                    "duration_seconds", "plugins_found", "technologies", "raw_output"):
+        for key in (
+            "tool",
+            "target",
+            "http_status",
+            "aggression",
+            "command",
+            "duration_seconds",
+            "plugins_found",
+            "technologies",
+            "raw_output",
+        ):
             assert key in result, f"Missing key: {key}"
         assert result["tool"] == "whatweb"
 

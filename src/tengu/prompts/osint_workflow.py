@@ -1,4 +1,5 @@
 """OSINT investigation workflow prompts."""
+
 from __future__ import annotations
 
 
@@ -16,8 +17,14 @@ def osint_investigation(
     """
     tool_map = {
         "domain": [
-            "whois_lookup", "dns_enumerate", "subfinder_enum", "amass_enum",
-            "dnsrecon_scan", "theharvester_scan", "whatweb_scan", "shodan_lookup",
+            "whois_lookup",
+            "dns_enumerate",
+            "subfinder_enum",
+            "amass_enum",
+            "dnsrecon_scan",
+            "theharvester_scan",
+            "whatweb_scan",
+            "shodan_lookup",
         ],
         "ip": ["whois_lookup", "dns_enumerate", "shodan_lookup", "theharvester_scan"],
         "email": ["theharvester_scan"],

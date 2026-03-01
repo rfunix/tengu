@@ -15,11 +15,13 @@ from tengu.tools.web.ffuf import _parse_ffuf_output, ffuf_fuzz
 
 
 def _make_ffuf_output(results: list[dict] | None = None) -> str:
-    return json.dumps({
-        "commandline": "ffuf -u https://example.com/FUZZ -w wordlist.txt",
-        "time": "2024-01-01T00:00:00Z",
-        "results": results or [],
-    })
+    return json.dumps(
+        {
+            "commandline": "ffuf -u https://example.com/FUZZ -w wordlist.txt",
+            "time": "2024-01-01T00:00:00Z",
+            "results": results or [],
+        }
+    )
 
 
 def _make_result_entry(
@@ -76,9 +78,7 @@ class TestParseFfufOutput:
         assert results[0]["input"] == "robots.txt"
 
     def test_multiple_results(self):
-        entries = [
-            _make_result_entry(url=f"https://example.com/path{i}") for i in range(5)
-        ]
+        entries = [_make_result_entry(url=f"https://example.com/path{i}") for i in range(5)]
         output = _make_ffuf_output(entries)
         results = _parse_ffuf_output(output)
         assert len(results) == 5
@@ -147,7 +147,15 @@ class TestFfufFuzz:
     @patch("tengu.tools.web.ffuf.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_ffuf_auto_adds_fuzz_marker(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_config_mock()
         mock_allowlist = MagicMock()
@@ -176,7 +184,15 @@ class TestFfufFuzz:
     @patch("tengu.tools.web.ffuf.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_ffuf_existing_fuzz_marker(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_config_mock()
         mock_allowlist = MagicMock()
@@ -199,7 +215,9 @@ class TestFfufFuzz:
     @patch("tengu.tools.web.ffuf.get_config")
     @patch("tengu.tools.web.ffuf.make_allowlist_from_config")
     @patch("tengu.tools.web.ffuf.get_audit_logger")
-    async def test_ffuf_blocked_by_allowlist(self, mock_audit_fn, mock_allowlist_fn, mock_config, mock_ctx):
+    async def test_ffuf_blocked_by_allowlist(
+        self, mock_audit_fn, mock_allowlist_fn, mock_config, mock_ctx
+    ):
         mock_config.return_value = _make_config_mock()
         mock_allowlist = MagicMock()
         mock_allowlist.check.side_effect = Exception("Blocked")
@@ -219,7 +237,15 @@ class TestFfufFuzz:
     @patch("tengu.tools.web.ffuf.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_ffuf_with_extensions(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_config_mock()
         mock_allowlist = MagicMock()
@@ -249,7 +275,15 @@ class TestFfufFuzz:
     @patch("tengu.tools.web.ffuf.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_ffuf_invalid_extension_filtered(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_config_mock()
         mock_allowlist = MagicMock()
@@ -279,7 +313,15 @@ class TestFfufFuzz:
     @patch("tengu.tools.web.ffuf.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_ffuf_filter_codes(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_config_mock()
         mock_allowlist = MagicMock()
@@ -307,7 +349,15 @@ class TestFfufFuzz:
     @patch("tengu.tools.web.ffuf.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_ffuf_match_codes(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_config_mock()
         mock_allowlist = MagicMock()
@@ -335,7 +385,15 @@ class TestFfufFuzz:
     @patch("tengu.tools.web.ffuf.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_ffuf_threads_clamped_max(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_config_mock()
         mock_allowlist = MagicMock()
@@ -364,7 +422,15 @@ class TestFfufFuzz:
     @patch("tengu.tools.web.ffuf.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_ffuf_threads_clamped_min(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_config_mock()
         mock_allowlist = MagicMock()
@@ -393,7 +459,15 @@ class TestFfufFuzz:
     @patch("tengu.tools.web.ffuf.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_ffuf_rate_limit(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_config_mock()
         mock_allowlist = MagicMock()
@@ -423,7 +497,15 @@ class TestFfufFuzz:
     @patch("tengu.tools.web.ffuf.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_ffuf_custom_headers(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_config_mock()
         mock_allowlist = MagicMock()
@@ -453,7 +535,15 @@ class TestFfufFuzz:
     @patch("tengu.tools.web.ffuf.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_ffuf_crlf_in_header_blocked(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_config_mock()
         mock_allowlist = MagicMock()
@@ -469,7 +559,9 @@ class TestFfufFuzz:
         mock_stealth_layer.proxy_url = None
         mock_stealth.return_value = mock_stealth_layer
 
-        await ffuf_fuzz(mock_ctx, "https://example.com/FUZZ", headers={"X-Test": "val\r\nX-Injected: evil"})
+        await ffuf_fuzz(
+            mock_ctx, "https://example.com/FUZZ", headers={"X-Test": "val\r\nX-Injected: evil"}
+        )
         args = mock_run.call_args[0][0]
         # CRLF characters should be stripped (preventing header injection)
         joined = " ".join(args)
@@ -485,7 +577,15 @@ class TestFfufFuzz:
     @patch("tengu.tools.web.ffuf.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_ffuf_parses_json_output(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_config_mock()
         mock_allowlist = MagicMock()

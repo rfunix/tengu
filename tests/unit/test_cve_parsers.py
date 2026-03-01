@@ -36,9 +36,7 @@ def _make_nvd_cve(
                     }
                 ]
             },
-            "weaknesses": [
-                {"description": [{"lang": "en", "value": cwe}]}
-            ],
+            "weaknesses": [{"description": [{"lang": "en", "value": cwe}]}],
             "references": [{"url": "https://nvd.nist.gov/vuln/detail/" + cve_id}],
             "configurations": [],
         }
@@ -98,6 +96,7 @@ class TestBuildHeaders:
 class TestParseNvdCve:
     def test_returns_cve_record(self):
         from tengu.types import CVERecord
+
         record = _parse_nvd_cve(_make_nvd_cve())
         assert isinstance(record, CVERecord)
 
@@ -149,9 +148,7 @@ class TestParseNvdCve:
 
     def test_nvd_cwe_other_filtered(self):
         data = _make_nvd_cve()
-        data["cve"]["weaknesses"] = [
-            {"description": [{"lang": "en", "value": "NVD-CWE-Other"}]}
-        ]
+        data["cve"]["weaknesses"] = [{"description": [{"lang": "en", "value": "NVD-CWE-Other"}]}]
         record = _parse_nvd_cve(data)
         assert "NVD-CWE-Other" not in record.cwe_ids
 
@@ -170,6 +167,7 @@ class TestParseNvdCve:
 class TestParseCveorg:
     def test_returns_cve_record(self):
         from tengu.types import CVERecord
+
         record = _parse_cveorg(_make_cveorg_data())
         assert isinstance(record, CVERecord)
 

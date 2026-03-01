@@ -31,10 +31,7 @@ class TestRiskScoring:
         assert score_with_chain > score_no_chain
 
     def test_score_capped_at_10(self):
-        findings = [
-            {"severity": "critical", "cvss_score": 10.0}
-            for _ in range(20)
-        ]
+        findings = [{"severity": "critical", "cvss_score": 10.0} for _ in range(20)]
         score = _calculate_risk_score(findings, [{"name": c} for c in range(10)])
         assert score <= 10.0
 

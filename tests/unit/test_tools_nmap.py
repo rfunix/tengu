@@ -32,7 +32,7 @@ def _host_xml(
     hn = f'<hostnames><hostname name="{hostname}"/></hostnames>' if hostname else "<hostnames/>"
     os_block = f"<os>{os_xml}</os>" if os_xml else ""
     return (
-        f'<host>'
+        f"<host>"
         f'<status state="{status}"/>'
         f'<address addr="{addr}" addrtype="ipv4"/>'
         f"{hn}"
@@ -51,12 +51,7 @@ def _port_xml(
     version: str = "",
 ) -> str:
     svc = f'<service name="{service}" product="{product}" version="{version}"/>'
-    return (
-        f'<port protocol="{protocol}" portid="{portid}">'
-        f'<state state="{state}"/>'
-        f"{svc}"
-        f"</port>"
-    )
+    return f'<port protocol="{protocol}" portid="{portid}"><state state="{state}"/>{svc}</port>'
 
 
 # ---------------------------------------------------------------------------
@@ -101,7 +96,9 @@ class TestParseNmapXml:
         assert hosts[0].hostname == "example.com"
 
     def test_service_version_combined(self):
-        port_xml = _port_xml(portid=22, state="open", service="ssh", product="OpenSSH", version="8.9")
+        port_xml = _port_xml(
+            portid=22, state="open", service="ssh", product="OpenSSH", version="8.9"
+        )
         xml = _minimal_xml(_host_xml(ports_xml=port_xml))
         hosts = _parse_nmap_xml(xml)
         assert "OpenSSH" in hosts[0].ports[0].version
@@ -126,9 +123,7 @@ class TestParseNmapXml:
     def test_host_without_address_skipped(self):
         # ipv6 address type — the parser only accepts ipv4/ipv6
         # Use a host with only MAC address → skipped
-        xml = _minimal_xml(
-            '<host><address addr="00:11:22:33:44:55" addrtype="mac"/></host>'
-        )
+        xml = _minimal_xml('<host><address addr="00:11:22:33:44:55" addrtype="mac"/></host>')
         hosts = _parse_nmap_xml(xml)
         assert hosts == []
 
@@ -195,12 +190,12 @@ _NMAP_XML_WITH_HOST = (
     '<?xml version="1.0"?><nmaprun>'
     '<host><status state="up"/>'
     '<address addr="192.168.1.1" addrtype="ipv4"/>'
-    '<hostnames/>'
-    '<ports>'
+    "<hostnames/>"
+    "<ports>"
     '<port protocol="tcp" portid="80"><state state="open"/><service name="http"/></port>'
-    '</ports>'
-    '</host>'
-    '</nmaprun>'
+    "</ports>"
+    "</host>"
+    "</nmaprun>"
 )
 
 
@@ -254,7 +249,9 @@ class TestNmapScan:
         self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl, mock_stealth
     ):
         """Allowlist rejection propagates as an exception."""
-        al, _ = _setup_nmap_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl, mock_stealth)
+        al, _ = _setup_nmap_mocks(
+            mock_run, mock_config, mock_allowlist, mock_audit, mock_rl, mock_stealth
+        )
         al.check.side_effect = ValueError("not allowed")
         ctx = _make_nmap_ctx()
 
@@ -313,7 +310,9 @@ class TestNmapScan:
         stealth = MagicMock()
         stealth.enabled = True
         stealth.proxy_url = "socks5://127.0.0.1:9050"
-        stealth.inject_proxy_flags = MagicMock(side_effect=lambda tool, args: args + ["--proxies", "socks5://127.0.0.1:9050"])
+        stealth.inject_proxy_flags = MagicMock(
+            side_effect=lambda tool, args: args + ["--proxies", "socks5://127.0.0.1:9050"]
+        )
         mock_stealth.return_value = stealth
         ctx = _make_nmap_ctx()
 

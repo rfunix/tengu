@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shutil
+from typing import Any
 
 import httpx
 import structlog
@@ -110,7 +111,7 @@ class StealthLayer:
         if self._timing:
             await self._timing.wait()
 
-    def create_http_client(self, **kwargs) -> httpx.AsyncClient:
+    def create_http_client(self, **kwargs: Any) -> httpx.AsyncClient:
         """Create an httpx AsyncClient pre-configured with proxy and UA."""
         return create_stealth_client(
             proxy_url=self.proxy_url,

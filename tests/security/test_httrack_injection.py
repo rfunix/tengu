@@ -4,6 +4,7 @@ These tests verify that shell metacharacters in httrack inputs are rejected
 before reaching subprocess execution. Defense-in-depth: the primary protection
 is never using shell=True, but explicit input validation is the second layer.
 """
+
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
@@ -57,6 +58,7 @@ class TestHttrackOutputDirInjection:
     @pytest.mark.parametrize("payload", OUTPUT_DIR_INJECTION_PAYLOADS)
     def test_output_dir_injection_chars_stripped(self, payload: str):
         from tengu.tools.recon.httrack import _sanitize_output_dir
+
         result = _sanitize_output_dir(payload)
         # The result must never contain shell metacharacters
         for char in (";", "&", "|", "`", "$", "\n", ">", "<", "(", ")"):
@@ -64,12 +66,14 @@ class TestHttrackOutputDirInjection:
 
     def test_output_dir_absolute_path_traversal_blocked(self):
         from tengu.tools.recon.httrack import _sanitize_output_dir
+
         result = _sanitize_output_dir("../../etc/passwd")
         # Must fall back to default since it doesn't start with /tmp/ or /home/
         assert result == "/tmp/httrack"
 
     def test_output_dir_null_byte_rejected(self):
         from tengu.tools.recon.httrack import _sanitize_output_dir
+
         result = _sanitize_output_dir("/tmp/site\x00evil")
         assert "\x00" not in result
 
@@ -77,16 +81,19 @@ class TestHttrackOutputDirInjection:
 class TestHttrackDepthBounds:
     """Depth parameter must be bounded regardless of user input."""
 
-    @pytest.mark.parametrize("depth,expected", [
-        (0, 1),
-        (-1, 1),
-        (-999, 1),
-        (1, 1),
-        (5, 5),
-        (6, 5),
-        (100, 5),
-        (999999, 5),
-    ])
+    @pytest.mark.parametrize(
+        "depth,expected",
+        [
+            (0, 1),
+            (-1, 1),
+            (-999, 1),
+            (1, 1),
+            (5, 5),
+            (6, 5),
+            (100, 5),
+            (999999, 5),
+        ],
+    )
     def test_depth_clamped(self, depth: int, expected: int):
         """Depth is clamped in 1–5 range by the tool before building args."""
         from tengu.tools.recon.httrack import _MAX_DEPTH
@@ -98,14 +105,17 @@ class TestHttrackDepthBounds:
 class TestHttrackMaxSizeBounds:
     """max_size must be bounded to prevent runaway downloads."""
 
-    @pytest.mark.parametrize("size_mb,expected", [
-        (0, 1),
-        (-1, 1),
-        (100, 100),
-        (500, 500),
-        (501, 500),
-        (999999, 500),
-    ])
+    @pytest.mark.parametrize(
+        "size_mb,expected",
+        [
+            (0, 1),
+            (-1, 1),
+            (100, 100),
+            (500, 500),
+            (501, 500),
+            (999999, 500),
+        ],
+    )
     def test_max_size_clamped(self, size_mb: int, expected: int):
         from tengu.tools.recon.httrack import _MAX_SIZE_MB
 
@@ -154,6 +164,7 @@ class TestHttrackNeverUsesShell:
             patch(f"{TOOL_MODULE}._dir_size_mb", return_value=0.0),
         ):
             from tengu.tools.recon.httrack import httrack_mirror
+
             await httrack_mirror(ctx, "http://example.com")
 
         # run_command must have been called with a list as first argument

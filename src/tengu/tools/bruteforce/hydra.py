@@ -23,14 +23,31 @@ from tengu.security.sanitizer import sanitize_target, sanitize_wordlist_path
 logger = structlog.get_logger(__name__)
 
 _SUPPORTED_SERVICES = {
-    "ssh", "ftp", "http-get", "http-post-form", "https-get", "https-post-form",
-    "smb", "rdp", "telnet", "mysql", "mssql", "postgresql", "smtp", "pop3",
-    "imap", "ldap", "vnc", "snmp", "redis", "mongodb",
+    "ssh",
+    "ftp",
+    "http-get",
+    "http-post-form",
+    "https-get",
+    "https-post-form",
+    "smb",
+    "rdp",
+    "telnet",
+    "mysql",
+    "mssql",
+    "postgresql",
+    "smtp",
+    "pop3",
+    "imap",
+    "ldap",
+    "vnc",
+    "snmp",
+    "redis",
+    "mongodb",
 }
 
 
 async def hydra_attack(
-    ctx: Context,  # type: ignore[type-arg]
+    ctx: Context,
     target: str,
     service: str,
     userlist: str,
@@ -39,7 +56,7 @@ async def hydra_attack(
     threads: int = 16,
     stop_on_success: bool = True,
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Perform a credential brute force attack using Hydra.
 
     WARNING: This is a destructive operation that may trigger account lockouts,
@@ -95,9 +112,12 @@ async def hydra_attack(
         tool_path,
         target,
         service,
-        "-L", userlist,
-        "-P", passlist,
-        "-t", str(threads),
+        "-L",
+        userlist,
+        "-P",
+        passlist,
+        "-t",
+        str(threads),
     ]
 
     if stop_on_success:
@@ -126,7 +146,9 @@ async def hydra_attack(
     credentials = _parse_hydra_output(stdout)
 
     await ctx.report_progress(100, 100, "Brute force attack complete")
-    await audit.log_tool_call("hydra", target, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        "hydra", target, params, result="completed", duration_seconds=duration
+    )
 
     return {
         "tool": "hydra",
@@ -139,7 +161,7 @@ async def hydra_attack(
     }
 
 
-def _parse_hydra_output(output: str) -> list[dict]:  # type: ignore[type-arg]
+def _parse_hydra_output(output: str) -> list[dict]:
     """Parse Hydra output for valid credentials."""
     credentials = []
 
@@ -151,10 +173,12 @@ def _parse_hydra_output(output: str) -> list[dict]:  # type: ignore[type-arg]
             re.IGNORECASE,
         )
         if m:
-            credentials.append({
-                "username": m.group(1),
-                "password": m.group(2),
-                "raw_line": line.strip(),
-            })
+            credentials.append(
+                {
+                    "username": m.group(1),
+                    "password": m.group(2),
+                    "raw_line": line.strip(),
+                }
+            )
 
     return credentials
