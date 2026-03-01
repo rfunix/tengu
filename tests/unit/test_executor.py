@@ -46,9 +46,7 @@ class TestRunCommand:
 
     @pytest.mark.asyncio
     async def test_returncode_nonzero_on_failure(self):
-        _, _, returncode = await run_command(
-            [sys.executable, "-c", "import sys; sys.exit(1)"]
-        )
+        _, _, returncode = await run_command([sys.executable, "-c", "import sys; sys.exit(1)"])
         assert returncode == 1
 
     @pytest.mark.asyncio

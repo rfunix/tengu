@@ -30,9 +30,7 @@ async def proxy_check(proxy_url: str) -> dict:
             "anonymity_level": None,
             "supports_https": False,
             "country": None,
-            "error": (
-                f"Invalid proxy scheme. Must start with: {', '.join(_ALLOWED_SCHEMES)}"
-            ),
+            "error": (f"Invalid proxy scheme. Must start with: {', '.join(_ALLOWED_SCHEMES)}"),
         }
 
     start = time.monotonic()

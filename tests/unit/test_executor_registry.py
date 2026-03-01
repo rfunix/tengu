@@ -90,6 +90,7 @@ class TestCheckTool:
 
     def test_returns_tool_status(self):
         from tengu.types import ToolStatus
+
         result = check_tool("python3")
         assert isinstance(result, ToolStatus)
 
@@ -297,7 +298,9 @@ class TestPrintStatusTable:
         result = ToolsCheckResult(
             tools=[
                 ToolStatus(name="nmap", available=True, path="/usr/bin/nmap", category="recon"),
-                ToolStatus(name="sqlmap", available=True, path="/usr/bin/sqlmap", category="injection"),
+                ToolStatus(
+                    name="sqlmap", available=True, path="/usr/bin/sqlmap", category="injection"
+                ),
                 ToolStatus(name="hydra", available=False, category="bruteforce"),
             ],
             total=3,

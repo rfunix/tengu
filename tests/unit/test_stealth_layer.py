@@ -38,7 +38,9 @@ def _ua_config() -> StealthConfig:
 def _timing_config(min_ms: int = 0, max_ms: int = 1) -> StealthConfig:
     return StealthConfig(
         enabled=True,
-        timing=TimingConfig(enabled=True, min_delay_ms=min_ms, max_delay_ms=max_ms, jitter_percent=0),
+        timing=TimingConfig(
+            enabled=True, min_delay_ms=min_ms, max_delay_ms=max_ms, jitter_percent=0
+        ),
     )
 
 
@@ -194,6 +196,7 @@ class TestResetStealthLayer:
     def test_reset_clears_singleton(self):
         reset_stealth_layer()
         from tengu.stealth.layer import _stealth_layer
+
         assert _stealth_layer is None
 
 
@@ -207,6 +210,7 @@ class TestGetWrapperPrefix:
 
     def _config_with_wrapper(self, mode: str) -> StealthConfig:
         from tengu.stealth.config import WrapperConfig
+
         return StealthConfig(enabled=True, wrapper=WrapperConfig(mode=mode))
 
     def test_disabled_stealth_returns_empty(self):
@@ -220,7 +224,9 @@ class TestGetWrapperPrefix:
 
         layer = StealthLayer(self._config_with_wrapper("proxychains"))
         with patch("tengu.stealth.layer.shutil.which") as mock_which:
-            mock_which.side_effect = lambda x: "/usr/bin/proxychains4" if x == "proxychains4" else None
+            mock_which.side_effect = lambda x: (
+                "/usr/bin/proxychains4" if x == "proxychains4" else None
+            )
             result = layer.get_wrapper_prefix()
         assert result == ["/usr/bin/proxychains4", "-q"]
 
@@ -230,7 +236,9 @@ class TestGetWrapperPrefix:
 
         layer = StealthLayer(self._config_with_wrapper("proxychains"))
         with patch("tengu.stealth.layer.shutil.which") as mock_which:
-            mock_which.side_effect = lambda x: "/usr/bin/proxychains" if x == "proxychains" else None
+            mock_which.side_effect = lambda x: (
+                "/usr/bin/proxychains" if x == "proxychains" else None
+            )
             result = layer.get_wrapper_prefix()
         assert result == ["/usr/bin/proxychains", "-q"]
 

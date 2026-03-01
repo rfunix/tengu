@@ -49,7 +49,7 @@ class AuditLogger:
         if error:
             record["error"] = error
         if duration_seconds is not None:
-            record["duration_seconds"] = round(duration_seconds, 3)
+            record["duration_seconds"] = round(duration_seconds, 3)  # type: ignore[arg-type]
 
         await self._write(record)
         logger.info(

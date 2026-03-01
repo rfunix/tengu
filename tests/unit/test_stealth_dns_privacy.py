@@ -52,7 +52,9 @@ class TestResolveDoh:
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
         with patch("tengu.stealth.dns_privacy.httpx.AsyncClient", return_value=mock_client):
-            result = await resolve_doh("example.com", "https://cloudflare-dns.com/dns-query", "AAAA")
+            result = await resolve_doh(
+                "example.com", "https://cloudflare-dns.com/dns-query", "AAAA"
+            )
 
         assert "2606:2800:220:1:248:1893:25c8:1946" in result
 
@@ -66,7 +68,7 @@ class TestResolveDoh:
         mock_response.json.return_value = {
             "Answer": [
                 {"type": 5, "data": "alias.example.com."},  # CNAME — filtered out
-                {"type": 1, "data": "1.2.3.4"},            # A — included
+                {"type": 1, "data": "1.2.3.4"},  # A — included
             ]
         }
 
@@ -95,7 +97,9 @@ class TestResolveDoh:
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
         with patch("tengu.stealth.dns_privacy.httpx.AsyncClient", return_value=mock_client):
-            result = await resolve_doh("nx.example.com", "https://cloudflare-dns.com/dns-query", "A")
+            result = await resolve_doh(
+                "nx.example.com", "https://cloudflare-dns.com/dns-query", "A"
+            )
 
         assert result == []
 
@@ -123,9 +127,7 @@ class TestResolveDoh:
 
         mock_response = MagicMock()
         mock_response.raise_for_status = MagicMock()
-        mock_response.json.return_value = {
-            "Answer": [{"type": 1, "data": "8.8.8.8"}]
-        }
+        mock_response.json.return_value = {"Answer": [{"type": 1, "data": "8.8.8.8"}]}
 
         mock_client = AsyncMock()
         mock_client.get = AsyncMock(return_value=mock_response)
@@ -164,9 +166,7 @@ class TestResolveDoh:
 
         mock_response = MagicMock()
         mock_response.raise_for_status = MagicMock()
-        mock_response.json.return_value = {
-            "Answer": [{"type": 1, "data": "10.0.0.1"}]
-        }
+        mock_response.json.return_value = {"Answer": [{"type": 1, "data": "10.0.0.1"}]}
 
         mock_client = AsyncMock()
         mock_client.get = AsyncMock(return_value=mock_response)
@@ -174,6 +174,8 @@ class TestResolveDoh:
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
         with patch("tengu.stealth.dns_privacy.httpx.AsyncClient", return_value=mock_client):
-            result = await resolve_doh("internal.example.com", "https://cloudflare-dns.com/dns-query", "A")
+            result = await resolve_doh(
+                "internal.example.com", "https://cloudflare-dns.com/dns-query", "A"
+            )
 
         assert isinstance(result, list)

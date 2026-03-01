@@ -1,7 +1,5 @@
 """Nuclei vulnerability scanner tool wrapper."""
 
-from __future__ import annotations
-
 import json
 import time
 from typing import Literal
@@ -23,15 +21,15 @@ Severity = Literal["info", "low", "medium", "high", "critical"]
 
 
 async def nuclei_scan(
-    ctx: Context,  # type: ignore[type-arg]
+    ctx: Context,
     target: str,
     templates: list[str] | None = None,
-    severity: list[Severity] | None = None,
+    severity: list[Literal["info", "low", "medium", "high", "critical"]] | None = None,
     tags: list[str] | None = None,
     exclude_tags: list[str] | None = None,
     rate_limit: int = 150,
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Scan a target for vulnerabilities using Nuclei template engine.
 
     Nuclei uses YAML templates to detect vulnerabilities, misconfigurations,
@@ -55,13 +53,16 @@ async def nuclei_scan(
     cfg = get_config()
     audit = get_audit_logger()
     params: dict[str, object] = {
-        "target": target, "templates": templates, "severity": severity, "tags": tags
+        "target": target,
+        "templates": templates,
+        "severity": severity,
+        "tags": tags,
     }
 
     target = sanitize_url(target)
 
     effective_severity = severity or cfg.tools.defaults.nuclei_severity
-    effective_severity = sanitize_severity(effective_severity)
+    effective_severity = sanitize_severity(effective_severity)  # type: ignore[arg-type]
 
     allowlist = make_allowlist_from_config()
     try:
@@ -75,36 +76,40 @@ async def nuclei_scan(
 
     args = [
         tool_path,
-        "-u", target,
+        "-u",
+        target,
         "-json",
         "-silent",
-        "-severity", ",".join(effective_severity),
-        "-rate-limit", str(max(1, min(rate_limit, 1000))),
+        "-severity",
+        ",".join(effective_severity),
+        "-rate-limit",
+        str(max(1, min(rate_limit, 1000))),
     ]
 
     if templates:
         import re
-        safe_templates = [
-            t for t in templates
-            if re.match(r"^[a-zA-Z0-9_\-/\.]+$", t)
-        ]
+
+        safe_templates = [t for t in templates if re.match(r"^[a-zA-Z0-9_\-/\.]+$", t)]
         for tmpl in safe_templates:
             args.extend(["-t", tmpl])
 
     if tags:
         import re
+
         safe_tags = [t for t in tags if re.match(r"^[a-zA-Z0-9_\-]+$", t)]
         if safe_tags:
             args.extend(["-tags", ",".join(safe_tags)])
 
     if exclude_tags:
         import re
+
         safe_exclude = [t for t in exclude_tags if re.match(r"^[a-zA-Z0-9_\-]+$", t)]
         if safe_exclude:
             args.extend(["-etags", ",".join(safe_exclude)])
 
     # Stealth: inject -proxy flag if proxy is active
     from tengu.stealth import get_stealth_layer
+
     stealth = get_stealth_layer()
     if stealth.enabled and stealth.proxy_url:
         args = stealth.inject_proxy_flags("nuclei", args)
@@ -147,7 +152,7 @@ async def nuclei_scan(
     }
 
 
-def _parse_nuclei_output(output: str) -> list[dict]:  # type: ignore[type-arg]
+def _parse_nuclei_output(output: str) -> list[dict]:
     """Parse Nuclei JSONL output into structured findings."""
     findings = []
 

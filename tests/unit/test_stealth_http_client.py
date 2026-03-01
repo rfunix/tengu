@@ -28,7 +28,10 @@ class TestCreateStealthClient:
     def test_no_user_agent_no_custom_header(self):
         client = create_stealth_client(user_agent=None)
         # default httpx UA or no custom UA set
-        assert "User-Agent" not in dict(client.headers) or client.headers.get("user-agent") != "Mozilla/5.0 (Test)"
+        assert (
+            "User-Agent" not in dict(client.headers)
+            or client.headers.get("user-agent") != "Mozilla/5.0 (Test)"
+        )
 
     def test_follow_redirects_enabled(self):
         client = create_stealth_client()

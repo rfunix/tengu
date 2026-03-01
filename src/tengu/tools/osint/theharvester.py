@@ -1,4 +1,5 @@
 """theHarvester OSINT tool wrapper — emails, subdomains, hosts from public sources."""
+
 from __future__ import annotations
 
 import re
@@ -65,9 +66,12 @@ async def theharvester_scan(
 
     args = [
         tool_path,
-        "-d", domain,
-        "-b", safe_sources,
-        "-l", str(limit),
+        "-d",
+        domain,
+        "-b",
+        safe_sources,
+        "-l",
+        str(limit),
     ]
 
     await ctx.report_progress(0, 100, f"Starting theHarvester OSINT on {domain}...")
@@ -79,7 +83,9 @@ async def theharvester_scan(
         try:
             stdout, stderr, returncode = await run_command(args, timeout=effective_timeout)
         except Exception as exc:
-            await audit.log_tool_call("theHarvester", domain, params, result="failed", error=str(exc))
+            await audit.log_tool_call(
+                "theHarvester", domain, params, result="failed", error=str(exc)
+            )
             raise
 
         duration = time.monotonic() - start
@@ -122,7 +128,9 @@ async def theharvester_scan(
             emails.append(e)
 
     await ctx.report_progress(100, 100, "theHarvester complete")
-    await audit.log_tool_call("theHarvester", domain, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        "theHarvester", domain, params, result="completed", duration_seconds=duration
+    )
 
     return {
         "tool": "theHarvester",

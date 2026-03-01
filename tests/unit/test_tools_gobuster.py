@@ -1,4 +1,5 @@
 """Unit tests for gobuster_scan: validation, sanitization, and output parsing."""
+
 from __future__ import annotations
 
 import asyncio
@@ -51,9 +52,18 @@ def ctx():
 _MOD = "tengu.tools.web.gobuster"
 
 
-async def _run_gobuster_async(ctx, target="http://example.com", mode="dir",
-                              wordlist="/tmp/wl.txt", extensions="", threads=10,
-                              stdout="", stderr="", returncode=0, blocked=False):
+async def _run_gobuster_async(
+    ctx,
+    target="http://example.com",
+    mode="dir",
+    wordlist="/tmp/wl.txt",
+    extensions="",
+    threads=10,
+    stdout="",
+    stderr="",
+    returncode=0,
+    blocked=False,
+):
     """Helper to call gobuster_scan under full mock."""
     from tengu.tools.web.gobuster import gobuster_scan
 
@@ -72,8 +82,9 @@ async def _run_gobuster_async(ctx, target="http://example.com", mode="dir",
         patch(f"{_MOD}.make_allowlist_from_config", return_value=_make_allowlist_mock(blocked)),
         patch(f"{_MOD}.run_command", new=AsyncMock(return_value=(stdout, stderr, returncode))),
     ):
-        return await gobuster_scan(ctx, target, mode=mode, wordlist=wordlist,
-                                   extensions=extensions, threads=threads)
+        return await gobuster_scan(
+            ctx, target, mode=mode, wordlist=wordlist, extensions=extensions, threads=threads
+        )
 
 
 def _run_gobuster(ctx, **kwargs):
@@ -164,7 +175,9 @@ class TestGobusterFindingsParsing:
         assert "/admin (Status: 200) [Size: 1234]" in result["findings"]
 
     def test_header_lines_starting_with_equals_excluded(self, ctx):
-        stdout = "===============================================================\n/path (Status: 200)\n"
+        stdout = (
+            "===============================================================\n/path (Status: 200)\n"
+        )
         result = _run_gobuster(ctx, stdout=stdout)
         assert result["findings_count"] == 1
         assert all(not f.startswith("=") for f in result["findings"])
@@ -190,8 +203,16 @@ class TestGobusterReturnStructure:
     def test_return_keys_present(self, ctx):
         result = _run_gobuster(ctx)
         expected_keys = {
-            "tool", "target", "mode", "wordlist", "command",
-            "duration_seconds", "findings_count", "findings", "raw_output", "errors",
+            "tool",
+            "target",
+            "mode",
+            "wordlist",
+            "command",
+            "duration_seconds",
+            "findings_count",
+            "findings",
+            "raw_output",
+            "errors",
         }
         assert expected_keys.issubset(result.keys())
 

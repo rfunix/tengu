@@ -1,4 +1,5 @@
 """CeWL custom wordlist generator from web page content."""
+
 from __future__ import annotations
 
 import re
@@ -72,9 +73,12 @@ async def cewl_generate(
 
     args = [
         tool_path,
-        "-d", str(depth),
-        "-m", str(min_word_length),
-        "-w", safe_output,
+        "-d",
+        str(depth),
+        "-m",
+        str(min_word_length),
+        "-w",
+        safe_output,
         url,
     ]
 

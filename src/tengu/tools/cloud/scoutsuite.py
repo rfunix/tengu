@@ -22,14 +22,14 @@ _VALID_PROVIDERS = {"aws", "azure", "gcp", "alibaba"}
 
 
 async def scoutsuite_scan(
-    ctx: Context,  # type: ignore[type-arg]
+    ctx: Context,
     provider: str,
     profile: str = "",
     project: str = "",
     subscription: str = "",
     report_dir: str = "/tmp/scoutsuite-report",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Perform a cloud security audit using ScoutSuite.
 
     Args:
@@ -63,8 +63,16 @@ async def scoutsuite_scan(
     # Sanitize optional identifier fields
     safe_profile = sanitize_free_text(profile, field="profile", max_length=128) if profile else ""
     safe_project = sanitize_free_text(project, field="project", max_length=256) if project else ""
-    safe_subscription = sanitize_free_text(subscription, field="subscription", max_length=256) if subscription else ""
-    safe_report_dir = sanitize_free_text(report_dir, field="report_dir", max_length=512) if report_dir else "/tmp/scoutsuite-report"
+    safe_subscription = (
+        sanitize_free_text(subscription, field="subscription", max_length=256)
+        if subscription
+        else ""
+    )
+    safe_report_dir = (
+        sanitize_free_text(report_dir, field="report_dir", max_length=512)
+        if report_dir
+        else "/tmp/scoutsuite-report"
+    )
 
     params: dict[str, object] = {
         "provider": provider,
@@ -81,7 +89,8 @@ async def scoutsuite_scan(
         tool_path,
         provider,
         "--no-browser",
-        "--report-dir", safe_report_dir,
+        "--report-dir",
+        safe_report_dir,
     ]
 
     # Provider-specific arguments
@@ -112,7 +121,9 @@ async def scoutsuite_scan(
     report_summary = _parse_scoutsuite_report(safe_report_dir)
 
     await ctx.report_progress(100, 100, "ScoutSuite audit complete")
-    await audit.log_tool_call("scout", provider, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        "scout", provider, params, result="completed", duration_seconds=duration
+    )
 
     return {
         "tool": "scoutsuite",
@@ -125,7 +136,7 @@ async def scoutsuite_scan(
     }
 
 
-def _parse_scoutsuite_report(report_dir: str) -> dict:  # type: ignore[type-arg]
+def _parse_scoutsuite_report(report_dir: str) -> dict:
     """Parse the ScoutSuite JSON results file from disk."""
     result: dict[str, object] = {
         "parsed": False,
@@ -153,7 +164,7 @@ def _parse_scoutsuite_report(report_dir: str) -> dict:  # type: ignore[type-arg]
     result["parsed"] = True
     services_data = data.get("services", {})
     service_summaries: dict[str, object] = {}
-    top_findings: list[dict] = []  # type: ignore[type-arg]
+    top_findings: list[dict] = []
     total_flagged = 0
 
     for service_name, service_data in services_data.items():
@@ -179,13 +190,15 @@ def _parse_scoutsuite_report(report_dir: str) -> dict:  # type: ignore[type-arg]
 
                 if level in ("danger", "warning"):
                     high_severity.append(f"{service_name}: {description} ({flagged} flagged)")
-                    top_findings.append({
-                        "service": service_name,
-                        "finding": finding_key,
-                        "description": description,
-                        "flagged_items": flagged,
-                        "severity": "high" if level == "danger" else "medium",
-                    })
+                    top_findings.append(
+                        {
+                            "service": service_name,
+                            "finding": finding_key,
+                            "description": description,
+                            "flagged_items": flagged,
+                            "severity": "high" if level == "danger" else "medium",
+                        }
+                    )
 
         if flagged_count > 0:
             service_summaries[service_name] = {
@@ -195,7 +208,9 @@ def _parse_scoutsuite_report(report_dir: str) -> dict:  # type: ignore[type-arg]
             total_flagged += flagged_count
 
     # Sort top findings by flagged items descending
-    top_findings_sorted = sorted(top_findings, key=lambda x: x.get("flagged_items", 0), reverse=True)
+    top_findings_sorted = sorted(
+        top_findings, key=lambda x: x.get("flagged_items", 0), reverse=True
+    )
 
     result["services"] = service_summaries
     result["total_flagged_items"] = total_flagged

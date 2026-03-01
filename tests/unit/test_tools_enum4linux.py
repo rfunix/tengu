@@ -71,9 +71,7 @@ class TestParseEnum4linuxOutput:
         assert result["users"][0]["username"] == "alice"
 
     def test_json_groups_parsed(self):
-        groups = {
-            "512": {"groupname": "Domain Admins", "members": ["Administrator"]}
-        }
+        groups = {"512": {"groupname": "Domain Admins", "members": ["Administrator"]}}
         output = _make_enum4linux_json(groups=groups)
         result = _parse_enum4linux_output(output)
         assert len(result["groups"]) == 1
@@ -133,11 +131,7 @@ class TestParseEnum4linuxText:
         assert result["users"][0]["rid"] == "0x1f4"
 
     def test_multiple_users(self):
-        text = (
-            "user:[admin] rid:[500]\n"
-            "user:[guest] rid:[501]\n"
-            "user:[bob] rid:[1001]\n"
-        )
+        text = "user:[admin] rid:[500]\nuser:[guest] rid:[501]\nuser:[bob] rid:[1001]\n"
         result = _parse_enum4linux_text(text)
         assert len(result["users"]) == 3
 
@@ -228,7 +222,9 @@ class TestEnum4linuxScan:
         with (
             patch("tengu.tools.ad.enum4linux.get_config", return_value=mock_cfg),
             patch("tengu.tools.ad.enum4linux.get_audit_logger", return_value=mock_audit),
-            patch("tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist),
+            patch(
+                "tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist
+            ),
             pytest.raises(Exception, match="Not allowed"),
         ):
             await enum4linux_scan(mock_ctx, "10.0.0.1")
@@ -242,11 +238,19 @@ class TestEnum4linuxScan:
         with (
             patch("tengu.tools.ad.enum4linux.get_config", return_value=mock_cfg),
             patch("tengu.tools.ad.enum4linux.get_audit_logger", return_value=mock_audit),
-            patch("tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist),
+            patch(
+                "tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist
+            ),
             patch("tengu.tools.ad.enum4linux.shutil.which", return_value="/usr/bin/enum4linux-ng"),
-            patch("tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"),
+            patch(
+                "tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"
+            ),
             patch("tengu.tools.ad.enum4linux.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.ad.enum4linux.run_command", new_callable=AsyncMock, return_value=("{}", "", 0)),
+            patch(
+                "tengu.tools.ad.enum4linux.run_command",
+                new_callable=AsyncMock,
+                return_value=("{}", "", 0),
+            ),
         ):
             result = await enum4linux_scan(mock_ctx, "10.0.0.1")
 
@@ -259,11 +263,19 @@ class TestEnum4linuxScan:
         with (
             patch("tengu.tools.ad.enum4linux.get_config", return_value=mock_cfg),
             patch("tengu.tools.ad.enum4linux.get_audit_logger", return_value=mock_audit),
-            patch("tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist),
+            patch(
+                "tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist
+            ),
             patch("tengu.tools.ad.enum4linux.shutil.which", return_value=None),
-            patch("tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux"),
+            patch(
+                "tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux"
+            ),
             patch("tengu.tools.ad.enum4linux.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.ad.enum4linux.run_command", new_callable=AsyncMock, return_value=("{}", "", 0)),
+            patch(
+                "tengu.tools.ad.enum4linux.run_command",
+                new_callable=AsyncMock,
+                return_value=("{}", "", 0),
+            ),
         ):
             result = await enum4linux_scan(mock_ctx, "10.0.0.1")
 
@@ -282,9 +294,13 @@ class TestEnum4linuxScan:
         with (
             patch("tengu.tools.ad.enum4linux.get_config", return_value=mock_cfg),
             patch("tengu.tools.ad.enum4linux.get_audit_logger", return_value=mock_audit),
-            patch("tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist),
+            patch(
+                "tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist
+            ),
             patch("tengu.tools.ad.enum4linux.shutil.which", return_value="/usr/bin/enum4linux-ng"),
-            patch("tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"),
+            patch(
+                "tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"
+            ),
             patch("tengu.tools.ad.enum4linux.rate_limited", return_value=mock_rl),
             patch("tengu.tools.ad.enum4linux.run_command", side_effect=fake_run),
         ):
@@ -308,9 +324,13 @@ class TestEnum4linuxScan:
         with (
             patch("tengu.tools.ad.enum4linux.get_config", return_value=mock_cfg),
             patch("tengu.tools.ad.enum4linux.get_audit_logger", return_value=mock_audit),
-            patch("tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist),
+            patch(
+                "tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist
+            ),
             patch("tengu.tools.ad.enum4linux.shutil.which", return_value="/usr/bin/enum4linux-ng"),
-            patch("tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"),
+            patch(
+                "tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"
+            ),
             patch("tengu.tools.ad.enum4linux.rate_limited", return_value=mock_rl),
             patch("tengu.tools.ad.enum4linux.run_command", side_effect=fake_run),
         ):
@@ -326,15 +346,35 @@ class TestEnum4linuxScan:
         with (
             patch("tengu.tools.ad.enum4linux.get_config", return_value=mock_cfg),
             patch("tengu.tools.ad.enum4linux.get_audit_logger", return_value=mock_audit),
-            patch("tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist),
+            patch(
+                "tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist
+            ),
             patch("tengu.tools.ad.enum4linux.shutil.which", return_value="/usr/bin/enum4linux-ng"),
-            patch("tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"),
+            patch(
+                "tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"
+            ),
             patch("tengu.tools.ad.enum4linux.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.ad.enum4linux.run_command", new_callable=AsyncMock, return_value=("{}", "", 0)),
+            patch(
+                "tengu.tools.ad.enum4linux.run_command",
+                new_callable=AsyncMock,
+                return_value=("{}", "", 0),
+            ),
         ):
             result = await enum4linux_scan(mock_ctx, "10.0.0.1")
 
-        for key in ("tool", "target", "authenticated", "command", "duration_seconds", "users", "groups", "shares", "password_policy", "os_info", "raw_output_excerpt"):
+        for key in (
+            "tool",
+            "target",
+            "authenticated",
+            "command",
+            "duration_seconds",
+            "users",
+            "groups",
+            "shares",
+            "password_policy",
+            "os_info",
+            "raw_output_excerpt",
+        ):
             assert key in result, f"Missing key: {key}"
 
     async def test_run_command_exception_propagates_with_audit_log(self, mock_ctx):
@@ -344,11 +384,19 @@ class TestEnum4linuxScan:
         with (
             patch("tengu.tools.ad.enum4linux.get_config", return_value=mock_cfg),
             patch("tengu.tools.ad.enum4linux.get_audit_logger", return_value=mock_audit),
-            patch("tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist),
+            patch(
+                "tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist
+            ),
             patch("tengu.tools.ad.enum4linux.shutil.which", return_value="/usr/bin/enum4linux-ng"),
-            patch("tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"),
+            patch(
+                "tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"
+            ),
             patch("tengu.tools.ad.enum4linux.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.ad.enum4linux.run_command", new_callable=AsyncMock, side_effect=RuntimeError("subprocess failed")),
+            patch(
+                "tengu.tools.ad.enum4linux.run_command",
+                new_callable=AsyncMock,
+                side_effect=RuntimeError("subprocess failed"),
+            ),
             pytest.raises(RuntimeError, match="subprocess failed"),
         ):
             await enum4linux_scan(mock_ctx, "10.0.0.1")
@@ -369,9 +417,13 @@ class TestEnum4linuxScan:
         with (
             patch("tengu.tools.ad.enum4linux.get_config", return_value=mock_cfg),
             patch("tengu.tools.ad.enum4linux.get_audit_logger", return_value=mock_audit),
-            patch("tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist),
+            patch(
+                "tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist
+            ),
             patch("tengu.tools.ad.enum4linux.shutil.which", return_value="/usr/bin/enum4linux-ng"),
-            patch("tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"),
+            patch(
+                "tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"
+            ),
             patch("tengu.tools.ad.enum4linux.rate_limited", return_value=mock_rl),
             patch("tengu.tools.ad.enum4linux.run_command", side_effect=fake_run),
         ):
@@ -386,11 +438,19 @@ class TestEnum4linuxScan:
         with (
             patch("tengu.tools.ad.enum4linux.get_config", return_value=mock_cfg),
             patch("tengu.tools.ad.enum4linux.get_audit_logger", return_value=mock_audit),
-            patch("tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist),
+            patch(
+                "tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist
+            ),
             patch("tengu.tools.ad.enum4linux.shutil.which", return_value="/usr/bin/enum4linux-ng"),
-            patch("tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"),
+            patch(
+                "tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"
+            ),
             patch("tengu.tools.ad.enum4linux.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.ad.enum4linux.run_command", new_callable=AsyncMock, return_value=("{}", "", 0)),
+            patch(
+                "tengu.tools.ad.enum4linux.run_command",
+                new_callable=AsyncMock,
+                return_value=("{}", "", 0),
+            ),
         ):
             result = await enum4linux_scan(mock_ctx, "10.0.0.1")
 
@@ -403,11 +463,19 @@ class TestEnum4linuxScan:
         with (
             patch("tengu.tools.ad.enum4linux.get_config", return_value=mock_cfg),
             patch("tengu.tools.ad.enum4linux.get_audit_logger", return_value=mock_audit),
-            patch("tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist),
+            patch(
+                "tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist
+            ),
             patch("tengu.tools.ad.enum4linux.shutil.which", return_value="/usr/bin/enum4linux-ng"),
-            patch("tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"),
+            patch(
+                "tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"
+            ),
             patch("tengu.tools.ad.enum4linux.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.ad.enum4linux.run_command", new_callable=AsyncMock, return_value=("{}", "", 0)),
+            patch(
+                "tengu.tools.ad.enum4linux.run_command",
+                new_callable=AsyncMock,
+                return_value=("{}", "", 0),
+            ),
         ):
             result = await enum4linux_scan(mock_ctx, "10.0.0.1", username="admin", password="pass")
 
@@ -421,11 +489,19 @@ class TestEnum4linuxScan:
         with (
             patch("tengu.tools.ad.enum4linux.get_config", return_value=mock_cfg),
             patch("tengu.tools.ad.enum4linux.get_audit_logger", return_value=mock_audit),
-            patch("tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist),
+            patch(
+                "tengu.tools.ad.enum4linux.make_allowlist_from_config", return_value=mock_allowlist
+            ),
             patch("tengu.tools.ad.enum4linux.shutil.which", return_value="/usr/bin/enum4linux-ng"),
-            patch("tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"),
+            patch(
+                "tengu.tools.ad.enum4linux.resolve_tool_path", return_value="/usr/bin/enum4linux-ng"
+            ),
             patch("tengu.tools.ad.enum4linux.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.ad.enum4linux.run_command", new_callable=AsyncMock, return_value=(long_stdout, "", 0)),
+            patch(
+                "tengu.tools.ad.enum4linux.run_command",
+                new_callable=AsyncMock,
+                return_value=(long_stdout, "", 0),
+            ),
         ):
             result = await enum4linux_scan(mock_ctx, "10.0.0.1")
 

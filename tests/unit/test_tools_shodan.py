@@ -1,4 +1,5 @@
 """Unit tests for the shodan_lookup async tool."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -109,6 +110,7 @@ async def _call_shodan(
         if import_error:
             # Simulate ImportError for httpx by patching builtins.__import__
             import builtins
+
             real_import = builtins.__import__
 
             def _bad_import(name, *args, **kwargs):
@@ -159,11 +161,19 @@ class TestShodanLookup:
 
     async def test_host_query_returns_correct_keys(self):
         mocks = _make_fixtures()
-        result = await _call_shodan(
-            mocks, query_type="host", httpx_response=_make_host_response()
-        )
-        for key in ("tool", "query_type", "target", "ip", "org", "isp", "country",
-                    "ports", "vulnerabilities", "services_count"):
+        result = await _call_shodan(mocks, query_type="host", httpx_response=_make_host_response())
+        for key in (
+            "tool",
+            "query_type",
+            "target",
+            "ip",
+            "org",
+            "isp",
+            "country",
+            "ports",
+            "vulnerabilities",
+            "services_count",
+        ):
             assert key in result, f"Missing key: {key}"
         assert result["tool"] == "shodan"
         assert result["query_type"] == "host"
@@ -207,9 +217,16 @@ class TestShodanLookup:
     async def test_search_results_limited(self):
         mocks = _make_fixtures()
         matches = [
-            {"ip_str": f"1.1.1.{i}", "port": 80, "org": "Org",
-             "location": {"country_name": "US"}, "hostnames": [],
-             "product": None, "version": None, "cpe": []}
+            {
+                "ip_str": f"1.1.1.{i}",
+                "port": 80,
+                "org": "Org",
+                "location": {"country_name": "US"},
+                "hostnames": [],
+                "product": None,
+                "version": None,
+                "cpe": [],
+            }
             for i in range(10)
         ]
         result = await _call_shodan(

@@ -19,7 +19,9 @@ def mock_ctx():
 def _make_tools_result(available: int = 3, missing: int = 2) -> ToolsCheckResult:
     tools = []
     for i in range(available):
-        tools.append(ToolStatus(name=f"tool{i}", available=True, path=f"/usr/bin/tool{i}", category="recon"))
+        tools.append(
+            ToolStatus(name=f"tool{i}", available=True, path=f"/usr/bin/tool{i}", category="recon")
+        )
     for i in range(missing):
         tools.append(ToolStatus(name=f"missing{i}", available=False, category="web"))
     return ToolsCheckResult(

@@ -25,7 +25,10 @@ class TestSanitizeDockerImage:
         assert _sanitize_docker_image("nginx:latest") == "nginx:latest"
 
     def test_image_with_registry(self):
-        assert _sanitize_docker_image("registry.example.com/myapp:1.0") == "registry.example.com/myapp:1.0"
+        assert (
+            _sanitize_docker_image("registry.example.com/myapp:1.0")
+            == "registry.example.com/myapp:1.0"
+        )
 
     def test_image_with_digest(self):
         sha = "sha256:" + "a" * 64
@@ -92,10 +95,12 @@ class TestValidSeverities:
 
 
 def _make_trivy_output(results: list | None = None) -> str:
-    return json.dumps({
-        "SchemaVersion": 2,
-        "Results": results or [],
-    })
+    return json.dumps(
+        {
+            "SchemaVersion": 2,
+            "Results": results or [],
+        }
+    )
 
 
 def _make_vuln(
@@ -239,7 +244,9 @@ def _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl):
 class TestTrivyScan:
     """Async tests for trivy_scan()."""
 
-    async def test_trivy_image_scan(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trivy_image_scan(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """scan_type='image' passes 'image' subcommand to run_command."""
         _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_trivy_ctx()
@@ -251,7 +258,9 @@ class TestTrivyScan:
         call_args = mock_run.call_args[0][0]
         assert "image" in call_args
 
-    async def test_trivy_repo_scan(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trivy_repo_scan(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """scan_type='repo' passes 'repo' subcommand."""
         _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_trivy_ctx()
@@ -264,7 +273,9 @@ class TestTrivyScan:
         call_args = mock_run.call_args[0][0]
         assert "repo" in call_args
 
-    async def test_trivy_filesystem_scan(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trivy_filesystem_scan(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """scan_type='fs' passes 'fs' subcommand."""
         _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_trivy_ctx()
@@ -276,7 +287,9 @@ class TestTrivyScan:
         call_args = mock_run.call_args[0][0]
         assert "fs" in call_args
 
-    async def test_trivy_invalid_scan_type(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trivy_invalid_scan_type(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """Invalid scan_type returns error dict without calling run_command."""
         _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_trivy_ctx()
@@ -288,7 +301,9 @@ class TestTrivyScan:
         assert "error" in result
         mock_run.assert_not_called()
 
-    async def test_trivy_severity_filter(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trivy_severity_filter(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """severity filter appears in --severity flag."""
         _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_trivy_ctx()
@@ -302,7 +317,9 @@ class TestTrivyScan:
         idx = call_args.index("--severity")
         assert "HIGH" in call_args[idx + 1]
 
-    async def test_trivy_output_parsed(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trivy_output_parsed(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """JSON output is parsed into vulnerability list."""
         _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
         vuln = _make_vuln(severity="CRITICAL")
@@ -316,7 +333,9 @@ class TestTrivyScan:
 
         assert result["total_vulnerabilities"] == 1
 
-    async def test_trivy_no_vulns(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trivy_no_vulns(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """Empty output → total_vulnerabilities=0."""
         _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
         mock_run.return_value = ("", "", 0)
@@ -328,7 +347,9 @@ class TestTrivyScan:
 
         assert result["total_vulnerabilities"] == 0
 
-    async def test_trivy_tool_key(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trivy_tool_key(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """Result 'tool' key equals 'trivy'."""
         _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_trivy_ctx()
@@ -339,7 +360,9 @@ class TestTrivyScan:
 
         assert result["tool"] == "trivy"
 
-    async def test_trivy_audit_logged(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trivy_audit_logged(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """audit.log_tool_call is called during execution."""
         audit = _setup_trivy_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_trivy_ctx()

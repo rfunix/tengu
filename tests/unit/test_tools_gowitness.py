@@ -1,4 +1,5 @@
 """Unit tests for the gowitness_screenshot async tool."""
+
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
@@ -153,7 +154,16 @@ class TestGowitnessScreenshot:
     async def test_returns_correct_structure(self):
         mocks = _make_fixtures()
         result = await _call_gowitness(mocks)
-        for key in ("tool", "target", "mode", "output_dir", "command",
-                    "duration_seconds", "screenshots_taken", "screenshot_paths", "raw_output"):
+        for key in (
+            "tool",
+            "target",
+            "mode",
+            "output_dir",
+            "command",
+            "duration_seconds",
+            "screenshots_taken",
+            "screenshot_paths",
+            "raw_output",
+        ):
             assert key in result, f"Missing key: {key}"
         assert result["tool"] == "gowitness"

@@ -75,8 +75,12 @@ class TestTorCheckConnected:
         reset_stealth_layer()
         make_client = _make_http_client(tor_json={"IP": "10.0.0.1", "IsTor": True})
 
-        with patch("tengu.tools.stealth.tor_check.get_stealth_layer", return_value=_disabled_stealth()), \
-             patch("tengu.tools.stealth.tor_check.httpx.AsyncClient", side_effect=make_client):
+        with (
+            patch(
+                "tengu.tools.stealth.tor_check.get_stealth_layer", return_value=_disabled_stealth()
+            ),
+            patch("tengu.tools.stealth.tor_check.httpx.AsyncClient", side_effect=make_client),
+        ):
             from tengu.tools.stealth.tor_check import tor_check
 
             result = await tor_check()
@@ -90,8 +94,12 @@ class TestTorCheckConnected:
         reset_stealth_layer()
         make_client = _make_http_client(tor_json={"IP": "5.6.7.8", "IsTor": False})
 
-        with patch("tengu.tools.stealth.tor_check.get_stealth_layer", return_value=_disabled_stealth()), \
-             patch("tengu.tools.stealth.tor_check.httpx.AsyncClient", side_effect=make_client):
+        with (
+            patch(
+                "tengu.tools.stealth.tor_check.get_stealth_layer", return_value=_disabled_stealth()
+            ),
+            patch("tengu.tools.stealth.tor_check.httpx.AsyncClient", side_effect=make_client),
+        ):
             from tengu.tools.stealth.tor_check import tor_check
 
             result = await tor_check()
@@ -104,8 +112,12 @@ class TestTorCheckConnected:
         reset_stealth_layer()
         make_client = _make_http_client(ipify_json={"ip": "203.0.113.1"})
 
-        with patch("tengu.tools.stealth.tor_check.get_stealth_layer", return_value=_disabled_stealth()), \
-             patch("tengu.tools.stealth.tor_check.httpx.AsyncClient", side_effect=make_client):
+        with (
+            patch(
+                "tengu.tools.stealth.tor_check.get_stealth_layer", return_value=_disabled_stealth()
+            ),
+            patch("tengu.tools.stealth.tor_check.httpx.AsyncClient", side_effect=make_client),
+        ):
             from tengu.tools.stealth.tor_check import tor_check
 
             result = await tor_check()
@@ -118,8 +130,12 @@ class TestTorCheckConnected:
         reset_stealth_layer()
         make_client = _make_http_client(ipify_error=Exception("connection error"))
 
-        with patch("tengu.tools.stealth.tor_check.get_stealth_layer", return_value=_disabled_stealth()), \
-             patch("tengu.tools.stealth.tor_check.httpx.AsyncClient", side_effect=make_client):
+        with (
+            patch(
+                "tengu.tools.stealth.tor_check.get_stealth_layer", return_value=_disabled_stealth()
+            ),
+            patch("tengu.tools.stealth.tor_check.httpx.AsyncClient", side_effect=make_client),
+        ):
             from tengu.tools.stealth.tor_check import tor_check
 
             result = await tor_check()
@@ -132,8 +148,12 @@ class TestTorCheckConnected:
         reset_stealth_layer()
         make_client = _make_http_client(tor_error=Exception("SOCKS error"))
 
-        with patch("tengu.tools.stealth.tor_check.get_stealth_layer", return_value=_disabled_stealth()), \
-             patch("tengu.tools.stealth.tor_check.httpx.AsyncClient", side_effect=make_client):
+        with (
+            patch(
+                "tengu.tools.stealth.tor_check.get_stealth_layer", return_value=_disabled_stealth()
+            ),
+            patch("tengu.tools.stealth.tor_check.httpx.AsyncClient", side_effect=make_client),
+        ):
             from tengu.tools.stealth.tor_check import tor_check
 
             result = await tor_check()
@@ -155,8 +175,10 @@ class TestTorCheckProxyUrl:
         stealth = _proxy_stealth("socks5://127.0.0.1:9050")
         make_client = _make_http_client()
 
-        with patch("tengu.tools.stealth.tor_check.get_stealth_layer", return_value=stealth), \
-             patch("tengu.tools.stealth.tor_check.httpx.AsyncClient", side_effect=make_client):
+        with (
+            patch("tengu.tools.stealth.tor_check.get_stealth_layer", return_value=stealth),
+            patch("tengu.tools.stealth.tor_check.httpx.AsyncClient", side_effect=make_client),
+        ):
             from tengu.tools.stealth.tor_check import tor_check
 
             result = await tor_check()
@@ -170,8 +192,10 @@ class TestTorCheckProxyUrl:
         stealth = _disabled_stealth()
         make_client = _make_http_client()
 
-        with patch("tengu.tools.stealth.tor_check.get_stealth_layer", return_value=stealth), \
-             patch("tengu.tools.stealth.tor_check.httpx.AsyncClient", side_effect=make_client):
+        with (
+            patch("tengu.tools.stealth.tor_check.get_stealth_layer", return_value=stealth),
+            patch("tengu.tools.stealth.tor_check.httpx.AsyncClient", side_effect=make_client),
+        ):
             from tengu.tools.stealth.tor_check import tor_check
 
             result = await tor_check()
@@ -184,8 +208,12 @@ class TestTorCheckProxyUrl:
         reset_stealth_layer()
         make_client = _make_http_client()
 
-        with patch("tengu.tools.stealth.tor_check.get_stealth_layer", return_value=_disabled_stealth()), \
-             patch("tengu.tools.stealth.tor_check.httpx.AsyncClient", side_effect=make_client):
+        with (
+            patch(
+                "tengu.tools.stealth.tor_check.get_stealth_layer", return_value=_disabled_stealth()
+            ),
+            patch("tengu.tools.stealth.tor_check.httpx.AsyncClient", side_effect=make_client),
+        ):
             from tengu.tools.stealth.tor_check import tor_check
 
             result = await tor_check()

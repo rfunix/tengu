@@ -23,26 +23,28 @@ def _make_nuclei_line(
     cvss_score: float | None = 9.0,
     tags: list | None = None,
 ) -> str:
-    return json.dumps({
-        "template-id": template_id,
-        "info": {
-            "name": name,
-            "severity": severity,
-            "description": "Remote code execution via Log4j",
-            "classification": {
-                "cve-id": cve_ids or ["CVE-2021-44228"],
-                "cwe-id": ["CWE-502"],
-                "cvss-score": cvss_score,
+    return json.dumps(
+        {
+            "template-id": template_id,
+            "info": {
+                "name": name,
+                "severity": severity,
+                "description": "Remote code execution via Log4j",
+                "classification": {
+                    "cve-id": cve_ids or ["CVE-2021-44228"],
+                    "cwe-id": ["CWE-502"],
+                    "cvss-score": cvss_score,
+                },
+                "tags": tags or ["cve", "rce", "log4j"],
+                "reference": ["https://nvd.nist.gov/vuln/detail/CVE-2021-44228"],
             },
-            "tags": tags or ["cve", "rce", "log4j"],
-            "reference": ["https://nvd.nist.gov/vuln/detail/CVE-2021-44228"],
-        },
-        "matched-at": matched_at,
-        "type": "http",
-        "extracted-results": [],
-        "curl-command": "",
-        "timestamp": "2024-01-01T00:00:00Z",
-    })
+            "matched-at": matched_at,
+            "type": "http",
+            "extracted-results": [],
+            "curl-command": "",
+            "timestamp": "2024-01-01T00:00:00Z",
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -103,9 +105,7 @@ class TestParseNucleiOutput:
         assert len(findings) == 1
 
     def test_multiple_findings(self):
-        lines = "\n".join([
-            _make_nuclei_line(template_id=f"tmpl-{i}") for i in range(5)
-        ])
+        lines = "\n".join([_make_nuclei_line(template_id=f"tmpl-{i}") for i in range(5)])
         findings = _parse_nuclei_output(lines)
         assert len(findings) == 5
 
@@ -157,7 +157,9 @@ class TestNucleiScan:
     @patch("tengu.tools.web.nuclei.get_config")
     @patch("tengu.tools.web.nuclei.make_allowlist_from_config")
     @patch("tengu.tools.web.nuclei.get_audit_logger")
-    async def test_nuclei_blocked_url(self, mock_audit_fn, mock_allowlist_fn, mock_config, mock_ctx):
+    async def test_nuclei_blocked_url(
+        self, mock_audit_fn, mock_allowlist_fn, mock_config, mock_ctx
+    ):
         mock_config.return_value = _make_nuclei_config()
         mock_allowlist = MagicMock()
         mock_allowlist.check.side_effect = Exception("Target blocked")
@@ -177,7 +179,15 @@ class TestNucleiScan:
     @patch("tengu.tools.web.nuclei.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_nuclei_templates_flag(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_nuclei_config()
         mock_allowlist = MagicMock()
@@ -205,7 +215,15 @@ class TestNucleiScan:
     @patch("tengu.tools.web.nuclei.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_nuclei_tags_flag(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_nuclei_config()
         mock_allowlist = MagicMock()
@@ -235,7 +253,15 @@ class TestNucleiScan:
     @patch("tengu.tools.web.nuclei.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_nuclei_severity_filter(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_nuclei_config()
         mock_allowlist = MagicMock()
@@ -265,7 +291,15 @@ class TestNucleiScan:
     @patch("tengu.tools.web.nuclei.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_nuclei_stealth_proxy(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_nuclei_config()
         mock_allowlist = MagicMock()
@@ -281,7 +315,9 @@ class TestNucleiScan:
         mock_stealth_layer.enabled = True
         mock_stealth_layer.proxy_url = "socks5://127.0.0.1:9050"
         # inject_proxy_flags appends the -proxy flag
-        mock_stealth_layer.inject_proxy_flags.side_effect = lambda tool, args: args + ["-proxy", "socks5://127.0.0.1:9050"]
+        mock_stealth_layer.inject_proxy_flags.side_effect = lambda tool, args: (
+            args + ["-proxy", "socks5://127.0.0.1:9050"]
+        )
         mock_stealth.return_value = mock_stealth_layer
 
         await nuclei_scan(mock_ctx, "https://example.com")
@@ -296,7 +332,15 @@ class TestNucleiScan:
     @patch("tengu.tools.web.nuclei.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_nuclei_output_parsing(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_nuclei_config()
         mock_allowlist = MagicMock()
@@ -327,7 +371,15 @@ class TestNucleiScan:
     @patch("tengu.tools.web.nuclei.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_nuclei_no_templates_no_tags(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_nuclei_config()
         mock_allowlist = MagicMock()
@@ -357,7 +409,15 @@ class TestNucleiScan:
     @patch("tengu.tools.web.nuclei.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_nuclei_timeout_respected(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_nuclei_config(scan_timeout=60)
         mock_allowlist = MagicMock()
@@ -385,7 +445,15 @@ class TestNucleiScan:
     @patch("tengu.tools.web.nuclei.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_nuclei_tool_key(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_nuclei_config()
         mock_allowlist = MagicMock()

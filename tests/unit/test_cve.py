@@ -234,9 +234,7 @@ class TestParseNvdCve:
                 "id": "CVE-2000-0001",
                 "descriptions": [{"lang": "en", "value": "test"}],
                 "metrics": {},
-                "weaknesses": [
-                    {"description": [{"lang": "en", "value": "NVD-CWE-Other"}]}
-                ],
+                "weaknesses": [{"description": [{"lang": "en", "value": "NVD-CWE-Other"}]}],
             }
         }
         result = _parse_nvd_cve(vuln)
@@ -257,8 +255,7 @@ class TestParseNvdCve:
 
     def test_affected_products_capped_at_20(self):
         cpe_matches = [
-            {"vulnerable": True, "criteria": f"cpe:2.3:a:vendor:product{i}:*"}
-            for i in range(25)
+            {"vulnerable": True, "criteria": f"cpe:2.3:a:vendor:product{i}:*"} for i in range(25)
         ]
         vuln = {
             "cve": {
@@ -480,6 +477,7 @@ class TestRateLimitWait:
 
     async def test_updates_last_request_time(self):
         import time
+
         cve_mod._last_request_time = 0.0
         before = time.monotonic()
         with patch("tengu.resources.cve.get_config") as mock_cfg:
@@ -498,7 +496,12 @@ class TestLookupCve:
     async def test_cache_hit_returns_record(self, tmp_path):
         db_path = str(tmp_path / "test.db")
         cache = CVECache(db_path)
-        record = CVERecord(id="CVE-2021-44228", description="Log4Shell", published="2021-12-09", last_modified="2021-12-15")
+        record = CVERecord(
+            id="CVE-2021-44228",
+            description="Log4Shell",
+            published="2021-12-09",
+            last_modified="2021-12-15",
+        )
         cache.set_cve("CVE-2021-44228", record.model_dump(mode="json"))
 
         with (
@@ -645,7 +648,12 @@ class TestSearchCves:
     async def test_cache_hit_returns_records(self, tmp_path):
         db_path = str(tmp_path / "search_cache.db")
         cache = CVECache(db_path)
-        record = CVERecord(id="CVE-2021-44228", description="Log4Shell", published="2021-12-09", last_modified="2021-12-15")
+        record = CVERecord(
+            id="CVE-2021-44228",
+            description="Log4Shell",
+            published="2021-12-09",
+            last_modified="2021-12-15",
+        )
         query_key = "log4j:None:None:None:20"
         cache.set_search(query_key, {"records": [record.model_dump(mode="json")]})
 

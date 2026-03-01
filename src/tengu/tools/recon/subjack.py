@@ -1,4 +1,5 @@
 """Subjack subdomain takeover detection tool wrapper."""
+
 from __future__ import annotations
 
 import time
@@ -64,18 +65,23 @@ async def subjack_check(
     # Use provided wordlist or default
     if subdomains_file:
         from tengu.security.sanitizer import sanitize_wordlist_path
+
         wordlist_arg = sanitize_wordlist_path(subdomains_file)
     else:
         wordlist_arg = "/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt"
 
     args = [
         tool_path,
-        "-w", wordlist_arg,
-        "-t", str(threads),
-        "-o", "/dev/stdout",
+        "-w",
+        wordlist_arg,
+        "-t",
+        str(threads),
+        "-o",
+        "/dev/stdout",
         "-ssl",
         "-a",
-        "-timeout", "10",
+        "-timeout",
+        "10",
     ]
 
     await ctx.report_progress(0, 100, f"Starting Subjack takeover check on {domain}...")
@@ -103,7 +109,9 @@ async def subjack_check(
             vulnerable.append({"subdomain": line, "status": "vulnerable"})
 
     await ctx.report_progress(100, 100, "Subjack complete")
-    await audit.log_tool_call("subjack", domain, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        "subjack", domain, params, result="completed", duration_seconds=duration
+    )
 
     return {
         "tool": "subjack",

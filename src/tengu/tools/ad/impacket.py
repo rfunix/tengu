@@ -33,14 +33,14 @@ _SPN_PATTERN = re.compile(r"ServicePrincipalName\s+(.+?)(?:\s{2,}|\t)")
 
 
 async def impacket_kerberoast(
-    ctx: Context,  # type: ignore[type-arg]
+    ctx: Context,
     target: str,
     domain: str,
     username: str,
     password: str = "",
     hashes: str = "",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Perform Kerberoasting using Impacket GetUserSPNs.
 
     Requests TGS tickets for service accounts with SPNs registered in Active Directory.
@@ -68,7 +68,9 @@ async def impacket_kerberoast(
     target = sanitize_target(target)
     domain = sanitize_domain(domain)
     safe_username = sanitize_free_text(username, field="username", max_length=256)
-    safe_password = sanitize_free_text(password, field="password", max_length=512) if password else ""
+    safe_password = (
+        sanitize_free_text(password, field="password", max_length=512) if password else ""
+    )
     safe_hashes = sanitize_free_text(hashes, field="hashes", max_length=128) if hashes else ""
 
     # Audit params — redact credentials
@@ -108,9 +110,11 @@ async def impacket_kerberoast(
     args: list[str] = [
         tool_path,
         cred_arg,
-        "-dc-ip", target,
+        "-dc-ip",
+        target,
         "-request",
-        "-outputfile", "/dev/stdout",
+        "-outputfile",
+        "/dev/stdout",
     ]
 
     if safe_hashes:
@@ -142,7 +146,9 @@ async def impacket_kerberoast(
     parsed = _parse_kerberoast_output(stdout)
 
     await ctx.report_progress(100, 100, "Kerberoasting complete")
-    await audit.log_tool_call(tool_name, target, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        tool_name, target, params, result="completed", duration_seconds=duration
+    )
 
     hashcat_hint = (
         "Crack offline with: hashcat -m 13100 hashes.txt wordlist.txt"
@@ -166,9 +172,9 @@ async def impacket_kerberoast(
     }
 
 
-def _parse_kerberoast_output(output: str) -> dict:  # type: ignore[type-arg]
+def _parse_kerberoast_output(output: str) -> dict:
     """Parse Impacket GetUserSPNs output for TGS hashes and account information."""
-    accounts: list[dict] = []  # type: ignore[type-arg]
+    accounts: list[dict] = []
     tgs_hashes: list[str] = []
     current_account: dict[str, object] = {}
 
@@ -209,11 +215,13 @@ def _parse_kerberoast_output(output: str) -> dict:  # type: ignore[type-arg]
     # If hashes were found but accounts weren't parsed structurally, create minimal entries
     if tgs_hashes and not accounts:
         for i, h in enumerate(tgs_hashes):
-            accounts.append({
-                "spn": f"unknown-spn-{i+1}",
-                "account": "unknown",
-                "tgs_hash": h,
-            })
+            accounts.append(
+                {
+                    "spn": f"unknown-spn-{i + 1}",
+                    "account": "unknown",
+                    "tgs_hash": h,
+                }
+            )
 
     return {
         "accounts": accounts,

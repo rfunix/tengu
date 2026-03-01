@@ -98,7 +98,9 @@ class TestTestCors:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.cors.make_allowlist_from_config")
     @patch("tengu.tools.web.cors.get_audit_logger")
-    async def test_cors_blocked_url(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_cors_blocked_url(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.side_effect = Exception("Not allowed")
         mock_allowlist_fn.return_value = mock_allowlist
@@ -115,7 +117,9 @@ class TestTestCors:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.cors.make_allowlist_from_config")
     @patch("tengu.tools.web.cors.get_audit_logger")
-    async def test_cors_no_vulnerabilities(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_cors_no_vulnerabilities(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -136,7 +140,9 @@ class TestTestCors:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.cors.make_allowlist_from_config")
     @patch("tengu.tools.web.cors.get_audit_logger")
-    async def test_cors_origin_reflected(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_cors_origin_reflected(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -169,7 +175,9 @@ class TestTestCors:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.cors.make_allowlist_from_config")
     @patch("tengu.tools.web.cors.get_audit_logger")
-    async def test_cors_origin_reflected_with_credentials(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_cors_origin_reflected_with_credentials(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -203,7 +211,9 @@ class TestTestCors:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.cors.make_allowlist_from_config")
     @patch("tengu.tools.web.cors.get_audit_logger")
-    async def test_cors_null_origin_accepted(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_cors_null_origin_accepted(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -238,7 +248,9 @@ class TestTestCors:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.cors.make_allowlist_from_config")
     @patch("tengu.tools.web.cors.get_audit_logger")
-    async def test_cors_wildcard_with_credentials(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_cors_wildcard_with_credentials(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -257,7 +269,9 @@ class TestTestCors:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.cors.make_allowlist_from_config")
     @patch("tengu.tools.web.cors.get_audit_logger")
-    async def test_cors_request_error_continues(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_cors_request_error_continues(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -284,7 +298,9 @@ class TestTestCors:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.cors.make_allowlist_from_config")
     @patch("tengu.tools.web.cors.get_audit_logger")
-    async def test_cors_custom_origins_added(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_cors_custom_origins_added(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -305,7 +321,9 @@ class TestTestCors:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.cors.make_allowlist_from_config")
     @patch("tengu.tools.web.cors.get_audit_logger")
-    async def test_cors_returns_remediation_when_vulnerable(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_cors_returns_remediation_when_vulnerable(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -326,7 +344,9 @@ class TestTestCors:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.cors.make_allowlist_from_config")
     @patch("tengu.tools.web.cors.get_audit_logger")
-    async def test_cors_returns_no_remediation_when_safe(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_cors_returns_no_remediation_when_safe(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -345,7 +365,9 @@ class TestTestCors:
     @patch("tengu.stealth.get_stealth_layer")
     @patch("tengu.tools.web.cors.make_allowlist_from_config")
     @patch("tengu.tools.web.cors.get_audit_logger")
-    async def test_cors_tool_key_in_result(self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx):
+    async def test_cors_tool_key_in_result(
+        self, mock_audit_fn, mock_allowlist_fn, mock_stealth_fn, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist

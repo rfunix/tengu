@@ -1,4 +1,5 @@
 """Unit tests for the theharvester_scan async tool."""
+
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
@@ -94,28 +95,21 @@ class TestTheHarvesterScan:
         assert " " not in result["sources"]
 
     async def test_emails_parsed_from_section(self):
-        stdout = (
-            "[*] Emails found:\nadmin@example.com\ninfo@example.com\n"
-            "[*] Hosts found:\n"
-        )
+        stdout = "[*] Emails found:\nadmin@example.com\ninfo@example.com\n[*] Hosts found:\n"
         mocks = _make_fixtures(run_stdout=stdout)
         result = await _call_harvester(mocks, domain="example.com")
         assert "admin@example.com" in result["emails"]
         assert "info@example.com" in result["emails"]
 
     async def test_ips_parsed_from_hosts_section(self):
-        stdout = (
-            "[*] Hosts found:\n192.168.1.100\n10.0.0.1\n"
-        )
+        stdout = "[*] Hosts found:\n192.168.1.100\n10.0.0.1\n"
         mocks = _make_fixtures(run_stdout=stdout)
         result = await _call_harvester(mocks, domain="example.com")
         assert "192.168.1.100" in result["ips"]
         assert "10.0.0.1" in result["ips"]
 
     async def test_subdomains_parsed_from_hosts_section(self):
-        stdout = (
-            "[*] Hosts found:\napi.example.com\nmail.example.com\n192.168.1.1\n"
-        )
+        stdout = "[*] Hosts found:\napi.example.com\nmail.example.com\n192.168.1.1\n"
         mocks = _make_fixtures(run_stdout=stdout)
         result = await _call_harvester(mocks, domain="example.com")
         assert "api.example.com" in result["subdomains"]
@@ -136,9 +130,21 @@ class TestTheHarvesterScan:
     async def test_returns_correct_structure(self):
         mocks = _make_fixtures()
         result = await _call_harvester(mocks)
-        for key in ("tool", "domain", "sources", "command", "duration_seconds",
-                    "emails_found", "emails", "subdomains_found", "subdomains",
-                    "ips_found", "ips", "hosts", "raw_output"):
+        for key in (
+            "tool",
+            "domain",
+            "sources",
+            "command",
+            "duration_seconds",
+            "emails_found",
+            "emails",
+            "subdomains_found",
+            "subdomains",
+            "ips_found",
+            "ips",
+            "hosts",
+            "raw_output",
+        ):
             assert key in result, f"Missing key: {key}"
         assert result["tool"] == "theHarvester"
 

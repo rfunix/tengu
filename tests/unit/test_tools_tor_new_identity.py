@@ -13,7 +13,9 @@ from tengu.tools.stealth.tor_new_identity import tor_new_identity
 # ---------------------------------------------------------------------------
 
 
-def _make_reader_writer(auth_response: bytes = b"250 OK\r\n", newnym_response: bytes = b"250 OK\r\n"):
+def _make_reader_writer(
+    auth_response: bytes = b"250 OK\r\n", newnym_response: bytes = b"250 OK\r\n"
+):
     """Build mocked reader/writer pair for asyncio.open_connection."""
     mock_reader = AsyncMock()
     mock_writer = MagicMock()
@@ -42,8 +44,13 @@ class TestTorNewIdentitySuccess:
         """Returns success=True when auth+newnym both return 250 OK, with password."""
         reader, writer = _make_reader_writer()
 
-        with patch("tengu.tools.stealth.tor_new_identity.asyncio.open_connection", AsyncMock(return_value=(reader, writer))), \
-             patch("tengu.tools.stealth.tor_new_identity.asyncio.wait_for", new=_fake_wait_for):
+        with (
+            patch(
+                "tengu.tools.stealth.tor_new_identity.asyncio.open_connection",
+                AsyncMock(return_value=(reader, writer)),
+            ),
+            patch("tengu.tools.stealth.tor_new_identity.asyncio.wait_for", new=_fake_wait_for),
+        ):
             result = await tor_new_identity(control_port=9051, control_password="s3cr3t")
 
         assert result["success"] is True
@@ -57,8 +64,13 @@ class TestTorNewIdentitySuccess:
         """Returns success=True when no password — uses plain AUTHENTICATE."""
         reader, writer = _make_reader_writer()
 
-        with patch("tengu.tools.stealth.tor_new_identity.asyncio.open_connection", AsyncMock(return_value=(reader, writer))), \
-             patch("tengu.tools.stealth.tor_new_identity.asyncio.wait_for", new=_fake_wait_for):
+        with (
+            patch(
+                "tengu.tools.stealth.tor_new_identity.asyncio.open_connection",
+                AsyncMock(return_value=(reader, writer)),
+            ),
+            patch("tengu.tools.stealth.tor_new_identity.asyncio.wait_for", new=_fake_wait_for),
+        ):
             result = await tor_new_identity(control_port=9051, control_password="")
 
         assert result["success"] is True
@@ -71,8 +83,13 @@ class TestTorNewIdentitySuccess:
         """The decoded response is included in the result dict."""
         reader, writer = _make_reader_writer(newnym_response=b"250 OK\r\n")
 
-        with patch("tengu.tools.stealth.tor_new_identity.asyncio.open_connection", AsyncMock(return_value=(reader, writer))), \
-             patch("tengu.tools.stealth.tor_new_identity.asyncio.wait_for", new=_fake_wait_for):
+        with (
+            patch(
+                "tengu.tools.stealth.tor_new_identity.asyncio.open_connection",
+                AsyncMock(return_value=(reader, writer)),
+            ),
+            patch("tengu.tools.stealth.tor_new_identity.asyncio.wait_for", new=_fake_wait_for),
+        ):
             result = await tor_new_identity()
 
         assert "response" in result
@@ -91,8 +108,13 @@ class TestTorNewIdentityAuthFailure:
         """Authentication failure (non-250) returns success=False with message."""
         reader, writer = _make_reader_writer(auth_response=b"515 Authentication failed\r\n")
 
-        with patch("tengu.tools.stealth.tor_new_identity.asyncio.open_connection", AsyncMock(return_value=(reader, writer))), \
-             patch("tengu.tools.stealth.tor_new_identity.asyncio.wait_for", new=_fake_wait_for):
+        with (
+            patch(
+                "tengu.tools.stealth.tor_new_identity.asyncio.open_connection",
+                AsyncMock(return_value=(reader, writer)),
+            ),
+            patch("tengu.tools.stealth.tor_new_identity.asyncio.wait_for", new=_fake_wait_for),
+        ):
             result = await tor_new_identity()
 
         assert result["success"] is False
@@ -107,8 +129,13 @@ class TestTorNewIdentityAuthFailure:
             newnym_response=b"552 Unrecognized signal\r\n",
         )
 
-        with patch("tengu.tools.stealth.tor_new_identity.asyncio.open_connection", AsyncMock(return_value=(reader, writer))), \
-             patch("tengu.tools.stealth.tor_new_identity.asyncio.wait_for", new=_fake_wait_for):
+        with (
+            patch(
+                "tengu.tools.stealth.tor_new_identity.asyncio.open_connection",
+                AsyncMock(return_value=(reader, writer)),
+            ),
+            patch("tengu.tools.stealth.tor_new_identity.asyncio.wait_for", new=_fake_wait_for),
+        ):
             result = await tor_new_identity()
 
         assert result["success"] is False

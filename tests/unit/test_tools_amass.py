@@ -1,4 +1,5 @@
 """Unit tests for the amass_enum async tool."""
+
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
@@ -113,8 +114,17 @@ class TestAmassEnum:
     async def test_returns_correct_structure(self):
         mocks = _make_fixtures()
         result = await _call_amass(mocks)
-        for key in ("tool", "domain", "mode", "command", "duration_seconds",
-                    "subdomains_found", "subdomains", "raw_output", "errors"):
+        for key in (
+            "tool",
+            "domain",
+            "mode",
+            "command",
+            "duration_seconds",
+            "subdomains_found",
+            "subdomains",
+            "raw_output",
+            "errors",
+        ):
             assert key in result, f"Missing key: {key}"
         assert result["tool"] == "amass"
 

@@ -22,7 +22,9 @@ def patch_dns_exception_nxdomain():
     yield
     # Clean up
     for attr in ("NXDOMAIN", "NoAnswer"):
-        if hasattr(dns.exception, attr) and getattr(dns.exception, attr) is getattr(dns.resolver, attr, None):
+        if hasattr(dns.exception, attr) and getattr(dns.exception, attr) is getattr(
+            dns.resolver, attr, None
+        ):
             with contextlib.suppress(AttributeError):
                 delattr(dns.exception, attr)
 
@@ -363,9 +365,7 @@ class TestDnsEnumerate:
             mock_resolver_cls.return_value = mock_resolver
 
             # Should not raise
-            await dns_enumerate(
-                mock_ctx, "example.com", nameserver="not-an-ip", record_types=["A"]
-            )
+            await dns_enumerate(mock_ctx, "example.com", nameserver="not-an-ip", record_types=["A"])
 
         # nameservers should NOT have been set (invalid IP)
         assert mock_resolver.nameservers == []

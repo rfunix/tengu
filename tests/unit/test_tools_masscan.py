@@ -136,7 +136,9 @@ def _setup_masscan_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock
 class TestMasscanScan:
     """Async tests for masscan_scan()."""
 
-    async def test_masscan_blocked_target(self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl):
+    async def test_masscan_blocked_target(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl
+    ):
         """Allowlist rejection propagates as an exception."""
         al, _ = _setup_masscan_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         al.check.side_effect = ValueError("target not allowed")
@@ -147,7 +149,9 @@ class TestMasscanScan:
         with pytest.raises(ValueError, match="target not allowed"):
             await masscan_scan(ctx, "192.168.1.0/24")
 
-    async def test_masscan_rate_clamped_max(self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl):
+    async def test_masscan_rate_clamped_max(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl
+    ):
         """Rate above 100_000 is clamped to 100_000."""
         _setup_masscan_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_masscan_ctx()
@@ -158,7 +162,9 @@ class TestMasscanScan:
 
         assert result["rate_pps"] == 100_000
 
-    async def test_masscan_rate_clamped_min(self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl):
+    async def test_masscan_rate_clamped_min(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl
+    ):
         """Rate of 0 is clamped to 1."""
         _setup_masscan_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_masscan_ctx()
@@ -169,7 +175,9 @@ class TestMasscanScan:
 
         assert result["rate_pps"] == 1
 
-    async def test_masscan_custom_ports(self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl):
+    async def test_masscan_custom_ports(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl
+    ):
         """Custom port spec is passed with -p flag."""
         _setup_masscan_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_masscan_ctx()
@@ -183,7 +191,9 @@ class TestMasscanScan:
         idx = call_args.index("-p")
         assert "80" in call_args[idx + 1]
 
-    async def test_masscan_output_parsed(self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl):
+    async def test_masscan_output_parsed(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl
+    ):
         """JSON output is parsed into results list."""
         _setup_masscan_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         data = [{"ip": "10.0.0.1", "ports": [{"port": 80, "proto": "tcp", "status": "open"}]}]
@@ -197,7 +207,9 @@ class TestMasscanScan:
         assert result["open_ports_count"] == 1
         assert result["results"][0]["ip"] == "10.0.0.1"
 
-    async def test_masscan_no_hosts_found(self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl):
+    async def test_masscan_no_hosts_found(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl
+    ):
         """Empty output → open_ports_count=0, results=[]."""
         _setup_masscan_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         mock_run.return_value = ("", "", 0)
@@ -210,7 +222,9 @@ class TestMasscanScan:
         assert result["open_ports_count"] == 0
         assert result["results"] == []
 
-    async def test_masscan_tool_key(self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl):
+    async def test_masscan_tool_key(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl
+    ):
         """Result 'tool' key equals 'masscan'."""
         _setup_masscan_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_masscan_ctx()
@@ -221,7 +235,9 @@ class TestMasscanScan:
 
         assert result["tool"] == "masscan"
 
-    async def test_masscan_audit_logged(self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl):
+    async def test_masscan_audit_logged(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl
+    ):
         """audit.log_tool_call is called during execution."""
         _, audit = _setup_masscan_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_masscan_ctx()
@@ -232,7 +248,9 @@ class TestMasscanScan:
 
         assert audit.log_tool_call.call_count >= 1
 
-    async def test_masscan_rate_in_args(self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl):
+    async def test_masscan_rate_in_args(
+        self, mock_run, mock_config, mock_allowlist, mock_audit, mock_resolve, mock_rl
+    ):
         """Rate value appears in --rate flag."""
         _setup_masscan_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_masscan_ctx()

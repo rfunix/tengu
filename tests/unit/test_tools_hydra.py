@@ -65,7 +65,9 @@ class TestHydraAttack:
         from tengu.tools.bruteforce.hydra import hydra_attack
 
         with patch("tengu.tools.bruteforce.hydra.get_config", return_value=_mock_config()):
-            result = await hydra_attack(mock_ctx, "192.168.1.1", "unsupportedprotocol", "/tmp/u.txt", "/tmp/p.txt")
+            result = await hydra_attack(
+                mock_ctx, "192.168.1.1", "unsupportedprotocol", "/tmp/u.txt", "/tmp/p.txt"
+            )
 
         assert "error" in result
         assert "Unsupported service" in result["error"]
@@ -86,7 +88,10 @@ class TestHydraAttack:
             patch("tengu.tools.bruteforce.hydra.rate_limited", return_value=mock_rl_ctx),
             patch("tengu.tools.bruteforce.hydra.sanitize_wordlist_path", side_effect=lambda x: x),
             patch("tengu.tools.bruteforce.hydra.make_allowlist_from_config") as mock_allowlist,
-            patch("tengu.tools.bruteforce.hydra.run_command", AsyncMock(return_value=("output", "", 0))),
+            patch(
+                "tengu.tools.bruteforce.hydra.run_command",
+                AsyncMock(return_value=("output", "", 0)),
+            ),
         ):
             mock_allowlist.return_value.check.return_value = None
 
@@ -118,7 +123,9 @@ class TestHydraAttack:
             patch("tengu.tools.bruteforce.hydra.run_command", fake_run),
         ):
             mock_allowlist.return_value.check.return_value = None
-            await hydra_attack(mock_ctx, "192.168.1.1", "ssh", "/tmp/u.txt", "/tmp/p.txt", port=2222)
+            await hydra_attack(
+                mock_ctx, "192.168.1.1", "ssh", "/tmp/u.txt", "/tmp/p.txt", port=2222
+            )
 
         assert "-s" in captured_args
         assert "2222" in captured_args
@@ -146,7 +153,9 @@ class TestHydraAttack:
             patch("tengu.tools.bruteforce.hydra.run_command", fake_run),
         ):
             mock_allowlist.return_value.check.return_value = None
-            await hydra_attack(mock_ctx, "192.168.1.1", "ssh", "/tmp/u.txt", "/tmp/p.txt", threads=500)
+            await hydra_attack(
+                mock_ctx, "192.168.1.1", "ssh", "/tmp/u.txt", "/tmp/p.txt", threads=500
+            )
 
         t_idx = captured_args.index("-t")
         assert int(captured_args[t_idx + 1]) <= 64
@@ -174,7 +183,9 @@ class TestHydraAttack:
             patch("tengu.tools.bruteforce.hydra.run_command", fake_run),
         ):
             mock_allowlist.return_value.check.return_value = None
-            await hydra_attack(mock_ctx, "192.168.1.1", "ssh", "/tmp/u.txt", "/tmp/p.txt", stop_on_success=True)
+            await hydra_attack(
+                mock_ctx, "192.168.1.1", "ssh", "/tmp/u.txt", "/tmp/p.txt", stop_on_success=True
+            )
 
         assert "-f" in captured_args
 
@@ -194,7 +205,10 @@ class TestHydraAttack:
             patch("tengu.tools.bruteforce.hydra.rate_limited", return_value=mock_rl_ctx),
             patch("tengu.tools.bruteforce.hydra.sanitize_wordlist_path", side_effect=lambda x: x),
             patch("tengu.tools.bruteforce.hydra.make_allowlist_from_config") as mock_allowlist,
-            patch("tengu.tools.bruteforce.hydra.run_command", AsyncMock(return_value=(hydra_output, "", 0))),
+            patch(
+                "tengu.tools.bruteforce.hydra.run_command",
+                AsyncMock(return_value=(hydra_output, "", 0)),
+            ),
         ):
             mock_allowlist.return_value.check.return_value = None
             result = await hydra_attack(mock_ctx, "192.168.1.1", "ssh", "/tmp/u.txt", "/tmp/p.txt")
@@ -218,7 +232,10 @@ class TestHydraAttack:
             patch("tengu.tools.bruteforce.hydra.rate_limited", return_value=mock_rl_ctx),
             patch("tengu.tools.bruteforce.hydra.sanitize_wordlist_path", side_effect=lambda x: x),
             patch("tengu.tools.bruteforce.hydra.make_allowlist_from_config") as mock_allowlist,
-            patch("tengu.tools.bruteforce.hydra.run_command", AsyncMock(return_value=("[ERROR] No passwords found", "", 1))),
+            patch(
+                "tengu.tools.bruteforce.hydra.run_command",
+                AsyncMock(return_value=("[ERROR] No passwords found", "", 1)),
+            ),
         ):
             mock_allowlist.return_value.check.return_value = None
             result = await hydra_attack(mock_ctx, "192.168.1.1", "ftp", "/tmp/u.txt", "/tmp/p.txt")
@@ -269,6 +286,7 @@ class TestHydraAttack:
             await hydra_attack(mock_ctx, "192.168.1.1", "ssh", "/tmp/u.txt", "/tmp/p.txt")
 
         assert mock_audit.log_tool_call.call_count >= 1
+
 
 # ---------------------------------------------------------------------------
 # TestSupportedServices

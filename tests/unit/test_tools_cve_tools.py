@@ -84,10 +84,13 @@ class TestCveLookup:
         """lookup_cve raises — error propagates (or returns gracefully)."""
         from tengu.tools.analysis.cve_tools import cve_lookup
 
-        with patch(
-            "tengu.tools.analysis.cve_tools.lookup_cve",
-            AsyncMock(side_effect=Exception("Network error")),
-        ), pytest.raises(Exception, match="Network error"):
+        with (
+            patch(
+                "tengu.tools.analysis.cve_tools.lookup_cve",
+                AsyncMock(side_effect=Exception("Network error")),
+            ),
+            pytest.raises(Exception, match="Network error"),
+        ):
             await cve_lookup(mock_ctx, "CVE-2021-44228")
 
     async def test_cve_lookup_cvss_v3_score(self, mock_ctx):
@@ -119,7 +122,9 @@ class TestCveLookup:
 
         record = _make_cve_record(cve_id="CVE-2021-44228")
 
-        with patch("tengu.tools.analysis.cve_tools.lookup_cve", AsyncMock(return_value=record)) as mock_lookup:
+        with patch(
+            "tengu.tools.analysis.cve_tools.lookup_cve", AsyncMock(return_value=record)
+        ) as mock_lookup:
             await cve_lookup(mock_ctx, "cve-2021-44228")
 
         # sanitize_cve_id uppercases CVE IDs
@@ -149,7 +154,9 @@ class TestCveSearch:
         """severity='critical' is applied (uppercased)."""
         from tengu.tools.analysis.cve_tools import cve_search
 
-        with patch("tengu.tools.analysis.cve_tools.search_cves", AsyncMock(return_value=[])) as mock_search:
+        with patch(
+            "tengu.tools.analysis.cve_tools.search_cves", AsyncMock(return_value=[])
+        ) as mock_search:
             await cve_search(mock_ctx, keyword="apache", severity="critical")
 
         call_kwargs = mock_search.call_args[1]
@@ -159,7 +166,9 @@ class TestCveSearch:
         """max_results=5 limits return (clamped between 1 and 100)."""
         from tengu.tools.analysis.cve_tools import cve_search
 
-        with patch("tengu.tools.analysis.cve_tools.search_cves", AsyncMock(return_value=[])) as mock_search:
+        with patch(
+            "tengu.tools.analysis.cve_tools.search_cves", AsyncMock(return_value=[])
+        ) as mock_search:
             await cve_search(mock_ctx, keyword="nginx", max_results=5)
 
         call_kwargs = mock_search.call_args[1]
@@ -179,10 +188,13 @@ class TestCveSearch:
         """search_cves raises — error propagates."""
         from tengu.tools.analysis.cve_tools import cve_search
 
-        with patch(
-            "tengu.tools.analysis.cve_tools.search_cves",
-            AsyncMock(side_effect=Exception("NVD unreachable")),
-        ), pytest.raises(Exception, match="NVD unreachable"):
+        with (
+            patch(
+                "tengu.tools.analysis.cve_tools.search_cves",
+                AsyncMock(side_effect=Exception("NVD unreachable")),
+            ),
+            pytest.raises(Exception, match="NVD unreachable"),
+        ):
             await cve_search(mock_ctx, keyword="openssl")
 
     async def test_cve_search_tool_key(self, mock_ctx):
@@ -199,7 +211,9 @@ class TestCveSearch:
         """No severity filter — severity parameter is None in search call."""
         from tengu.tools.analysis.cve_tools import cve_search
 
-        with patch("tengu.tools.analysis.cve_tools.search_cves", AsyncMock(return_value=[])) as mock_search:
+        with patch(
+            "tengu.tools.analysis.cve_tools.search_cves", AsyncMock(return_value=[])
+        ) as mock_search:
             await cve_search(mock_ctx, keyword="apache")
 
         call_kwargs = mock_search.call_args[1]
@@ -209,7 +223,9 @@ class TestCveSearch:
         """Unknown severity — treated as None (graceful handling)."""
         from tengu.tools.analysis.cve_tools import cve_search
 
-        with patch("tengu.tools.analysis.cve_tools.search_cves", AsyncMock(return_value=[])) as mock_search:
+        with patch(
+            "tengu.tools.analysis.cve_tools.search_cves", AsyncMock(return_value=[])
+        ) as mock_search:
             await cve_search(mock_ctx, keyword="apache", severity="EXTREME")
 
         # Invalid severity should be set to None
