@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/tengu-demo-opt.gif" alt="Tengu demo" width="800"/>
+  <video src="docs/tengu-demo.mp4" autoplay loop muted playsinline width="800"></video>
 </p>
 
 <p align="center">
