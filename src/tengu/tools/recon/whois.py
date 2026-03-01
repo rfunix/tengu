@@ -18,9 +18,9 @@ logger = structlog.get_logger(__name__)
 
 
 async def whois_lookup(
-    ctx: Context,  # type: ignore[type-arg]
+    ctx: Context,
     target: str,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Perform a WHOIS lookup for a domain or IP address.
 
     Queries WHOIS databases to retrieve registration information including

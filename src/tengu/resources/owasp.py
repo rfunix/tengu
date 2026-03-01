@@ -8,12 +8,12 @@ from pathlib import Path
 _DATA_PATH = Path(__file__).parent / "data" / "owasp_top10_2025.json"
 
 
-def _load_data() -> dict:  # type: ignore[type-arg]
+def _load_data() -> dict:
     with _DATA_PATH.open(encoding="utf-8") as f:
         return json.load(f)
 
 
-def get_top10_list() -> dict:  # type: ignore[type-arg]
+def get_top10_list() -> dict:
     """Return the full OWASP Top 10:2025 list."""
     data = _load_data()
     return {
@@ -31,7 +31,7 @@ def get_top10_list() -> dict:  # type: ignore[type-arg]
     }
 
 
-def get_category(category_id: str) -> dict | None:  # type: ignore[type-arg]
+def get_category(category_id: str) -> dict | None:
     """Return details for a specific OWASP category (e.g. 'A01')."""
     data = _load_data()
     category_id = category_id.upper()
@@ -43,7 +43,7 @@ def get_category(category_id: str) -> dict | None:  # type: ignore[type-arg]
     return None
 
 
-def get_category_checklist(category_id: str) -> dict | None:  # type: ignore[type-arg]
+def get_category_checklist(category_id: str) -> dict | None:
     """Return the testing checklist for a specific OWASP category."""
     category = get_category(category_id)
     if not category:

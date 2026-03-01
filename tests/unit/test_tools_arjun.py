@@ -145,7 +145,11 @@ class TestArjunDiscover:
             patch("tengu.tools.api.arjun.make_allowlist_from_config", return_value=mock_allowlist),
             patch("tengu.tools.api.arjun.resolve_tool_path", return_value="arjun"),
             patch("tengu.tools.api.arjun.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.api.arjun.run_command", new_callable=AsyncMock, return_value=("", "", 0)),
+            patch(
+                "tengu.tools.api.arjun.run_command",
+                new_callable=AsyncMock,
+                return_value=("", "", 0),
+            ),
             pytest.raises(Exception, match="Target not in allowlist"),
         ):
             await arjun_discover(mock_ctx, "http://target.local")
@@ -162,7 +166,11 @@ class TestArjunDiscover:
             patch("tengu.tools.api.arjun.make_allowlist_from_config", return_value=mock_allowlist),
             patch("tengu.tools.api.arjun.resolve_tool_path", return_value="arjun"),
             patch("tengu.tools.api.arjun.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.api.arjun.run_command", new_callable=AsyncMock, return_value=('{"arjun":[]}', "", 0)),
+            patch(
+                "tengu.tools.api.arjun.run_command",
+                new_callable=AsyncMock,
+                return_value=('{"arjun":[]}', "", 0),
+            ),
         ):
             result = await arjun_discover(mock_ctx, "http://target.local", method="INVALID")
 
@@ -178,7 +186,11 @@ class TestArjunDiscover:
             patch("tengu.tools.api.arjun.make_allowlist_from_config", return_value=mock_allowlist),
             patch("tengu.tools.api.arjun.resolve_tool_path", return_value="arjun"),
             patch("tengu.tools.api.arjun.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.api.arjun.run_command", new_callable=AsyncMock, return_value=('{"arjun":[]}', "", 0)),
+            patch(
+                "tengu.tools.api.arjun.run_command",
+                new_callable=AsyncMock,
+                return_value=('{"arjun":[]}', "", 0),
+            ),
         ):
             result = await arjun_discover(mock_ctx, "http://target.local", method="POST")
 
@@ -201,7 +213,9 @@ class TestArjunDiscover:
             patch("tengu.tools.api.arjun.resolve_tool_path", return_value="arjun"),
             patch("tengu.tools.api.arjun.rate_limited", return_value=mock_rl),
             patch("tengu.tools.api.arjun.run_command", side_effect=fake_run),
-            patch("tengu.tools.api.arjun.sanitize_wordlist_path", return_value="/safe/wordlist.txt"),
+            patch(
+                "tengu.tools.api.arjun.sanitize_wordlist_path", return_value="/safe/wordlist.txt"
+            ),
         ):
             await arjun_discover(mock_ctx, "http://target.local", wordlist="/custom/wordlist.txt")
 
@@ -266,7 +280,11 @@ class TestArjunDiscover:
             patch("tengu.tools.api.arjun.make_allowlist_from_config", return_value=mock_allowlist),
             patch("tengu.tools.api.arjun.resolve_tool_path", return_value="arjun"),
             patch("tengu.tools.api.arjun.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.api.arjun.run_command", new_callable=AsyncMock, return_value=(stdout, "", 0)),
+            patch(
+                "tengu.tools.api.arjun.run_command",
+                new_callable=AsyncMock,
+                return_value=(stdout, "", 0),
+            ),
         ):
             result = await arjun_discover(mock_ctx, "http://target.local")
 
@@ -283,11 +301,25 @@ class TestArjunDiscover:
             patch("tengu.tools.api.arjun.make_allowlist_from_config", return_value=mock_allowlist),
             patch("tengu.tools.api.arjun.resolve_tool_path", return_value="arjun"),
             patch("tengu.tools.api.arjun.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.api.arjun.run_command", new_callable=AsyncMock, return_value=('{"arjun":[]}', "", 0)),
+            patch(
+                "tengu.tools.api.arjun.run_command",
+                new_callable=AsyncMock,
+                return_value=('{"arjun":[]}', "", 0),
+            ),
         ):
             result = await arjun_discover(mock_ctx, "http://target.local")
 
-        for key in ("tool", "url", "method", "wordlist", "command", "duration_seconds", "parameters_found", "parameters", "raw_output_excerpt"):
+        for key in (
+            "tool",
+            "url",
+            "method",
+            "wordlist",
+            "command",
+            "duration_seconds",
+            "parameters_found",
+            "parameters",
+            "raw_output_excerpt",
+        ):
             assert key in result, f"Missing key: {key}"
 
     async def test_tool_name_is_arjun(self, mock_ctx):
@@ -300,7 +332,11 @@ class TestArjunDiscover:
             patch("tengu.tools.api.arjun.make_allowlist_from_config", return_value=mock_allowlist),
             patch("tengu.tools.api.arjun.resolve_tool_path", return_value="arjun"),
             patch("tengu.tools.api.arjun.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.api.arjun.run_command", new_callable=AsyncMock, return_value=('{"arjun":[]}', "", 0)),
+            patch(
+                "tengu.tools.api.arjun.run_command",
+                new_callable=AsyncMock,
+                return_value=('{"arjun":[]}', "", 0),
+            ),
         ):
             result = await arjun_discover(mock_ctx, "http://target.local")
 
@@ -340,7 +376,11 @@ class TestArjunDiscover:
             patch("tengu.tools.api.arjun.make_allowlist_from_config", return_value=mock_allowlist),
             patch("tengu.tools.api.arjun.resolve_tool_path", return_value="arjun"),
             patch("tengu.tools.api.arjun.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.api.arjun.run_command", new_callable=AsyncMock, side_effect=RuntimeError("subprocess died")),
+            patch(
+                "tengu.tools.api.arjun.run_command",
+                new_callable=AsyncMock,
+                side_effect=RuntimeError("subprocess died"),
+            ),
             pytest.raises(RuntimeError, match="subprocess died"),
         ):
             await arjun_discover(mock_ctx, "http://target.local")
@@ -360,7 +400,11 @@ class TestArjunDiscover:
             patch("tengu.tools.api.arjun.make_allowlist_from_config", return_value=mock_allowlist),
             patch("tengu.tools.api.arjun.resolve_tool_path", return_value="arjun"),
             patch("tengu.tools.api.arjun.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.api.arjun.run_command", new_callable=AsyncMock, return_value=(long_stdout, "", 0)),
+            patch(
+                "tengu.tools.api.arjun.run_command",
+                new_callable=AsyncMock,
+                return_value=(long_stdout, "", 0),
+            ),
         ):
             result = await arjun_discover(mock_ctx, "http://target.local")
 
@@ -377,7 +421,11 @@ class TestArjunDiscover:
             patch("tengu.tools.api.arjun.make_allowlist_from_config", return_value=mock_allowlist),
             patch("tengu.tools.api.arjun.resolve_tool_path", return_value="arjun"),
             patch("tengu.tools.api.arjun.rate_limited", return_value=mock_rl),
-            patch("tengu.tools.api.arjun.run_command", new_callable=AsyncMock, return_value=(short_stdout, "", 0)),
+            patch(
+                "tengu.tools.api.arjun.run_command",
+                new_callable=AsyncMock,
+                return_value=(short_stdout, "", 0),
+            ),
         ):
             result = await arjun_discover(mock_ctx, "http://target.local")
 

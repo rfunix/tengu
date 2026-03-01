@@ -154,7 +154,10 @@ class TestSslTlsCheck:
         mock_audit.log_target_blocked = AsyncMock()
         mock_audit_fn.return_value = mock_audit
 
-        with patch.dict(sys.modules, _mock_sslyze_modules()), pytest.raises(Exception, match="Not in allowlist"):
+        with (
+            patch.dict(sys.modules, _mock_sslyze_modules()),
+            pytest.raises(Exception, match="Not in allowlist"),
+        ):
             await ssl_tls_check(mock_ctx, "example.com")
 
     @patch("tengu.tools.web.ssl_tls.make_allowlist_from_config")
@@ -251,7 +254,9 @@ class TestSslTlsCheck:
     @patch("tengu.tools.web.ssl_tls._build_ssl_result")
     @patch("tengu.tools.web.ssl_tls.make_allowlist_from_config")
     @patch("tengu.tools.web.ssl_tls.get_audit_logger")
-    async def test_ssl_scan_success_grade_a(self, mock_audit_fn, mock_allowlist_fn, mock_build, mock_ctx):
+    async def test_ssl_scan_success_grade_a(
+        self, mock_audit_fn, mock_allowlist_fn, mock_build, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -282,7 +287,9 @@ class TestSslTlsCheck:
     @patch("tengu.tools.web.ssl_tls._build_ssl_result")
     @patch("tengu.tools.web.ssl_tls.make_allowlist_from_config")
     @patch("tengu.tools.web.ssl_tls.get_audit_logger")
-    async def test_ssl_scan_weak_protocols(self, mock_audit_fn, mock_allowlist_fn, mock_build, mock_ctx):
+    async def test_ssl_scan_weak_protocols(
+        self, mock_audit_fn, mock_allowlist_fn, mock_build, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -312,7 +319,9 @@ class TestSslTlsCheck:
     @patch("tengu.tools.web.ssl_tls._build_ssl_result")
     @patch("tengu.tools.web.ssl_tls.make_allowlist_from_config")
     @patch("tengu.tools.web.ssl_tls.get_audit_logger")
-    async def test_ssl_scan_vulnerabilities(self, mock_audit_fn, mock_allowlist_fn, mock_build, mock_ctx):
+    async def test_ssl_scan_vulnerabilities(
+        self, mock_audit_fn, mock_allowlist_fn, mock_build, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -341,7 +350,9 @@ class TestSslTlsCheck:
     @patch("tengu.tools.web.ssl_tls._build_ssl_result")
     @patch("tengu.tools.web.ssl_tls.make_allowlist_from_config")
     @patch("tengu.tools.web.ssl_tls.get_audit_logger")
-    async def test_ssl_port_default_443(self, mock_audit_fn, mock_allowlist_fn, mock_build, mock_ctx):
+    async def test_ssl_port_default_443(
+        self, mock_audit_fn, mock_allowlist_fn, mock_build, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -420,6 +431,7 @@ class TestRunSslyzeScan:
     def test_run_sslyze_scan_is_sync(self):
         """_run_sslyze_scan is a regular sync function, not a coroutine."""
         import inspect
+
         assert not inspect.iscoroutinefunction(_run_sslyze_scan)
 
     def test_run_sslyze_scan_uses_scanner(self):
@@ -430,7 +442,9 @@ class TestRunSslyzeScan:
         mock_scanner_instance.get_results.return_value = [mock_scan_result]
         mock_sslyze.Scanner.return_value = mock_scanner_instance
 
-        with patch.dict(sys.modules, {"sslyze": mock_sslyze, "sslyze.plugins.scan_commands": MagicMock()}):
+        with patch.dict(
+            sys.modules, {"sslyze": mock_sslyze, "sslyze.plugins.scan_commands": MagicMock()}
+        ):
             mock_request = MagicMock()
             result = _run_sslyze_scan(mock_request)
 

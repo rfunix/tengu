@@ -19,11 +19,11 @@ logger = structlog.get_logger(__name__)
 
 
 async def subfinder_enum(
-    ctx: Context,  # type: ignore[type-arg]
+    ctx: Context,
     domain: str,
     sources: list[str] | None = None,
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Enumerate subdomains passively using Subfinder.
 
     Queries multiple passive sources (certificate transparency logs, DNS
@@ -66,15 +66,13 @@ async def subfinder_enum(
 
     if sources:
         # Sanitize source names — only alphanumeric and hyphens
-        safe_sources = ",".join(
-            s for s in sources
-            if all(c.isalnum() or c == "-" for c in s)
-        )
+        safe_sources = ",".join(s for s in sources if all(c.isalnum() or c == "-" for c in s))
         if safe_sources:
             args.extend(["-sources", safe_sources])
 
     # Stealth: inject --proxy flag if proxy is active
     from tengu.stealth import get_stealth_layer
+
     stealth = get_stealth_layer()
     if stealth.enabled and stealth.proxy_url:
         args = stealth.inject_proxy_flags("subfinder", args)

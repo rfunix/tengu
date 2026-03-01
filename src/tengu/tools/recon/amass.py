@@ -1,4 +1,5 @@
 """Amass subdomain enumeration and attack surface mapping."""
+
 from __future__ import annotations
 
 import time
@@ -89,7 +90,9 @@ async def amass_enum(
     subdomains = sorted(set(subdomains))
 
     await ctx.report_progress(100, 100, "Amass complete")
-    await audit.log_tool_call("amass", domain, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        "amass", domain, params, result="completed", duration_seconds=duration
+    )
 
     return {
         "tool": "amass",

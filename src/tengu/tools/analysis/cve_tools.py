@@ -9,9 +9,9 @@ from tengu.security.sanitizer import sanitize_cve_id, sanitize_free_text
 
 
 async def cve_lookup(
-    ctx: Context,  # type: ignore[type-arg]
+    ctx: Context,
     cve_id: str,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Fetch complete details for a specific CVE from NVD and CVE.org.
 
     Returns CVSS scores (v2/v3.1/v4.0), CWE mappings, affected products,
@@ -61,13 +61,13 @@ async def cve_lookup(
 
 
 async def cve_search(
-    ctx: Context,  # type: ignore[type-arg]
+    ctx: Context,
     keyword: str | None = None,
     cpe_name: str | None = None,
     severity: str | None = None,
     days_back: int | None = None,
     max_results: int = 20,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Search CVEs by keyword, product, CPE, or severity.
 
     Queries the NVD database for matching CVEs. Results are cached
@@ -84,9 +84,7 @@ async def cve_search(
         List of matching CVEs with severity, CVSS score, and description.
     """
     if not keyword and not cpe_name:
-        return {
-            "error": "Provide at least one search parameter: keyword or cpe_name"
-        }
+        return {"error": "Provide at least one search parameter: keyword or cpe_name"}
 
     if keyword:
         keyword = sanitize_free_text(keyword, field="keyword")
@@ -121,9 +119,13 @@ async def cve_search(
         "cves": [
             {
                 "id": r.id,
-                "description": r.description[:300] + "..." if len(r.description) > 300 else r.description,
+                "description": r.description[:300] + "..."
+                if len(r.description) > 300
+                else r.description,
                 "published": r.published,
-                "severity": max((m.severity for m in r.cvss), default="UNKNOWN") if r.cvss else "UNKNOWN",
+                "severity": max((m.severity for m in r.cvss), default="UNKNOWN")
+                if r.cvss
+                else "UNKNOWN",
                 "cvss_score": max((m.base_score for m in r.cvss), default=0.0) if r.cvss else 0.0,
                 "cwe_ids": r.cwe_ids,
                 "exploit_available": r.exploit_available,

@@ -1,7 +1,5 @@
 """DNS enumeration using dnspython (pure Python, no subprocess)."""
 
-from __future__ import annotations
-
 from typing import Literal
 
 import dns.asyncresolver
@@ -21,16 +19,26 @@ logger = structlog.get_logger(__name__)
 RecordType = Literal["A", "AAAA", "MX", "NS", "TXT", "CNAME", "SOA", "PTR", "SRV", "CAA"]
 
 _ALL_RECORD_TYPES: list[RecordType] = [
-    "A", "AAAA", "MX", "NS", "TXT", "CNAME", "SOA", "PTR", "SRV", "CAA"
+    "A",
+    "AAAA",
+    "MX",
+    "NS",
+    "TXT",
+    "CNAME",
+    "SOA",
+    "PTR",
+    "SRV",
+    "CAA",
 ]
 
 
 async def dns_enumerate(
-    ctx: Context,  # type: ignore[type-arg]
+    ctx: Context,
     domain: str,
-    record_types: list[RecordType] | None = None,
+    record_types: list[Literal["A", "AAAA", "MX", "NS", "TXT", "CNAME", "SOA", "PTR", "SRV", "CAA"]]
+    | None = None,
     nameserver: str | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Query DNS records for a domain.
 
     Performs DNS lookups for the specified record types using dnspython.
@@ -62,12 +70,13 @@ async def dns_enumerate(
 
     # Validate record type names
     valid_types = set(_ALL_RECORD_TYPES)
-    types_to_query = [t.upper() for t in types_to_query if t.upper() in valid_types]
+    types_to_query = [t.upper() for t in types_to_query if t.upper() in valid_types]  # type: ignore[misc]
 
     resolver = dns.asyncresolver.Resolver()
     if nameserver:
         # Validate nameserver is a valid IP
         import ipaddress
+
         try:
             ipaddress.ip_address(nameserver)
             resolver.nameservers = [nameserver]
@@ -84,12 +93,14 @@ async def dns_enumerate(
         try:
             answers = await resolver.resolve(domain, rtype)
             for rdata in answers:
-                records.append(DNSRecord(
-                    name=domain,
-                    record_type=rtype,
-                    value=str(rdata),
-                    ttl=answers.ttl,
-                ))
+                records.append(
+                    DNSRecord(
+                        name=domain,
+                        record_type=rtype,
+                        value=str(rdata),
+                        ttl=answers.ttl,
+                    )
+                )
         except dns.resolver.NXDOMAIN:
             errors[rtype] = "NXDOMAIN"
         except dns.resolver.NoAnswer:

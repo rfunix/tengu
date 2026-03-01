@@ -160,7 +160,14 @@ class TestMsfModuleInfo:
     async def test_dangerous_chars_removed_from_path(self):
         """Characters outside [a-zA-Z0-9_/-] are stripped from module_path."""
         ctx = _make_ctx()
-        info = {"name": "Test", "description": "", "references": [], "options": {}, "targets": [], "rank": ""}
+        info = {
+            "name": "Test",
+            "description": "",
+            "references": [],
+            "options": {},
+            "targets": [],
+            "rank": "",
+        }
 
         with patch("tengu.tools.exploit.metasploit._get_module_info", return_value=info):
             from tengu.tools.exploit.metasploit import msf_module_info
@@ -495,7 +502,15 @@ class TestSearchModulesInternal:
             results = _search_modules("test", "all")
 
         assert len(results) == 1
-        for key in ("fullname", "name", "type", "rank", "description", "disclosure_date", "references"):
+        for key in (
+            "fullname",
+            "name",
+            "type",
+            "rank",
+            "description",
+            "disclosure_date",
+            "references",
+        ):
             assert key in results[0]
 
     def test_references_capped_at_5(self):

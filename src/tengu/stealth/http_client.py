@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import httpx
 import structlog
 
@@ -13,7 +15,7 @@ def create_stealth_client(
     user_agent: str | None = None,
     timeout: float = 30.0,
     follow_redirects: bool = True,
-    **kwargs,
+    **kwargs: Any,
 ) -> httpx.AsyncClient:
     """Create an httpx AsyncClient configured for stealth operation.
 

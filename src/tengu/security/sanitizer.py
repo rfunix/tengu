@@ -15,7 +15,7 @@ from tengu.exceptions import InvalidInputError
 
 # Characters that could be used for shell injection or HTTP header injection.
 # Defense-in-depth: since we never use shell=True, but we still validate explicitly.
-_SHELL_METACHARACTERS = re.compile(r'[;&|`$<>()\{\}\[\]!\\\'\"\r\n]')
+_SHELL_METACHARACTERS = re.compile(r"[;&|`$<>()\{\}\[\]!\\\'\"\r\n]")
 
 # Valid hostname pattern (RFC 1123)
 _HOSTNAME_PATTERN = re.compile(
@@ -31,9 +31,9 @@ _WILDCARD_HOSTNAME_PATTERN = re.compile(
 
 # Valid port range
 _PORT_SPEC_PATTERN = re.compile(
-    r"^(\d{1,5})"                       # single port
-    r"(-\d{1,5})?"                       # optional range end
-    r"(,(\d{1,5}(-\d{1,5})?))*$"        # optional additional ports/ranges
+    r"^(\d{1,5})"  # single port
+    r"(-\d{1,5})?"  # optional range end
+    r"(,(\d{1,5}(-\d{1,5})?))*$"  # optional additional ports/ranges
 )
 
 # Hash pattern — hex characters only
@@ -187,9 +187,7 @@ def sanitize_wordlist_path(value: str) -> str:
         Path("/tmp"),
     ]
     if not any(str(path).startswith(str(p)) for p in allowed_prefixes):
-        raise InvalidInputError(
-            "wordlist", value, "path is outside allowed directories"
-        )
+        raise InvalidInputError("wordlist", value, "path is outside allowed directories")
 
     return str(path)
 
@@ -252,9 +250,7 @@ def sanitize_scan_type(
     value = value.strip().lower()
 
     if value not in allowed:
-        raise InvalidInputError(
-            field, value, f"must be one of: {', '.join(allowed)}"
-        )
+        raise InvalidInputError(field, value, f"must be one of: {', '.join(allowed)}")
 
     return value
 
@@ -319,8 +315,9 @@ def sanitize_repo_url(value: str) -> str:
 
     if not _REPO_URL_PATTERN.match(value):
         raise InvalidInputError(
-            "repo_url", value,
-            "not a valid git repository URL (expected https://... or git@...:.../...git)"
+            "repo_url",
+            value,
+            "not a valid git repository URL (expected https://... or git@...:.../...git)",
         )
 
     return value
@@ -344,8 +341,9 @@ def sanitize_docker_image(value: str) -> str:
 
     if not _DOCKER_IMAGE_PATTERN.match(value):
         raise InvalidInputError(
-            "docker_image", value,
-            "not a valid Docker image name (e.g. nginx:latest, registry.io/org/name:tag)"
+            "docker_image",
+            value,
+            "not a valid Docker image name (e.g. nginx:latest, registry.io/org/name:tag)",
         )
 
     return value.lower()
@@ -369,16 +367,20 @@ def sanitize_proxy_url(value: str) -> str:
 
     if not _PROXY_URL_PATTERN.match(value):
         raise InvalidInputError(
-            "proxy_url", value,
-            "not a valid proxy URL (expected socks5://host:port, http://host:port, etc.)"
+            "proxy_url",
+            value,
+            "not a valid proxy URL (expected socks5://host:port, http://host:port, etc.)",
         )
 
     # Validate port range if present
     import urllib.parse
+
     try:
         parsed = urllib.parse.urlparse(value)
         if parsed.port is not None and not (1 <= parsed.port <= 65535):
-            raise InvalidInputError("proxy_url", value, f"port {parsed.port} out of range (1-65535)")
+            raise InvalidInputError(
+                "proxy_url", value, f"port {parsed.port} out of range (1-65535)"
+            )
     except (ValueError, AttributeError):
         pass
 

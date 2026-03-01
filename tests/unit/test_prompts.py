@@ -376,21 +376,15 @@ class TestFullPentestReport:
         assert_prompt_basics(result)
 
     def test_client_name_interpolated(self):
-        result = full_pentest_report(
-            SAMPLE_FINDINGS, "BetaCorp", ["https://app.com"], "ROE"
-        )
+        result = full_pentest_report(SAMPLE_FINDINGS, "BetaCorp", ["https://app.com"], "ROE")
         assert "BetaCorp" in result
 
     def test_generate_report_tool_referenced(self):
-        result = full_pentest_report(
-            SAMPLE_FINDINGS, "Acme", ["https://app.com"], "ROE"
-        )
+        result = full_pentest_report(SAMPLE_FINDINGS, "Acme", ["https://app.com"], "ROE")
         assert "generate_report" in result
 
     def test_scope_interpolated(self):
-        result = full_pentest_report(
-            SAMPLE_FINDINGS, "Acme", ["https://myapp.io"], "ROE"
-        )
+        result = full_pentest_report(SAMPLE_FINDINGS, "Acme", ["https://myapp.io"], "ROE")
         assert "https://myapp.io" in result
 
     def test_engagement_dates_interpolated(self):
@@ -1269,9 +1263,7 @@ class TestParametrizedEdgeCases:
         assert long_target in result
 
     def test_report_with_only_low_findings(self):
-        findings = [
-            {"severity": "low", "title": "Info", "affected_asset": "x", "cvss_score": 1.0}
-        ]
+        findings = [{"severity": "low", "title": "Info", "affected_asset": "x", "cvss_score": 1.0}]
         result = executive_report(findings, "Acme", "2025-01-01")
         assert "0 Critical" in result
         assert "0 High" in result

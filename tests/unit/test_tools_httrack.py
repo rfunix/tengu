@@ -1,4 +1,5 @@
 """Unit tests for the httrack_mirror async tool."""
+
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
@@ -91,10 +92,20 @@ class TestHttrackMirror:
         mocks = _make_fixtures()
         result = await _call_httrack(mocks)
         expected_keys = (
-            "tool", "target", "output_dir", "depth", "max_size_mb",
-            "include_assets", "pages_downloaded", "total_files", "total_size_mb",
-            "duration_seconds", "file_types", "interesting_findings",
-            "command", "raw_output",
+            "tool",
+            "target",
+            "output_dir",
+            "depth",
+            "max_size_mb",
+            "include_assets",
+            "pages_downloaded",
+            "total_files",
+            "total_size_mb",
+            "duration_seconds",
+            "file_types",
+            "interesting_findings",
+            "command",
+            "raw_output",
         )
         for key in expected_keys:
             assert key in result, f"Missing key: {key}"
@@ -203,6 +214,7 @@ class TestHttrackMirror:
             patch(f"{TOOL_MODULE}.rate_limited", new=_make_rate_limited_mock()),
         ):
             from tengu.tools.recon.httrack import httrack_mirror
+
             with pytest.raises(RuntimeError):
                 await httrack_mirror(mocks["ctx"], "http://example.com")
 
@@ -226,6 +238,7 @@ class TestHttrackMirror:
             patch(f"{TOOL_MODULE}._dir_size_mb", return_value=1.0),
         ):
             from tengu.tools.recon.httrack import httrack_mirror
+
             result = await httrack_mirror(mocks["ctx"], "http://example.com")
         assert result["interesting_findings"] == findings
 
@@ -245,6 +258,7 @@ class TestHttrackMirror:
             patch(f"{TOOL_MODULE}._dir_size_mb", return_value=0.0),
         ):
             from tengu.tools.recon.httrack import httrack_mirror
+
             await httrack_mirror(mocks["ctx"], "http://example.com", timeout=None)
 
         _, kwargs = run_mock.call_args
@@ -259,28 +273,34 @@ class TestHttrackMirror:
 class TestHttrackHelpers:
     def test_sanitize_output_dir_valid_tmp(self):
         from tengu.tools.recon.httrack import _sanitize_output_dir
+
         assert _sanitize_output_dir("/tmp/mydir") == "/tmp/mydir"
 
     def test_sanitize_output_dir_valid_home(self):
         from tengu.tools.recon.httrack import _sanitize_output_dir
+
         assert _sanitize_output_dir("/home/user/sites") == "/home/user/sites"
 
     def test_sanitize_output_dir_bad_prefix_falls_back(self):
         from tengu.tools.recon.httrack import _sanitize_output_dir
+
         assert _sanitize_output_dir("/etc/secrets") == "/tmp/httrack"
 
     def test_sanitize_output_dir_strips_bad_chars(self):
         from tengu.tools.recon.httrack import _sanitize_output_dir
+
         result = _sanitize_output_dir("/tmp/dir;whoami")
         assert ";" not in result
 
     def test_count_files_empty_dir(self, tmp_path):
         from tengu.tools.recon.httrack import _count_files_by_type
+
         result = _count_files_by_type(tmp_path)
         assert result == {}
 
     def test_count_files_groups_by_extension(self, tmp_path):
         from tengu.tools.recon.httrack import _count_files_by_type
+
         (tmp_path / "a.html").write_text("x")
         (tmp_path / "b.html").write_text("x")
         (tmp_path / "c.js").write_text("x")
@@ -290,41 +310,49 @@ class TestHttrackHelpers:
 
     def test_count_files_no_extension_goes_to_other(self, tmp_path):
         from tengu.tools.recon.httrack import _count_files_by_type
+
         (tmp_path / "noext").write_text("x")
         result = _count_files_by_type(tmp_path)
         assert result.get("other", 0) == 1
 
     def test_find_interesting_detects_api_key(self, tmp_path):
         from tengu.tools.recon.httrack import _find_interesting
+
         (tmp_path / "config.js").write_text("api_key = 'abc123'")
         findings = _find_interesting(tmp_path)
         assert any("API key" in f for f in findings)
 
     def test_find_interesting_detects_todo(self, tmp_path):
         from tengu.tools.recon.httrack import _find_interesting
+
         (tmp_path / "app.js").write_text("// TODO: remove debug code")
         findings = _find_interesting(tmp_path)
         assert any("development note" in f for f in findings)
 
     def test_find_interesting_empty_dir(self, tmp_path):
         from tengu.tools.recon.httrack import _find_interesting
+
         assert _find_interesting(tmp_path) == []
 
     def test_find_interesting_nonexistent_dir(self):
         from tengu.tools.recon.httrack import _find_interesting
+
         result = _find_interesting(Path("/nonexistent/path/xyz"))
         assert result == []
 
     def test_dir_size_mb_empty_dir(self, tmp_path):
         from tengu.tools.recon.httrack import _dir_size_mb
+
         assert _dir_size_mb(tmp_path) == 0.0
 
     def test_dir_size_mb_nonexistent(self):
         from tengu.tools.recon.httrack import _dir_size_mb
+
         assert _dir_size_mb(Path("/nonexistent/xyz")) == 0.0
 
     def test_dir_size_mb_with_files(self, tmp_path):
         from tengu.tools.recon.httrack import _dir_size_mb
+
         (tmp_path / "file.html").write_bytes(b"x" * 1024 * 512)  # 0.5 MB
         size = _dir_size_mb(tmp_path)
         assert size > 0

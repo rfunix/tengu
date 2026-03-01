@@ -36,9 +36,7 @@ class TestSlidingWindowCleanup:
         # Manually inject expired timestamps
         import collections
 
-        limiter._call_times["tool"] = collections.deque(
-            [time.monotonic() - 120]
-        )
+        limiter._call_times["tool"] = collections.deque([time.monotonic() - 120])
 
         stats = limiter.get_stats("tool")
         # After cleanup, window should be empty

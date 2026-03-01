@@ -8,12 +8,12 @@ from pathlib import Path
 _DATA_PATH = Path(__file__).parent / "data" / "ptes_phases.json"
 
 
-def _load_data() -> dict:  # type: ignore[type-arg]
+def _load_data() -> dict:
     with _DATA_PATH.open(encoding="utf-8") as f:
         return json.load(f)
 
 
-def get_phases_overview() -> dict:  # type: ignore[type-arg]
+def get_phases_overview() -> dict:
     """Return a summary of all 7 PTES phases."""
     data = _load_data()
     return {
@@ -31,7 +31,7 @@ def get_phases_overview() -> dict:  # type: ignore[type-arg]
     }
 
 
-def get_phase(phase_number: int) -> dict | None:  # type: ignore[type-arg]
+def get_phase(phase_number: int) -> dict | None:
     """Return details for a specific PTES phase (1-7)."""
     data = _load_data()
 

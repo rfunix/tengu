@@ -141,7 +141,12 @@ class TestParseNxcOutput:
 class TestTgsHashPattern:
     def test_valid_tgs_hash_matched(self):
         # Synthetic TGS hash (hashcat format)
-        tgs = "$krb5tgs$23$*SVC_SQL$CORP.LOCAL$HTTP/sqlserver.corp.local*$" + "a" * 32 + "$" + "b" * 32
+        tgs = (
+            "$krb5tgs$23$*SVC_SQL$CORP.LOCAL$HTTP/sqlserver.corp.local*$"
+            + "a" * 32
+            + "$"
+            + "b" * 32
+        )
         assert _TGS_HASH_PATTERN.search(tgs)
 
     def test_non_hash_not_matched(self):
@@ -193,8 +198,7 @@ class TestParseKerberoastOutput:
 
     def test_multiple_hashes(self):
         hashes = "\n".join(
-            f"$krb5tgs$23$*SVC{i}$CORP$HTTP/srv{i}*$" + "a" * 32 + "$" + "b" * 32
-            for i in range(3)
+            f"$krb5tgs$23$*SVC{i}$CORP$HTTP/srv{i}*$" + "a" * 32 + "$" + "b" * 32 for i in range(3)
         )
         result = _parse_kerberoast_output(hashes)
         assert len(result["tgs_hashes"]) == 3
@@ -278,7 +282,9 @@ class TestImpacketKerberoast:
     def _patch_resolve(self, return_value="/usr/bin/impacket-GetUserSPNs"):
         return patch("tengu.tools.ad.impacket.resolve_tool_path", return_value=return_value)
 
-    async def test_kerberoast_blocked_target(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_kerberoast_blocked_target(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """Allowlist rejection propagates as an exception."""
         al, _ = _setup_impacket_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         al.check.side_effect = ValueError("target not allowed")
@@ -286,10 +292,16 @@ class TestImpacketKerberoast:
 
         from tengu.tools.ad.impacket import impacket_kerberoast
 
-        with self._patch_shutil(None), self._patch_resolve(), pytest.raises(ValueError, match="target not allowed"):
+        with (
+            self._patch_shutil(None),
+            self._patch_resolve(),
+            pytest.raises(ValueError, match="target not allowed"),
+        ):
             await impacket_kerberoast(ctx, "192.168.1.1", "corp.local", "admin", "pass")
 
-    async def test_kerberoast_with_password(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_kerberoast_with_password(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """Password provided results in domain/user:pass credential argument."""
         _setup_impacket_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_ad_ctx()
@@ -303,7 +315,9 @@ class TestImpacketKerberoast:
         cred_arg = call_args[1]
         assert "secret" in cred_arg
 
-    async def test_kerberoast_with_hashes(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_kerberoast_with_hashes(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """When hashes provided, -hashes flag is appended to args."""
         _setup_impacket_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_ad_ctx()
@@ -311,12 +325,16 @@ class TestImpacketKerberoast:
         from tengu.tools.ad.impacket import impacket_kerberoast
 
         with self._patch_shutil(None), self._patch_resolve():
-            await impacket_kerberoast(ctx, "192.168.1.1", "corp.local", "admin", hashes="aad3b:hash")
+            await impacket_kerberoast(
+                ctx, "192.168.1.1", "corp.local", "admin", hashes="aad3b:hash"
+            )
 
         call_args = mock_run.call_args[0][0]
         assert "-hashes" in call_args
 
-    async def test_kerberoast_output_parsed(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_kerberoast_output_parsed(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """Output with TGS hashes is parsed into tgs_hashes list."""
         _setup_impacket_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         tgs = "$krb5tgs$23$*SVC$CORP$HTTP/srv*$" + "a" * 32 + "$" + "b" * 32
@@ -330,7 +348,9 @@ class TestImpacketKerberoast:
 
         assert len(result["tgs_hashes"]) == 1
 
-    async def test_kerberoast_no_hashes_found(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_kerberoast_no_hashes_found(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """No TGS tickets → empty tgs_hashes list."""
         _setup_impacket_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         mock_run.return_value = ("No entries found!", "", 0)
@@ -343,7 +363,9 @@ class TestImpacketKerberoast:
 
         assert result["tgs_hashes"] == []
 
-    async def test_kerberoast_dc_ip_flag(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_kerberoast_dc_ip_flag(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """dc_ip (target) is passed via -dc-ip flag."""
         _setup_impacket_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_ad_ctx()
@@ -358,7 +380,9 @@ class TestImpacketKerberoast:
         idx = call_args.index("-dc-ip")
         assert call_args[idx + 1] == "10.0.0.5"
 
-    async def test_kerberoast_domain_in_cred_arg(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_kerberoast_domain_in_cred_arg(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """Domain is prepended to username in credential argument."""
         _setup_impacket_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_ad_ctx()
@@ -373,7 +397,9 @@ class TestImpacketKerberoast:
         assert "corp.local" in cred_arg
         assert "testuser" in cred_arg
 
-    async def test_kerberoast_audit_logged(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_kerberoast_audit_logged(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """audit.log_tool_call is called during execution."""
         _, audit = _setup_impacket_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_ad_ctx()
@@ -385,7 +411,9 @@ class TestImpacketKerberoast:
 
         assert audit.log_tool_call.call_count >= 1
 
-    async def test_kerberoast_run_error(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_kerberoast_run_error(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """run_command exception propagates and failure is logged."""
         _, audit = _setup_impacket_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         mock_run.side_effect = RuntimeError("timeout")
@@ -393,17 +421,20 @@ class TestImpacketKerberoast:
 
         from tengu.tools.ad.impacket import impacket_kerberoast
 
-        with self._patch_shutil(None), self._patch_resolve(), pytest.raises(RuntimeError, match="timeout"):
+        with (
+            self._patch_shutil(None),
+            self._patch_resolve(),
+            pytest.raises(RuntimeError, match="timeout"),
+        ):
             await impacket_kerberoast(ctx, "192.168.1.1", "corp.local", "admin")
 
         # Audit should record failure
-        failed_calls = [
-            c for c in audit.log_tool_call.call_args_list
-            if "failed" in str(c)
-        ]
+        failed_calls = [c for c in audit.log_tool_call.call_args_list if "failed" in str(c)]
         assert len(failed_calls) >= 1
 
-    async def test_kerberoast_rate_limited_used(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_kerberoast_rate_limited_used(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """rate_limited context manager is entered during execution."""
         _setup_impacket_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_ad_ctx()
@@ -415,7 +446,9 @@ class TestImpacketKerberoast:
 
         mock_rl.assert_called_once_with("impacket")
 
-    async def test_kerberoast_hashcat_hint_present(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_kerberoast_hashcat_hint_present(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """When hashes found, hashcat_hint is in result."""
         _setup_impacket_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         tgs = "$krb5tgs$23$*SVC$CORP$HTTP/srv*$" + "a" * 32 + "$" + "b" * 32
@@ -429,7 +462,9 @@ class TestImpacketKerberoast:
 
         assert "hashcat" in result["hashcat_hint"].lower()
 
-    async def test_kerberoast_warning_in_result(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_kerberoast_warning_in_result(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """Result includes warning about Event ID 4769."""
         _setup_impacket_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_ad_ctx()
@@ -461,7 +496,9 @@ class TestNxcEnum:
     def _patch_resolve_nxc(self, return_value="/usr/bin/nxc"):
         return patch("tengu.tools.ad.crackmapexec.resolve_tool_path", return_value=return_value)
 
-    async def test_nxc_blocked_target(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_nxc_blocked_target(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """Allowlist rejection propagates as an exception."""
         al, _ = _setup_nxc_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         al.check.side_effect = ValueError("target not allowed")
@@ -469,10 +506,16 @@ class TestNxcEnum:
 
         from tengu.tools.ad.crackmapexec import nxc_enum
 
-        with self._patch_shutil_nxc(), self._patch_resolve_nxc(), pytest.raises(ValueError, match="target not allowed"):
+        with (
+            self._patch_shutil_nxc(),
+            self._patch_resolve_nxc(),
+            pytest.raises(ValueError, match="target not allowed"),
+        ):
             await nxc_enum(ctx, "192.168.1.1")
 
-    async def test_nxc_invalid_protocol(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_nxc_invalid_protocol(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """Unsupported protocol returns error dict without running command."""
         _setup_nxc_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_ad_ctx()
@@ -486,7 +529,9 @@ class TestNxcEnum:
         assert "telnet" in result["error"]
         mock_run.assert_not_called()
 
-    async def test_nxc_valid_protocol_smb(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_nxc_valid_protocol_smb(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """SMB protocol is accepted and command runs."""
         _setup_nxc_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_ad_ctx()
@@ -499,7 +544,9 @@ class TestNxcEnum:
         assert "error" not in result
         assert result["protocol"] == "smb"
 
-    async def test_nxc_valid_protocol_ldap(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_nxc_valid_protocol_ldap(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """LDAP protocol is accepted and command runs."""
         _setup_nxc_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_ad_ctx()
@@ -512,7 +559,9 @@ class TestNxcEnum:
         assert "error" not in result
         assert result["protocol"] == "ldap"
 
-    async def test_nxc_modules_flag(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_nxc_modules_flag(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """Modules list results in -M flags in command args."""
         _setup_nxc_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_ad_ctx()
@@ -527,7 +576,9 @@ class TestNxcEnum:
         idx = call_args.index("-M")
         assert call_args[idx + 1] == "spider_plus"
 
-    async def test_nxc_output_parsed(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_nxc_output_parsed(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """Parsed output data is in the result dict."""
         _setup_nxc_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         mock_run.return_value = ("[+] 10.0.0.1:445 SMB signing disabled\n", "", 0)
@@ -541,7 +592,9 @@ class TestNxcEnum:
         assert "authentication_status" in result
         assert "hosts_found" in result
 
-    async def test_nxc_credentials(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_nxc_credentials(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """Username and password are added to command args."""
         _setup_nxc_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_ad_ctx()
@@ -567,7 +620,9 @@ class TestNxcEnum:
 
         assert result["tool"] in ("nxc", "crackmapexec")
 
-    async def test_nxc_audit_logged(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_nxc_audit_logged(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """audit.log_tool_call is called during execution."""
         _, audit = _setup_nxc_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_ad_ctx()
@@ -587,10 +642,16 @@ class TestNxcEnum:
 
         from tengu.tools.ad.crackmapexec import nxc_enum
 
-        with self._patch_shutil_nxc(), self._patch_resolve_nxc(), pytest.raises(RuntimeError, match="connection refused"):
+        with (
+            self._patch_shutil_nxc(),
+            self._patch_resolve_nxc(),
+            pytest.raises(RuntimeError, match="connection refused"),
+        ):
             await nxc_enum(ctx, "192.168.1.1", protocol="smb")
 
-    async def test_nxc_rate_limited_used(self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl):
+    async def test_nxc_rate_limited_used(
+        self, mock_run, mock_config, mock_audit, mock_allowlist, mock_rl
+    ):
         """rate_limited context manager is entered with 'nxc' key."""
         _setup_nxc_mocks(mock_run, mock_config, mock_allowlist, mock_audit, mock_rl)
         ctx = _make_ad_ctx()

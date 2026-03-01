@@ -67,20 +67,22 @@ def _make_trufflehog_line(
     verified: bool = False,
     raw: str = "AKIAIOSFODNN7EXAMPLE",
 ) -> str:
-    return json.dumps({
-        "DetectorName": detector,
-        "Verified": verified,
-        "Raw": raw,
-        "SourceMetadata": {
-            "Data": {
-                "Git": {
-                    "commit": "abc123",
-                    "file": "config.py",
-                    "line": 42,
+    return json.dumps(
+        {
+            "DetectorName": detector,
+            "Verified": verified,
+            "Raw": raw,
+            "SourceMetadata": {
+                "Data": {
+                    "Git": {
+                        "commit": "abc123",
+                        "file": "config.py",
+                        "line": 42,
+                    }
                 }
-            }
-        },
-    })
+            },
+        }
+    )
 
 
 class TestParseTrufflehogOutput:
@@ -119,23 +121,27 @@ class TestParseTrufflehogOutput:
 
     def test_camelcase_field_names(self):
         # CamelCase keys (trufflehog v3 output)
-        line = json.dumps({
-            "DetectorName": "GitHub",
-            "Verified": True,
-            "Raw": "ghp_" + "x" * 36,
-            "SourceMetadata": {"Data": {}},
-        })
+        line = json.dumps(
+            {
+                "DetectorName": "GitHub",
+                "Verified": True,
+                "Raw": "ghp_" + "x" * 36,
+                "SourceMetadata": {"Data": {}},
+            }
+        )
         findings = _parse_trufflehog_output(line)
         assert findings[0]["detector"] == "GitHub"
 
     def test_lowercase_field_names(self):
         # Lowercase keys (alternate output format)
-        line = json.dumps({
-            "detectorName": "Slack",
-            "verified": False,
-            "raw": "xoxb-slack-token",
-            "sourceMetadata": {"data": {}},
-        })
+        line = json.dumps(
+            {
+                "detectorName": "Slack",
+                "verified": False,
+                "raw": "xoxb-slack-token",
+                "sourceMetadata": {"data": {}},
+            }
+        )
         findings = _parse_trufflehog_output(line)
         assert findings[0]["detector"] == "Slack"
 
@@ -340,7 +346,9 @@ def _setup_gitleaks_mocks(mock_run, mock_config, mock_audit, mock_rl):
 class TestTrufflehogScan:
     """Async tests for trufflehog_scan()."""
 
-    async def test_trufflehog_git_scan(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trufflehog_git_scan(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """scan_type='git' passes 'git' subcommand to run_command."""
         _setup_trufflehog_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_secrets_ctx()
@@ -356,7 +364,9 @@ class TestTrufflehogScan:
         call_args = mock_run.call_args[0][0]
         assert "git" in call_args
 
-    async def test_trufflehog_github_scan(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trufflehog_github_scan(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """scan_type='github' passes 'github' subcommand to run_command."""
         _setup_trufflehog_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_secrets_ctx()
@@ -372,7 +382,9 @@ class TestTrufflehogScan:
         call_args = mock_run.call_args[0][0]
         assert "github" in call_args
 
-    async def test_trufflehog_filesystem_scan(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trufflehog_filesystem_scan(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """scan_type='filesystem' passes 'filesystem' subcommand."""
         _setup_trufflehog_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_secrets_ctx()
@@ -384,7 +396,9 @@ class TestTrufflehogScan:
         call_args = mock_run.call_args[0][0]
         assert "filesystem" in call_args
 
-    async def test_trufflehog_invalid_scan_type(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trufflehog_invalid_scan_type(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """Invalid scan_type returns error dict without calling run_command."""
         _setup_trufflehog_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_secrets_ctx()
@@ -396,7 +410,9 @@ class TestTrufflehogScan:
         assert "error" in result
         mock_run.assert_not_called()
 
-    async def test_trufflehog_branch_flag(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trufflehog_branch_flag(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """Branch provided → --branch flag appears in args."""
         _setup_trufflehog_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_secrets_ctx()
@@ -407,20 +423,26 @@ class TestTrufflehogScan:
             al = MagicMock()
             al.check = MagicMock()
             mock_al.return_value = al
-            await trufflehog_scan(ctx, "https://github.com/test/repo", scan_type="git", branch="main")
+            await trufflehog_scan(
+                ctx, "https://github.com/test/repo", scan_type="git", branch="main"
+            )
 
         call_args = mock_run.call_args[0][0]
         assert "--branch" in call_args
 
-    async def test_trufflehog_output_parsed(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trufflehog_output_parsed(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """JSON-line output is parsed into findings list."""
         _setup_trufflehog_mocks(mock_run, mock_config, mock_audit, mock_rl)
-        finding = json.dumps({
-            "DetectorName": "AWS",
-            "Verified": True,
-            "Raw": "AKIAIOSFODNN7EXAMPLE",
-            "SourceMetadata": {"Data": {}},
-        })
+        finding = json.dumps(
+            {
+                "DetectorName": "AWS",
+                "Verified": True,
+                "Raw": "AKIAIOSFODNN7EXAMPLE",
+                "SourceMetadata": {"Data": {}},
+            }
+        )
         mock_run.return_value = (finding, "", 0)
         ctx = _make_secrets_ctx()
 
@@ -431,7 +453,9 @@ class TestTrufflehogScan:
         assert result["secrets_found"] == 1
         assert len(result["findings"]) == 1
 
-    async def test_trufflehog_no_secrets(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trufflehog_no_secrets(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """Empty output → secrets_found=0, findings=[]."""
         _setup_trufflehog_mocks(mock_run, mock_config, mock_audit, mock_rl)
         mock_run.return_value = ("", "", 0)
@@ -444,7 +468,9 @@ class TestTrufflehogScan:
         assert result["secrets_found"] == 0
         assert result["findings"] == []
 
-    async def test_trufflehog_tool_key(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trufflehog_tool_key(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """Result 'tool' key equals 'trufflehog'."""
         _setup_trufflehog_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_secrets_ctx()
@@ -455,7 +481,9 @@ class TestTrufflehogScan:
 
         assert result["tool"] == "trufflehog"
 
-    async def test_trufflehog_audit_logged(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trufflehog_audit_logged(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """audit.log_tool_call is called during execution."""
         audit = _setup_trufflehog_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_secrets_ctx()
@@ -466,7 +494,9 @@ class TestTrufflehogScan:
 
         assert audit.log_tool_call.call_count >= 1
 
-    async def test_trufflehog_run_error(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trufflehog_run_error(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """run_command exception propagates."""
         _setup_trufflehog_mocks(mock_run, mock_config, mock_audit, mock_rl)
         mock_run.side_effect = RuntimeError("scan crashed")
@@ -477,7 +507,9 @@ class TestTrufflehogScan:
         with pytest.raises(RuntimeError, match="scan crashed"):
             await trufflehog_scan(ctx, "/tmp", scan_type="filesystem")
 
-    async def test_trufflehog_timeout(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trufflehog_timeout(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """Explicit timeout is forwarded to run_command."""
         _setup_trufflehog_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_secrets_ctx()
@@ -489,7 +521,9 @@ class TestTrufflehogScan:
         call_kwargs = mock_run.call_args[1]
         assert call_kwargs.get("timeout") == 300
 
-    async def test_trufflehog_ssh_url_forbidden_chars(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_trufflehog_ssh_url_forbidden_chars(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """SSH git URL with shell metacharacters raises InvalidInputError."""
         _setup_trufflehog_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_secrets_ctx()
@@ -515,7 +549,9 @@ class TestTrufflehogScan:
 class TestGitleaksScan:
     """Async tests for gitleaks_scan()."""
 
-    async def test_gitleaks_invalid_scan_type(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_gitleaks_invalid_scan_type(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """Invalid scan_type returns error dict without calling run_command."""
         _setup_gitleaks_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_secrets_ctx()
@@ -527,7 +563,9 @@ class TestGitleaksScan:
         assert "error" in result
         mock_run.assert_not_called()
 
-    async def test_gitleaks_report_format_json(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_gitleaks_report_format_json(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """report_format='json' is reflected in result and args."""
         _setup_gitleaks_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_secrets_ctx()
@@ -542,7 +580,9 @@ class TestGitleaksScan:
         idx = call_args.index("--report-format")
         assert call_args[idx + 1] == "json"
 
-    async def test_gitleaks_report_format_fallback(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_gitleaks_report_format_fallback(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """Invalid report_format falls back to 'json'."""
         _setup_gitleaks_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_secrets_ctx()
@@ -553,7 +593,9 @@ class TestGitleaksScan:
 
         assert result["report_format"] == "json"
 
-    async def test_gitleaks_detect_subcommand(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_gitleaks_detect_subcommand(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """scan_type='detect' passes 'detect' subcommand to run_command."""
         _setup_gitleaks_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_secrets_ctx()
@@ -565,7 +607,9 @@ class TestGitleaksScan:
         call_args = mock_run.call_args[0][0]
         assert "detect" in call_args
 
-    async def test_gitleaks_output_parsed(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_gitleaks_output_parsed(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """Valid JSON output is parsed into findings list."""
         _setup_gitleaks_mocks(mock_run, mock_config, mock_audit, mock_rl)
         item = {
@@ -589,7 +633,9 @@ class TestGitleaksScan:
         assert result["secrets_found"] == 1
         assert len(result["findings"]) == 1
 
-    async def test_gitleaks_no_leaks(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_gitleaks_no_leaks(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """Empty output → secrets_found=0, findings=[]."""
         _setup_gitleaks_mocks(mock_run, mock_config, mock_audit, mock_rl)
         mock_run.return_value = ("", "", 0)
@@ -602,7 +648,9 @@ class TestGitleaksScan:
         assert result["secrets_found"] == 0
         assert result["findings"] == []
 
-    async def test_gitleaks_tool_key(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_gitleaks_tool_key(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """Result 'tool' key equals 'gitleaks'."""
         _setup_gitleaks_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_secrets_ctx()
@@ -613,7 +661,9 @@ class TestGitleaksScan:
 
         assert result["tool"] == "gitleaks"
 
-    async def test_gitleaks_audit_logged(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_gitleaks_audit_logged(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """audit.log_tool_call is called during execution."""
         audit = _setup_gitleaks_mocks(mock_run, mock_config, mock_audit, mock_rl)
         ctx = _make_secrets_ctx()
@@ -624,7 +674,9 @@ class TestGitleaksScan:
 
         assert audit.log_tool_call.call_count >= 1
 
-    async def test_gitleaks_run_error(self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize):
+    async def test_gitleaks_run_error(
+        self, mock_run, mock_config, mock_audit, mock_resolve, mock_rl, mock_sanitize
+    ):
         """Non-zero exit with exception propagates."""
         _setup_gitleaks_mocks(mock_run, mock_config, mock_audit, mock_rl)
         mock_run.side_effect = RuntimeError("gitleaks failed")

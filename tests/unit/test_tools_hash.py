@@ -147,8 +147,14 @@ class TestHashCrack:
 
         with (
             patch("tengu.tools.bruteforce.hash_tools.get_config", return_value=_mock_config()),
-            patch("tengu.tools.bruteforce.hash_tools._crack_with_john", AsyncMock(return_value=mock_john_result)),
-            patch("tengu.tools.bruteforce.hash_tools._crack_with_hashcat", AsyncMock(return_value={"cracked": False})),
+            patch(
+                "tengu.tools.bruteforce.hash_tools._crack_with_john",
+                AsyncMock(return_value=mock_john_result),
+            ),
+            patch(
+                "tengu.tools.bruteforce.hash_tools._crack_with_hashcat",
+                AsyncMock(return_value={"cracked": False}),
+            ),
         ):
             result = await hash_crack(
                 mock_ctx,
@@ -229,7 +235,9 @@ class TestHashCrack:
 
         with (
             patch("tengu.tools.bruteforce.hash_tools.get_config", return_value=_mock_config()),
-            patch("tengu.tools.bruteforce.hash_tools.sanitize_wordlist_path", side_effect=lambda x: x),
+            patch(
+                "tengu.tools.bruteforce.hash_tools.sanitize_wordlist_path", side_effect=lambda x: x
+            ),
             patch("tengu.tools.bruteforce.hash_tools._crack_with_john", fake_john),
             patch(
                 "tengu.tools.bruteforce.hash_tools._crack_with_hashcat",
@@ -285,7 +293,9 @@ class TestHashCrack:
 
         with (
             patch("tengu.tools.bruteforce.hash_tools.get_config", return_value=cfg),
-            patch("tengu.tools.bruteforce.hash_tools.sanitize_wordlist_path", side_effect=lambda x: x),
+            patch(
+                "tengu.tools.bruteforce.hash_tools.sanitize_wordlist_path", side_effect=lambda x: x
+            ),
             patch("tengu.tools.bruteforce.hash_tools._crack_with_john", fake_john),
             patch(
                 "tengu.tools.bruteforce.hash_tools._crack_with_hashcat",
@@ -316,13 +326,17 @@ class TestCrackWithJohn:
         john_stdout_show = "d41d8cd98f00b204e9800998ecf8427e:password123\n1 password hash cracked\n"
 
         with (
-            patch("tengu.tools.bruteforce.hash_tools.resolve_tool_path", return_value="/usr/bin/john"),
+            patch(
+                "tengu.tools.bruteforce.hash_tools.resolve_tool_path", return_value="/usr/bin/john"
+            ),
             patch(
                 "tengu.tools.bruteforce.hash_tools.run_command",
-                AsyncMock(side_effect=[
-                    (john_stdout_crack, "", 0),  # crack run
-                    (john_stdout_show, "", 0),    # --show run
-                ]),
+                AsyncMock(
+                    side_effect=[
+                        (john_stdout_crack, "", 0),  # crack run
+                        (john_stdout_show, "", 0),  # --show run
+                    ]
+                ),
             ),
         ):
             result = await _crack_with_john(
@@ -340,13 +354,17 @@ class TestCrackWithJohn:
         john_stdout_show = "# No hashes found\n0 password hashes cracked\n"
 
         with (
-            patch("tengu.tools.bruteforce.hash_tools.resolve_tool_path", return_value="/usr/bin/john"),
+            patch(
+                "tengu.tools.bruteforce.hash_tools.resolve_tool_path", return_value="/usr/bin/john"
+            ),
             patch(
                 "tengu.tools.bruteforce.hash_tools.run_command",
-                AsyncMock(side_effect=[
-                    (john_stdout_crack, "", 1),
-                    (john_stdout_show, "", 0),
-                ]),
+                AsyncMock(
+                    side_effect=[
+                        (john_stdout_crack, "", 1),
+                        (john_stdout_show, "", 0),
+                    ]
+                ),
             ),
         ):
             result = await _crack_with_john(
@@ -369,7 +387,10 @@ class TestCrackWithHashcat:
         hashcat_stdout = "d41d8cd98f00b204e9800998ecf8427e:letmein\n"
 
         with (
-            patch("tengu.tools.bruteforce.hash_tools.resolve_tool_path", return_value="/usr/bin/hashcat"),
+            patch(
+                "tengu.tools.bruteforce.hash_tools.resolve_tool_path",
+                return_value="/usr/bin/hashcat",
+            ),
             patch(
                 "tengu.tools.bruteforce.hash_tools.run_command",
                 AsyncMock(return_value=(hashcat_stdout, "", 0)),
@@ -389,7 +410,10 @@ class TestCrackWithHashcat:
         hashcat_stdout = "Session..........: hashcat\nStatus...........: Exhausted\n"
 
         with (
-            patch("tengu.tools.bruteforce.hash_tools.resolve_tool_path", return_value="/usr/bin/hashcat"),
+            patch(
+                "tengu.tools.bruteforce.hash_tools.resolve_tool_path",
+                return_value="/usr/bin/hashcat",
+            ),
             patch(
                 "tengu.tools.bruteforce.hash_tools.run_command",
                 AsyncMock(return_value=(hashcat_stdout, "", 1)),

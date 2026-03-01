@@ -23,11 +23,11 @@ _TEST_ORIGINS = [
 
 
 async def test_cors(
-    ctx: Context,  # type: ignore[type-arg]
+    ctx: Context,
     url: str,
     custom_origins: list[str] | None = None,
     timeout_seconds: int = 30,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Test a URL for CORS (Cross-Origin Resource Sharing) misconfigurations.
 
     Sends requests with various Origin headers to detect if the server
@@ -71,13 +71,14 @@ async def test_cors(
                 pass
 
     issues: list[str] = []
-    test_results: list[dict] = []  # type: ignore[type-arg]
+    test_results: list[dict] = []
     allow_origin: str | None = None
     allow_credentials = False
 
     await ctx.report_progress(0, len(test_origins), f"Testing CORS on {url}...")
 
     from tengu.stealth import get_stealth_layer
+
     stealth = get_stealth_layer()
     async with stealth.create_http_client(
         follow_redirects=True,
@@ -102,7 +103,7 @@ async def test_cors(
                 acam = response.headers.get("access-control-allow-methods", "")
                 acah = response.headers.get("access-control-allow-headers", "")
 
-                test_result: dict = {  # type: ignore[type-arg]
+                test_result: dict = {
                     "origin_tested": origin,
                     "access_control_allow_origin": acao,
                     "access_control_allow_credentials": acac,
@@ -168,7 +169,9 @@ async def test_cors(
             "Implement a strict allowlist of trusted origins. "
             "Never reflect the Origin header value back. "
             "Only set Access-Control-Allow-Credentials: true for explicitly trusted origins."
-        ) if result.vulnerable else None,
+        )
+        if result.vulnerable
+        else None,
     }
 
 

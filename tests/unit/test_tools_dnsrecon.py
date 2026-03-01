@@ -1,4 +1,5 @@
 """Unit tests for the dnsrecon_scan async tool."""
+
 from __future__ import annotations
 
 import json
@@ -128,7 +129,16 @@ class TestDnsreconScan:
     async def test_returns_correct_structure(self):
         mocks = _make_fixtures()
         result = await _call_dnsrecon(mocks)
-        for key in ("tool", "domain", "scan_type", "command", "duration_seconds",
-                    "records_found", "records", "raw_output", "errors"):
+        for key in (
+            "tool",
+            "domain",
+            "scan_type",
+            "command",
+            "duration_seconds",
+            "records_found",
+            "records",
+            "raw_output",
+            "errors",
+        ):
             assert key in result, f"Missing key: {key}"
         assert result["tool"] == "dnsrecon"

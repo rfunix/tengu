@@ -4,7 +4,7 @@ from __future__ import annotations
 
 
 def executive_report(
-    findings: list[dict],  # type: ignore[type-arg]
+    findings: list[dict],
     client_name: str,
     engagement_date: str,
 ) -> str:
@@ -49,7 +49,7 @@ Write the executive summary now.
 
 
 def technical_report(
-    findings: list[dict],  # type: ignore[type-arg]
+    findings: list[dict],
     client_name: str,
     scope: list[str],
     methodology: str = "PTES",
@@ -59,7 +59,7 @@ def technical_report(
 for a report to {client_name}.
 
 ## Context
-- Scope: {', '.join(scope)}
+- Scope: {", ".join(scope)}
 - Methodology: {methodology}
 - Total Findings: {len(findings)}
 
@@ -81,7 +81,7 @@ ID format for cross-referencing. Be specific and actionable.
 
 
 def full_pentest_report(
-    findings: list[dict],  # type: ignore[type-arg]
+    findings: list[dict],
     client_name: str,
     scope: list[str],
     rules_of_engagement: str,
@@ -93,7 +93,7 @@ def full_pentest_report(
 
 ## Report Parameters
 - Client: {client_name}
-- Scope: {', '.join(scope)}
+- Scope: {", ".join(scope)}
 - Engagement Dates: {engagement_dates}
 - Methodology: {methodology}
 - Rules of Engagement: {rules_of_engagement}
@@ -111,7 +111,7 @@ def full_pentest_report(
    - findings=(the findings list below)
    - report_type="full"
    - output_format="html"
-   - output_path="./reports/{client_name.replace(' ', '_')}_pentest_report.html"
+   - output_path="./reports/{client_name.replace(" ", "_")}_pentest_report.html"
 
 3. Also generate with output_format="markdown" for version control.
 
@@ -127,7 +127,7 @@ Generate the complete report now.
 
 
 def remediation_plan(
-    findings: list[dict],  # type: ignore[type-arg]
+    findings: list[dict],
     priority: str = "risk",
 ) -> str:
     """Generate a remediation plan prompt."""
@@ -188,7 +188,7 @@ def finding_detail(
 
 Generate a complete finding document with:
 
-1. **Finding ID**: TENGU-{__import__('datetime').datetime.now().year}-XXX (assign appropriate number)
+1. **Finding ID**: TENGU-{__import__("datetime").datetime.now().year}-XXX (assign appropriate number)
 2. **Title**: Concise, descriptive title (max 80 chars)
 3. **Severity**: Critical/High/Medium/Low/Informational
 4. **CVSS Score**: Calculate from vector if provided, or estimate based on impact
@@ -208,7 +208,7 @@ Document this finding now in the standard format.
 """
 
 
-def risk_matrix(findings: list[dict]) -> str:  # type: ignore[type-arg]
+def risk_matrix(findings: list[dict]) -> str:
     """Generate a risk matrix visualization prompt."""
     return f"""Create a comprehensive risk matrix for the following {len(findings)} findings.
 
@@ -234,8 +234,8 @@ Use `generate_report` with report_type="risk_matrix" for the formatted output.
 
 
 def retest_report(
-    original_findings: list[dict],  # type: ignore[type-arg]
-    retest_results: list[dict],  # type: ignore[type-arg]
+    original_findings: list[dict],
+    retest_results: list[dict],
 ) -> str:
     """Generate a retest/verification report prompt."""
     return f"""Write a professional retest report comparing original findings against retest results.
@@ -279,7 +279,7 @@ Retest Results:
 """
 
 
-def _format_findings_for_prompt(findings: list[dict]) -> str:  # type: ignore[type-arg]
+def _format_findings_for_prompt(findings: list[dict]) -> str:
     """Format findings for inclusion in prompts."""
     if not findings:
         return "No findings provided."
@@ -287,7 +287,7 @@ def _format_findings_for_prompt(findings: list[dict]) -> str:  # type: ignore[ty
     lines = []
     for i, f in enumerate(findings[:20]):
         lines.append(
-            f"{i+1}. [{f.get('severity', 'unknown').upper()}] "
+            f"{i + 1}. [{f.get('severity', 'unknown').upper()}] "
             f"{f.get('title', f.get('template_name', 'Unknown'))} "
             f"— {f.get('affected_asset', f.get('url', 'N/A'))} "
             f"(CVSS: {f.get('cvss_score', 'N/A')})"

@@ -134,7 +134,9 @@ class TestCalculateRiskScore:
         chains = [{"name": f"chain{i}"} for i in range(5)]
         score = _calculate_risk_score(findings, chains)
         # max chain boost is 2.0
-        score_single = _calculate_risk_score(findings, [{"name": "c1"}, {"name": "c2"}, {"name": "c3"}, {"name": "c4"}])
+        score_single = _calculate_risk_score(
+            findings, [{"name": "c1"}, {"name": "c2"}, {"name": "c3"}, {"name": "c4"}]
+        )
         assert score == score_single  # both should hit the 2.0 cap
 
     def test_critical_boost_capped_at_one_five(self):
@@ -171,7 +173,9 @@ class TestBuildRemediationPriority:
         assert result[0]["severity"] == "critical"
 
     def test_max_twenty_items(self):
-        findings = [{"severity": "low", "cvss_score": 2.0, "title": f"Issue {i}"} for i in range(30)]
+        findings = [
+            {"severity": "low", "cvss_score": 2.0, "title": f"Issue {i}"} for i in range(30)
+        ]
         assert len(_build_remediation_priority(findings)) == 20
 
     def test_critical_timeframe_is_thirty_days(self):

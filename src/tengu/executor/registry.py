@@ -137,10 +137,7 @@ async def check_all(verbose: bool = True) -> ToolsCheckResult:
 
     This is what `make doctor` calls.
     """
-    tasks = [
-        check_tool_async(t["name"], t["category"])
-        for t in _TOOL_CATALOG
-    ]
+    tasks = [check_tool_async(t["name"], t["category"]) for t in _TOOL_CATALOG]
     statuses = await asyncio.gather(*tasks)
 
     result = ToolsCheckResult(

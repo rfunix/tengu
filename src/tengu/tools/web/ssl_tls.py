@@ -15,17 +15,15 @@ from tengu.types import SSLResult
 logger = structlog.get_logger(__name__)
 
 _WEAK_PROTOCOLS = {"SSLv2", "SSLv3", "TLSv1.0", "TLSv1.1"}
-_WEAK_CIPHERS_PATTERNS = [
-    "RC4", "DES", "3DES", "MD5", "NULL", "EXPORT", "anon", "ADH", "AECDH"
-]
+_WEAK_CIPHERS_PATTERNS = ["RC4", "DES", "3DES", "MD5", "NULL", "EXPORT", "anon", "ADH", "AECDH"]
 
 
 async def ssl_tls_check(
-    ctx: Context,  # type: ignore[type-arg]
+    ctx: Context,
     host: str,
     port: int = 443,
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Analyze SSL/TLS configuration of a host using sslyze.
 
     Checks for:
@@ -68,7 +66,7 @@ async def ssl_tls_check(
 
     try:
         # Import sslyze lazily — it's an optional heavy dependency
-        from sslyze import (
+        from sslyze import (  # type: ignore[attr-defined]
             ServerNetworkLocation,
             ServerScanRequest,
         )
@@ -148,7 +146,7 @@ async def ssl_tls_check(
 
 def _run_sslyze_scan(scan_request: object) -> object:
     """Run sslyze synchronously in a thread pool executor."""
-    from sslyze import Scanner
+    from sslyze import Scanner  # type: ignore[attr-defined]
 
     scanner = Scanner()
     scanner.queue_scans([scan_request])  # type: ignore[list-item]
@@ -177,16 +175,20 @@ def _build_ssl_result(host: str, port: int, scan_result: object) -> SSLResult:
         }
 
         for proto_name, command in protocol_commands.items():
-            cmd_result = scan_result.scan_result.__dict__.get(  # type: ignore[union-attr]
+            cmd_result = scan_result.scan_result.__dict__.get(  # type: ignore[attr-defined]
                 command.value.lower().replace("-", "_"), None
             )
-            if cmd_result and hasattr(cmd_result, "accepted_cipher_suites") and cmd_result.accepted_cipher_suites:
+            if (
+                cmd_result
+                and hasattr(cmd_result, "accepted_cipher_suites")
+                and cmd_result.accepted_cipher_suites
+            ):
                 result.protocols.append(proto_name)
                 if proto_name in _WEAK_PROTOCOLS:
                     result.weak_protocols.append(proto_name)
 
         # Check certificate
-        cert_result = scan_result.scan_result.__dict__.get("certificate_info")  # type: ignore[union-attr]
+        cert_result = scan_result.scan_result.__dict__.get("certificate_info")  # type: ignore[attr-defined]
         if cert_result and hasattr(cert_result, "certificate_deployments"):
             for deployment in cert_result.certificate_deployments:
                 leaf = deployment.received_certificate_chain[0]
@@ -195,11 +197,11 @@ def _build_ssl_result(host: str, port: int, scan_result: object) -> SSLResult:
                 break
 
         # Check vulnerabilities
-        heartbleed = scan_result.scan_result.__dict__.get("heartbleed")  # type: ignore[union-attr]
+        heartbleed = scan_result.scan_result.__dict__.get("heartbleed")  # type: ignore[attr-defined]
         if heartbleed and getattr(heartbleed, "is_vulnerable_to_heartbleed", False):
             result.vulnerabilities.append("Heartbleed (CVE-2014-0160)")
 
-        robot = scan_result.scan_result.__dict__.get("robot")  # type: ignore[union-attr]
+        robot = scan_result.scan_result.__dict__.get("robot")  # type: ignore[attr-defined]
         if robot and "not_vulnerable" not in str(getattr(robot, "robot_result", "")).lower():
             result.vulnerabilities.append("ROBOT Attack")
 

@@ -1,4 +1,5 @@
 """Unit tests for aircrack_scan: interface sanitization, scan time clamping, CSV parsing."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -50,32 +51,35 @@ def _make_csv_content(num_aps: int = 2, include_station_line: bool = False) -> s
     for i in range(num_aps):
         row = (
             f"AA:BB:CC:DD:EE:0{i}, "  # BSSID (parts[0])
-            f"2024-01-01 00:00:00, "   # first_seen (parts[1])
-            f"2024-01-01 00:01:00, "   # last_seen (parts[2])
-            f"{i + 1}, "              # channel (parts[3])
-            f"54, "                   # speed (parts[4])
-            f"WPA2, "                 # privacy (parts[5])
-            f"CCMP, "                 # cipher (parts[6])
-            f"PSK, "                  # auth (parts[7])
-            f"-50, "                  # power (parts[8])
-            f"100, "                  # beacons (parts[9])
-            f"0, "                    # IV (parts[10])
-            f"0.0.0.0, "             # LAN IP (parts[11])
-            f"8, "                    # ID-length (parts[12])
-            f"TestNet{i}"             # SSID (parts[13])
+            f"2024-01-01 00:00:00, "  # first_seen (parts[1])
+            f"2024-01-01 00:01:00, "  # last_seen (parts[2])
+            f"{i + 1}, "  # channel (parts[3])
+            f"54, "  # speed (parts[4])
+            f"WPA2, "  # privacy (parts[5])
+            f"CCMP, "  # cipher (parts[6])
+            f"PSK, "  # auth (parts[7])
+            f"-50, "  # power (parts[8])
+            f"100, "  # beacons (parts[9])
+            f"0, "  # IV (parts[10])
+            f"0.0.0.0, "  # LAN IP (parts[11])
+            f"8, "  # ID-length (parts[12])
+            f"TestNet{i}"  # SSID (parts[13])
         )
         rows.append(row)
 
     lines = [header] + rows
     if include_station_line:
         lines.append("")
-        lines.append("Station MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs")
-        lines.append("FF:FF:FF:FF:FF:FF, 2024-01-01 00:00:00, 2024-01-01 00:01:00, -60, 10, AA:BB:CC:DD:EE:00, TestNet0")
+        lines.append(
+            "Station MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs"
+        )
+        lines.append(
+            "FF:FF:FF:FF:FF:FF, 2024-01-01 00:00:00, 2024-01-01 00:01:00, -60, 10, AA:BB:CC:DD:EE:00, TestNet0"
+        )
     return "\n".join(lines)
 
 
-async def _run_aircrack(ctx, interface="wlan0mon", scan_time=30,
-                        csv_content=None, csv_exists=True):
+async def _run_aircrack(ctx, interface="wlan0mon", scan_time=30, csv_content=None, csv_exists=True):
     """Run aircrack_scan under full mock."""
     from tengu.tools.wireless.aircrack import aircrack_scan
 
@@ -297,8 +301,12 @@ class TestAircrackReturnStructure:
     async def test_return_keys_present(self, ctx):
         result, _, _, _ = await _run_aircrack(ctx)
         expected_keys = {
-            "tool", "interface", "scan_duration_seconds",
-            "networks_found", "access_points", "warning",
+            "tool",
+            "interface",
+            "scan_duration_seconds",
+            "networks_found",
+            "access_points",
+            "warning",
         }
         assert expected_keys.issubset(result.keys())
 
@@ -314,6 +322,7 @@ class TestAircrackReturnStructure:
     async def test_no_allowlist_check_and_no_get_config(self, ctx):
         """checkov/aircrack don't call get_config or allowlist — verify module imports."""
         import tengu.tools.wireless.aircrack as mod
+
         # Confirm make_allowlist_from_config is not imported in aircrack module
         assert not hasattr(mod, "make_allowlist_from_config")
         assert not hasattr(mod, "get_config")

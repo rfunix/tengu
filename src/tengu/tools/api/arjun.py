@@ -22,12 +22,12 @@ _VALID_METHODS = {"GET", "POST", "JSON", "XML"}
 
 
 async def arjun_discover(
-    ctx: Context,  # type: ignore[type-arg]
+    ctx: Context,
     url: str,
     method: str = "GET",
     wordlist: str = "",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Discover hidden HTTP parameters in web endpoints using Arjun.
 
     Args:
@@ -73,10 +73,13 @@ async def arjun_discover(
 
     args: list[str] = [
         tool_path,
-        "-u", url,
-        "-m", method,
+        "-u",
+        url,
+        "-m",
+        method,
         "--stable",
-        "-oJ", "/dev/stdout",
+        "-oJ",
+        "/dev/stdout",
     ]
 
     if safe_wordlist:
@@ -129,6 +132,7 @@ def _parse_arjun_output(output: str) -> list[str]:
     except json.JSONDecodeError:
         # Fall back to line-by-line search for parameter names
         import re
+
         for line in output.splitlines():
             m = re.search(r'"([a-zA-Z0-9_\-]+)"\s*:', line)
             if m:

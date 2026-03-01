@@ -1,7 +1,5 @@
 """Nmap port scanner tool wrapper."""
 
-from __future__ import annotations
-
 import re
 import time
 import xml.etree.ElementTree as ET
@@ -36,15 +34,15 @@ _TIMING_FLAGS = {"T0", "T1", "T2", "T3", "T4", "T5"}
 
 
 async def nmap_scan(
-    ctx: Context,  # type: ignore[type-arg]
+    ctx: Context,
     target: str,
     ports: str = "1-1024",
-    scan_type: ScanType = "connect",
+    scan_type: Literal["syn", "connect", "udp", "version", "ping", "fast"] = "connect",
     timing: str = "T3",
     os_detection: bool = False,
     scripts: str = "",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Scan a target for open ports, services, and versions using Nmap.
 
     Args:
@@ -106,6 +104,7 @@ async def nmap_scan(
 
     # Stealth: inject --proxies flag if proxy is active
     from tengu.stealth import get_stealth_layer
+
     stealth = get_stealth_layer()
     if stealth.enabled and stealth.proxy_url:
         args = stealth.inject_proxy_flags("nmap", args)
@@ -210,13 +209,15 @@ def _parse_nmap_xml(xml_output: str) -> list[Host]:
                         version = f"{product} {ver}".strip()
 
                 if state == "open":
-                    ports.append(Port(
-                        number=portid,
-                        protocol=protocol,
-                        state=state,
-                        service=service,
-                        version=version,
-                    ))
+                    ports.append(
+                        Port(
+                            number=portid,
+                            protocol=protocol,
+                            state=state,
+                            service=service,
+                            version=version,
+                        )
+                    )
 
         # Get OS detection
         os_name = None
@@ -230,13 +231,15 @@ def _parse_nmap_xml(xml_output: str) -> list[Host]:
         status_elem = host_elem.find("status")
         status = status_elem.get("state", "unknown") if status_elem is not None else "unknown"
 
-        hosts.append(Host(
-            address=address,
-            hostname=hostname,
-            os=os_name,
-            ports=ports,
-            status=status,
-        ))
+        hosts.append(
+            Host(
+                address=address,
+                hostname=hostname,
+                os=os_name,
+                ports=ports,
+                status=status,
+            )
+        )
 
     return hosts
 
@@ -247,11 +250,13 @@ def _summarize_ports(hosts: list[Host]) -> list[dict[str, object]]:
     for host in hosts:
         for port in host.ports:
             if port.state == "open":
-                summary.append({
-                    "host": host.address,
-                    "port": port.number,
-                    "protocol": port.protocol,
-                    "service": port.service,
-                    "version": port.version,
-                })
+                summary.append(
+                    {
+                        "host": host.address,
+                        "port": port.number,
+                        "protocol": port.protocol,
+                        "service": port.service,
+                        "version": port.version,
+                    }
+                )
     return summary

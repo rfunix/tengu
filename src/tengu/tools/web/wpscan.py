@@ -1,4 +1,5 @@
 """WPScan WordPress vulnerability scanner wrapper."""
+
 from __future__ import annotations
 
 import json
@@ -49,6 +50,7 @@ async def wpscan_scan(
 
     url = sanitize_url(url)
     import re
+
     safe_enumerate = re.sub(r"[^a-z,]", "", enumerate.lower())
     threads = max(1, min(threads, 20))
 
@@ -64,10 +66,14 @@ async def wpscan_scan(
 
     args = [
         tool_path,
-        "--url", url,
-        "--enumerate", safe_enumerate,
-        "--threads", str(threads),
-        "--format", "json",
+        "--url",
+        url,
+        "--enumerate",
+        safe_enumerate,
+        "--threads",
+        str(threads),
+        "--format",
+        "json",
         "--no-update",
     ]
 

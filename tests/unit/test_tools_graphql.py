@@ -259,9 +259,7 @@ class TestCheckFieldSuggestions:
     async def test_suggestions_disabled(self):
         mock_resp = MagicMock()
         mock_resp.status_code = 400
-        mock_resp.json.return_value = {
-            "errors": [{"message": "Unknown field '__typ'"}]
-        }
+        mock_resp.json.return_value = {"errors": [{"message": "Unknown field '__typ'"}]}
         mock_client = _make_http_client(mock_resp)
 
         result = await _check_field_suggestions(mock_client, "https://example.com/graphql")
@@ -301,7 +299,9 @@ class TestGraphqlSecurityCheck:
     @patch("tengu.tools.api.graphql.get_audit_logger")
     @patch("tengu.tools.api.graphql.get_config")
     @patch("tengu.tools.api.graphql.httpx.AsyncClient")
-    async def test_graphql_blocked_by_allowlist(self, mock_httpx, mock_config, mock_audit_fn, mock_allowlist_fn, mock_ctx):
+    async def test_graphql_blocked_by_allowlist(
+        self, mock_httpx, mock_config, mock_audit_fn, mock_allowlist_fn, mock_ctx
+    ):
         mock_config.return_value = self._make_config_mock()
 
         mock_allowlist = MagicMock()
@@ -321,7 +321,9 @@ class TestGraphqlSecurityCheck:
     @patch("tengu.tools.api.graphql.get_audit_logger")
     @patch("tengu.tools.api.graphql.get_config")
     @patch("tengu.tools.api.graphql.httpx.AsyncClient")
-    async def test_graphql_all_checks_pass(self, mock_httpx, mock_config, mock_audit_fn, mock_allowlist_fn, mock_ctx):
+    async def test_graphql_all_checks_pass(
+        self, mock_httpx, mock_config, mock_audit_fn, mock_allowlist_fn, mock_ctx
+    ):
         mock_config.return_value = self._make_config_mock()
 
         mock_allowlist = MagicMock()
@@ -348,7 +350,9 @@ class TestGraphqlSecurityCheck:
     @patch("tengu.tools.api.graphql.get_audit_logger")
     @patch("tengu.tools.api.graphql.get_config")
     @patch("tengu.tools.api.graphql.httpx.AsyncClient")
-    async def test_graphql_introspection_found(self, mock_httpx, mock_config, mock_audit_fn, mock_allowlist_fn, mock_ctx):
+    async def test_graphql_introspection_found(
+        self, mock_httpx, mock_config, mock_audit_fn, mock_allowlist_fn, mock_ctx
+    ):
         mock_config.return_value = self._make_config_mock()
 
         mock_allowlist = MagicMock()
@@ -384,7 +388,9 @@ class TestGraphqlSecurityCheck:
     @patch("tengu.tools.api.graphql.get_audit_logger")
     @patch("tengu.tools.api.graphql.get_config")
     @patch("tengu.tools.api.graphql.httpx.AsyncClient")
-    async def test_graphql_authenticated_with_header(self, mock_httpx, mock_config, mock_audit_fn, mock_allowlist_fn, mock_ctx):
+    async def test_graphql_authenticated_with_header(
+        self, mock_httpx, mock_config, mock_audit_fn, mock_allowlist_fn, mock_ctx
+    ):
         mock_config.return_value = self._make_config_mock()
 
         mock_allowlist = MagicMock()
@@ -417,7 +423,9 @@ class TestGraphqlSecurityCheck:
     @patch("tengu.tools.api.graphql.get_audit_logger")
     @patch("tengu.tools.api.graphql.get_config")
     @patch("tengu.tools.api.graphql.httpx.AsyncClient")
-    async def test_graphql_skip_introspection(self, mock_httpx, mock_config, mock_audit_fn, mock_allowlist_fn, mock_ctx):
+    async def test_graphql_skip_introspection(
+        self, mock_httpx, mock_config, mock_audit_fn, mock_allowlist_fn, mock_ctx
+    ):
         mock_config.return_value = self._make_config_mock()
 
         mock_allowlist = MagicMock()
@@ -444,7 +452,9 @@ class TestGraphqlSecurityCheck:
     @patch("tengu.tools.api.graphql.get_audit_logger")
     @patch("tengu.tools.api.graphql.get_config")
     @patch("tengu.tools.api.graphql.httpx.AsyncClient")
-    async def test_graphql_auth_header_strips_newlines(self, mock_httpx, mock_config, mock_audit_fn, mock_allowlist_fn, mock_ctx):
+    async def test_graphql_auth_header_strips_newlines(
+        self, mock_httpx, mock_config, mock_audit_fn, mock_allowlist_fn, mock_ctx
+    ):
         mock_config.return_value = self._make_config_mock()
 
         mock_allowlist = MagicMock()
@@ -477,7 +487,9 @@ class TestGraphqlSecurityCheck:
     @patch("tengu.tools.api.graphql.get_audit_logger")
     @patch("tengu.tools.api.graphql.get_config")
     @patch("tengu.tools.api.graphql.httpx.AsyncClient")
-    async def test_graphql_custom_timeout_capped(self, mock_httpx, mock_config, mock_audit_fn, mock_allowlist_fn, mock_ctx):
+    async def test_graphql_custom_timeout_capped(
+        self, mock_httpx, mock_config, mock_audit_fn, mock_allowlist_fn, mock_ctx
+    ):
         cfg = MagicMock()
         cfg.tools.defaults.scan_timeout = 300
         mock_config.return_value = cfg

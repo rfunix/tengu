@@ -154,7 +154,15 @@ class TestNiktoScan:
     @patch("tengu.tools.web.nikto.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_nikto_tuning_flag(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_nikto_config()
         mock_allowlist = MagicMock()
@@ -184,7 +192,15 @@ class TestNiktoScan:
     @patch("tengu.tools.web.nikto.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_nikto_ssl_flag(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_nikto_config()
         mock_allowlist = MagicMock()
@@ -212,7 +228,15 @@ class TestNiktoScan:
     @patch("tengu.tools.web.nikto.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_nikto_custom_port(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_nikto_config()
         mock_allowlist = MagicMock()
@@ -242,7 +266,15 @@ class TestNiktoScan:
     @patch("tengu.tools.web.nikto.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_nikto_stealth_proxy(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_nikto_config()
         mock_allowlist = MagicMock()
@@ -257,7 +289,9 @@ class TestNiktoScan:
         mock_stealth_layer = MagicMock()
         mock_stealth_layer.enabled = True
         mock_stealth_layer.proxy_url = "http://127.0.0.1:8080"
-        mock_stealth_layer.inject_proxy_flags.side_effect = lambda tool, args: args + ["-useproxy", "http://127.0.0.1:8080"]
+        mock_stealth_layer.inject_proxy_flags.side_effect = lambda tool, args: (
+            args + ["-useproxy", "http://127.0.0.1:8080"]
+        )
         mock_stealth.return_value = mock_stealth_layer
 
         await nikto_scan(mock_ctx, "https://example.com")
@@ -272,7 +306,15 @@ class TestNiktoScan:
     @patch("tengu.tools.web.nikto.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_nikto_output_parsing(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_nikto_config()
         mock_allowlist = MagicMock()
@@ -302,7 +344,15 @@ class TestNiktoScan:
     @patch("tengu.tools.web.nikto.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_nikto_default_scan(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_nikto_config()
         mock_allowlist = MagicMock()
@@ -332,7 +382,15 @@ class TestNiktoScan:
     @patch("tengu.tools.web.nikto.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_nikto_run_error(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_nikto_config()
         mock_allowlist = MagicMock()
@@ -360,7 +418,15 @@ class TestNiktoScan:
     @patch("tengu.tools.web.nikto.rate_limited")
     @patch("tengu.stealth.get_stealth_layer")
     async def test_nikto_tool_key(
-        self, mock_stealth, mock_rl, mock_resolve, mock_audit_fn, mock_allowlist_fn, mock_config, mock_run, mock_ctx
+        self,
+        mock_stealth,
+        mock_rl,
+        mock_resolve,
+        mock_audit_fn,
+        mock_allowlist_fn,
+        mock_config,
+        mock_run,
+        mock_ctx,
     ):
         mock_config.return_value = _make_nikto_config()
         mock_allowlist = MagicMock()

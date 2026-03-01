@@ -95,6 +95,7 @@ class TestUserAgentRotator:
 
     def test_thread_safety_multiple_gets(self):
         import threading
+
         rotator = UserAgentRotator(rotate_every=2)
         results = []
         errors = []

@@ -55,9 +55,16 @@ class TestAnonymityLevel:
         reset_stealth_layer()
         mock_client = _make_tor_client(is_tor=True)
 
-        with patch("tengu.tools.stealth.check_anonymity.get_stealth_layer", return_value=_disabled_stealth()), \
-             patch("tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client), \
-             patch("tengu.tools.stealth.check_anonymity.socket.getaddrinfo", return_value=[]):
+        with (
+            patch(
+                "tengu.tools.stealth.check_anonymity.get_stealth_layer",
+                return_value=_disabled_stealth(),
+            ),
+            patch(
+                "tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client
+            ),
+            patch("tengu.tools.stealth.check_anonymity.socket.getaddrinfo", return_value=[]),
+        ):
             from tengu.tools.stealth.check_anonymity import check_anonymity
 
             result = await check_anonymity()
@@ -72,9 +79,13 @@ class TestAnonymityLevel:
         mock_client = _make_tor_client(is_tor=False)
         stealth = _proxy_stealth()
 
-        with patch("tengu.tools.stealth.check_anonymity.get_stealth_layer", return_value=stealth), \
-             patch("tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client), \
-             patch("tengu.tools.stealth.check_anonymity.socket.getaddrinfo", return_value=[]):
+        with (
+            patch("tengu.tools.stealth.check_anonymity.get_stealth_layer", return_value=stealth),
+            patch(
+                "tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client
+            ),
+            patch("tengu.tools.stealth.check_anonymity.socket.getaddrinfo", return_value=[]),
+        ):
             from tengu.tools.stealth.check_anonymity import check_anonymity
 
             result = await check_anonymity()
@@ -88,9 +99,16 @@ class TestAnonymityLevel:
         reset_stealth_layer()
         mock_client = _make_tor_client(is_tor=False)
 
-        with patch("tengu.tools.stealth.check_anonymity.get_stealth_layer", return_value=_disabled_stealth()), \
-             patch("tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client), \
-             patch("tengu.tools.stealth.check_anonymity.socket.getaddrinfo", return_value=[]):
+        with (
+            patch(
+                "tengu.tools.stealth.check_anonymity.get_stealth_layer",
+                return_value=_disabled_stealth(),
+            ),
+            patch(
+                "tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client
+            ),
+            patch("tengu.tools.stealth.check_anonymity.socket.getaddrinfo", return_value=[]),
+        ):
             from tengu.tools.stealth.check_anonymity import check_anonymity
 
             result = await check_anonymity()
@@ -114,9 +132,16 @@ class TestAnonymityLevel:
 
         mock_client = _make_tor_client(is_tor=False)
 
-        with patch("tengu.tools.stealth.check_anonymity.get_stealth_layer", return_value=stealth_no_proxy), \
-             patch("tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client), \
-             patch("tengu.tools.stealth.check_anonymity.socket.getaddrinfo", return_value=[]):
+        with (
+            patch(
+                "tengu.tools.stealth.check_anonymity.get_stealth_layer",
+                return_value=stealth_no_proxy,
+            ),
+            patch(
+                "tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client
+            ),
+            patch("tengu.tools.stealth.check_anonymity.socket.getaddrinfo", return_value=[]),
+        ):
             from tengu.tools.stealth.check_anonymity import check_anonymity
 
             result = await check_anonymity()
@@ -142,9 +167,19 @@ class TestDnsLeak:
         # Simulate DNS resolution returning an IP
         fake_addr_info = [(socket.AF_INET, socket.SOCK_STREAM, 0, "", ("8.8.8.8", 0))]
 
-        with patch("tengu.tools.stealth.check_anonymity.get_stealth_layer", return_value=_disabled_stealth()), \
-             patch("tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client), \
-             patch("tengu.tools.stealth.check_anonymity.socket.getaddrinfo", return_value=fake_addr_info):
+        with (
+            patch(
+                "tengu.tools.stealth.check_anonymity.get_stealth_layer",
+                return_value=_disabled_stealth(),
+            ),
+            patch(
+                "tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client
+            ),
+            patch(
+                "tengu.tools.stealth.check_anonymity.socket.getaddrinfo",
+                return_value=fake_addr_info,
+            ),
+        ):
             from tengu.tools.stealth.check_anonymity import check_anonymity
 
             result = await check_anonymity()
@@ -158,9 +193,16 @@ class TestDnsLeak:
         reset_stealth_layer()
         mock_client = _make_tor_client(is_tor=False)
 
-        with patch("tengu.tools.stealth.check_anonymity.get_stealth_layer", return_value=_disabled_stealth()), \
-             patch("tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client), \
-             patch("tengu.tools.stealth.check_anonymity.socket.getaddrinfo", return_value=[]):
+        with (
+            patch(
+                "tengu.tools.stealth.check_anonymity.get_stealth_layer",
+                return_value=_disabled_stealth(),
+            ),
+            patch(
+                "tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client
+            ),
+            patch("tengu.tools.stealth.check_anonymity.socket.getaddrinfo", return_value=[]),
+        ):
             from tengu.tools.stealth.check_anonymity import check_anonymity
 
             result = await check_anonymity()
@@ -176,9 +218,19 @@ class TestDnsLeak:
 
         fake_addr_info = [(socket.AF_INET, socket.SOCK_STREAM, 0, "", ("8.8.8.8", 0))]
 
-        with patch("tengu.tools.stealth.check_anonymity.get_stealth_layer", return_value=_disabled_stealth()), \
-             patch("tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client), \
-             patch("tengu.tools.stealth.check_anonymity.socket.getaddrinfo", return_value=fake_addr_info):
+        with (
+            patch(
+                "tengu.tools.stealth.check_anonymity.get_stealth_layer",
+                return_value=_disabled_stealth(),
+            ),
+            patch(
+                "tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client
+            ),
+            patch(
+                "tengu.tools.stealth.check_anonymity.socket.getaddrinfo",
+                return_value=fake_addr_info,
+            ),
+        ):
             from tengu.tools.stealth.check_anonymity import check_anonymity
 
             result = await check_anonymity()
@@ -199,9 +251,16 @@ class TestRecommendations:
         reset_stealth_layer()
         mock_client = _make_tor_client(is_tor=False)
 
-        with patch("tengu.tools.stealth.check_anonymity.get_stealth_layer", return_value=_disabled_stealth()), \
-             patch("tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client), \
-             patch("tengu.tools.stealth.check_anonymity.socket.getaddrinfo", return_value=[]):
+        with (
+            patch(
+                "tengu.tools.stealth.check_anonymity.get_stealth_layer",
+                return_value=_disabled_stealth(),
+            ),
+            patch(
+                "tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client
+            ),
+            patch("tengu.tools.stealth.check_anonymity.socket.getaddrinfo", return_value=[]),
+        ):
             from tengu.tools.stealth.check_anonymity import check_anonymity
 
             result = await check_anonymity()
@@ -216,9 +275,19 @@ class TestRecommendations:
         mock_client = _make_tor_client(is_tor=False)
         fake_addr_info = [(socket.AF_INET, socket.SOCK_STREAM, 0, "", ("1.1.1.1", 0))]
 
-        with patch("tengu.tools.stealth.check_anonymity.get_stealth_layer", return_value=_disabled_stealth()), \
-             patch("tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client), \
-             patch("tengu.tools.stealth.check_anonymity.socket.getaddrinfo", return_value=fake_addr_info):
+        with (
+            patch(
+                "tengu.tools.stealth.check_anonymity.get_stealth_layer",
+                return_value=_disabled_stealth(),
+            ),
+            patch(
+                "tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client
+            ),
+            patch(
+                "tengu.tools.stealth.check_anonymity.socket.getaddrinfo",
+                return_value=fake_addr_info,
+            ),
+        ):
             from tengu.tools.stealth.check_anonymity import check_anonymity
 
             result = await check_anonymity()
@@ -232,9 +301,16 @@ class TestRecommendations:
         reset_stealth_layer()
         mock_client = _make_tor_client()
 
-        with patch("tengu.tools.stealth.check_anonymity.get_stealth_layer", return_value=_disabled_stealth()), \
-             patch("tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client), \
-             patch("tengu.tools.stealth.check_anonymity.socket.getaddrinfo", return_value=[]):
+        with (
+            patch(
+                "tengu.tools.stealth.check_anonymity.get_stealth_layer",
+                return_value=_disabled_stealth(),
+            ),
+            patch(
+                "tengu.tools.stealth.check_anonymity.httpx.AsyncClient", return_value=mock_client
+            ),
+            patch("tengu.tools.stealth.check_anonymity.socket.getaddrinfo", return_value=[]),
+        ):
             from tengu.tools.stealth.check_anonymity import check_anonymity
 
             result = await check_anonymity()
