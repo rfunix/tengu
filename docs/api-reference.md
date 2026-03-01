@@ -1,6 +1,6 @@
 # API Reference
 
-Complete reference for all 56 tools, 19 resources, and 34 prompts in Tengu.
+Complete reference for all 57 tools, 19 resources, and 34 prompts in Tengu.
 
 All tools require the target to be in the `[targets].allowed_hosts` allowlist
 configured in `tengu.toml`, unless explicitly noted otherwise.
@@ -1123,6 +1123,55 @@ pipeline: sanitizer → allowlist → rate_limiter → audit → executor.
 | `dnsrecon_scan` | DNS record enumeration, zone transfer attempts, and subdomain brute-force |
 | `subjack_check` | Subdomain takeover detection by identifying dangling CNAME and NS records |
 | `gowitness_screenshot` | Headless Chromium screenshots of discovered web targets for visual triage |
+| `httrack_mirror` | Full website mirror for offline content analysis, JS secret hunting, and forensic snapshots |
+
+#### `httrack_mirror`
+
+Downloads a full website locally (HTML, JS, CSS, images) for offline inspection. Useful for
+forensic snapshots, hunting secrets hardcoded in compiled JS bundles, and mapping application
+structure without continuous active interaction.
+
+**Parameters**:
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `target` | `str` | required | URL of the site to mirror (e.g. `http://example.com`) |
+| `depth` | `int` | `2` | Crawl depth 1–5 (capped at 5) |
+| `output_dir` | `str` | `"/tmp/httrack"` | Local directory to save the mirror (must be under `/tmp/` or `/home/`) |
+| `max_size` | `int` | `100` | Max download size in MB (capped at 500) |
+| `include_assets` | `bool` | `true` | Download CSS/JS/images; set `false` for HTML/JS only |
+| `timeout` | `int\|null` | config | Override scan timeout in seconds |
+
+**Returns**:
+```json
+{
+  "tool": "httrack",
+  "target": "http://example.com",
+  "output_dir": "/tmp/httrack",
+  "depth": 2,
+  "max_size_mb": 100,
+  "include_assets": true,
+  "pages_downloaded": 42,
+  "total_files": 137,
+  "total_size_mb": 18.3,
+  "duration_seconds": 34.5,
+  "file_types": {"html": 42, "js": 51, "css": 14, "png": 30},
+  "interesting_findings": [
+    "Found potential API key in config.js",
+    "Found development note in app.js"
+  ],
+  "command": "httrack http://example.com -O /tmp/httrack -r2 ...",
+  "raw_output": "..."
+}
+```
+
+**Notes**:
+- Requires `httrack` installed (`apt install httrack` / `brew install httrack`).
+- `interesting_findings` auto-scans HTML/JS for patterns: `api_key`, `secret`, `token`, `TODO/FIXME`, HTML comments with env hints, and internal URL references.
+- Use `include_assets=false` to skip images/CSS and focus on code files only.
+- Use `depth=1` for single-page apps (SPAs load all JS on the first request).
+
+---
 
 ### Additional Web Tools (v0.2.0)
 
