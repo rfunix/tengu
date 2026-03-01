@@ -17,10 +17,10 @@
 <p align="center">
   <a href="https://github.com/rfunix/tengu/actions/workflows/ci.yml"><img src="https://github.com/rfunix/tengu/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
-  <a href="https://python.org"><img src="https://img.shields.io/badge/python-3.11+-blue.svg" alt="Python"></a>
+  <a href="https://python.org"><img src="https://img.shields.io/badge/python-3.12+-blue.svg" alt="Python"></a>
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-compatible-green.svg" alt="MCP"></a>
   <img src="https://img.shields.io/badge/tools-56-orange.svg" alt="Tools">
-  <img src="https://img.shields.io/badge/version-0.2.0-brightgreen.svg" alt="Version">
+  <img src="https://img.shields.io/badge/version-0.2.1-brightgreen.svg" alt="Version">
 </p>
 
 ---
@@ -37,7 +37,7 @@
 - **AI-Orchestrated** — Claude decides the next tool based on previous findings
 - **Safety First** — Allowlist, rate limiting, audit logs, and human-in-the-loop for destructive actions
 - **Auto Reports** — Correlate findings and generate professional pentest reports (MD/HTML/PDF)
-- **26 Workflows** — Pre-built prompts for full pentest, web app, AD, cloud, and more
+- **32 Workflows** — Pre-built prompts for full pentest, web app, AD, cloud, and more
 - **19 Resources** — Built-in OWASP Top 10, MITRE ATT&CK, PTES, and pentest checklists
 - **Stealth Layer** — Optional Tor/SOCKS5 proxy routing, UA rotation, and timing jitter
 
@@ -47,7 +47,7 @@
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.12+
 - [`uv`](https://github.com/astral-sh/uv) package manager
 - Kali Linux (recommended) or any Linux with security tools
 
@@ -195,6 +195,7 @@ allowed_hosts = ["192.168.1.0/24", "example.com"]
 | `sqlmap_scan` | Automated SQL injection detection and exploitation |
 | `xss_scan` | XSS detection via Dalfox |
 | `graphql_security_check` | GraphQL introspection, batching, depth limit, field suggestions |
+| `arjun_discover` | Hidden HTTP parameter discovery |
 
 ### Exploitation
 | Tool | Description |
@@ -235,12 +236,6 @@ allowed_hosts = ["192.168.1.0/24", "example.com"]
 | Tool | Description |
 |------|-------------|
 | `scoutsuite_scan` | Cloud security audit (AWS, Azure, GCP) |
-
-### API Security
-| Tool | Description |
-|------|-------------|
-| `arjun_discover` | Hidden HTTP parameter discovery |
-| `graphql_security_check` | GraphQL security testing |
 
 ### Active Directory
 | Tool | Description |
@@ -283,7 +278,7 @@ allowed_hosts = ["192.168.1.0/24", "example.com"]
 
 ---
 
-## Pre-built Workflows (26 Prompts)
+## Pre-built Workflows (32 Prompts)
 
 Tengu includes guided workflows that automatically chain multiple tools:
 
