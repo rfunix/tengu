@@ -26,7 +26,7 @@ async def enum4linux_scan(
     username: str = "",
     password: str = "",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Enumerate SMB/NetBIOS information using enum4linux-ng.
 
     Args:
@@ -125,7 +125,7 @@ async def enum4linux_scan(
     }
 
 
-def _parse_enum4linux_output(output: str) -> dict:  # type: ignore[type-arg]
+def _parse_enum4linux_output(output: str) -> dict:
     """Parse enum4linux-ng JSON output into structured data."""
     result: dict[str, object] = {
         "users": [],
@@ -146,9 +146,9 @@ def _parse_enum4linux_output(output: str) -> dict:  # type: ignore[type-arg]
         return _parse_enum4linux_text(output)
 
     # enum4linux-ng JSON structure
-    users: list[dict] = []  # type: ignore[type-arg]
-    groups: list[dict] = []  # type: ignore[type-arg]
-    shares: list[dict] = []  # type: ignore[type-arg]
+    users: list[dict] = []
+    groups: list[dict] = []
+    shares: list[dict] = []
     password_policy: dict[str, object] = {}
     os_info: dict[str, object] = {}
 
@@ -236,13 +236,13 @@ def _parse_enum4linux_output(output: str) -> dict:  # type: ignore[type-arg]
     return result
 
 
-def _parse_enum4linux_text(output: str) -> dict:  # type: ignore[type-arg]
+def _parse_enum4linux_text(output: str) -> dict:
     """Fall-back parser for classic enum4linux text output."""
     import re
 
-    users: list[dict] = []  # type: ignore[type-arg]
-    shares: list[dict] = []  # type: ignore[type-arg]
-    groups: list[dict] = []  # type: ignore[type-arg]
+    users: list[dict] = []
+    shares: list[dict] = []
+    groups: list[dict] = []
 
     for line in output.splitlines():
         # Users: user:[name] rid:[RID]

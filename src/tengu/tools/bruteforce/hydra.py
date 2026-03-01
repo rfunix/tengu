@@ -56,7 +56,7 @@ async def hydra_attack(
     threads: int = 16,
     stop_on_success: bool = True,
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Perform a credential brute force attack using Hydra.
 
     WARNING: This is a destructive operation that may trigger account lockouts,
@@ -161,7 +161,7 @@ async def hydra_attack(
     }
 
 
-def _parse_hydra_output(output: str) -> list[dict]:  # type: ignore[type-arg]
+def _parse_hydra_output(output: str) -> list[dict]:
     """Parse Hydra output for valid credentials."""
     credentials = []
 

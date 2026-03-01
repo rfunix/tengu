@@ -49,7 +49,7 @@ async def trivy_scan(
     scan_type: str = "image",
     severity: str = "HIGH,CRITICAL",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Scan container images, filesystems, or repositories for vulnerabilities using Trivy.
 
     Args:
@@ -148,7 +148,7 @@ async def trivy_scan(
     }
 
 
-def _parse_trivy_output(output: str) -> dict:  # type: ignore[type-arg]
+def _parse_trivy_output(output: str) -> dict:
     """Parse Trivy JSON output into structured results."""
     result: dict[str, object] = {
         "total": 0,
@@ -167,8 +167,8 @@ def _parse_trivy_output(output: str) -> dict:  # type: ignore[type-arg]
         return result
 
     raw_results = data.get("Results", [])
-    all_vulns: list[dict] = []  # type: ignore[type-arg]
-    structured_results: list[dict] = []  # type: ignore[type-arg]
+    all_vulns: list[dict] = []
+    structured_results: list[dict] = []
 
     severity_counts: dict[str, int] = {
         "UNKNOWN": 0,

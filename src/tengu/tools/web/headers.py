@@ -84,7 +84,7 @@ async def analyze_headers(
     url: str,
     follow_redirects: bool = True,
     timeout_seconds: int = 30,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Analyze HTTP security headers for a web application.
 
     Checks for the presence and correctness of critical security headers

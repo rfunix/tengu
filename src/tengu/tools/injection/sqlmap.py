@@ -34,7 +34,7 @@ async def sqlmap_scan(
     dbms: str = "",
     batch: bool = True,
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Test a URL for SQL injection vulnerabilities using SQLMap.
 
     SQLMap automates the detection and exploitation of SQL injection flaws.
@@ -168,7 +168,7 @@ async def sqlmap_scan(
     }
 
 
-def _parse_sqlmap_output(output: str) -> dict:  # type: ignore[type-arg]
+def _parse_sqlmap_output(output: str) -> dict:
     """Parse SQLMap stdout for key findings."""
     result: dict[str, object] = {
         "vulnerable_params": [],

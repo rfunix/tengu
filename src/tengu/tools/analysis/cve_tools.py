@@ -11,7 +11,7 @@ from tengu.security.sanitizer import sanitize_cve_id, sanitize_free_text
 async def cve_lookup(
     ctx: Context,
     cve_id: str,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Fetch complete details for a specific CVE from NVD and CVE.org.
 
     Returns CVSS scores (v2/v3.1/v4.0), CWE mappings, affected products,
@@ -67,7 +67,7 @@ async def cve_search(
     severity: str | None = None,
     days_back: int | None = None,
     max_results: int = 20,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Search CVEs by keyword, product, CPE, or severity.
 
     Queries the NVD database for matching CVEs. Results are cached

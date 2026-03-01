@@ -1,7 +1,5 @@
 """DNS enumeration using dnspython (pure Python, no subprocess)."""
 
-from __future__ import annotations
-
 from typing import Literal
 
 import dns.asyncresolver
@@ -37,9 +35,10 @@ _ALL_RECORD_TYPES: list[RecordType] = [
 async def dns_enumerate(
     ctx: Context,
     domain: str,
-    record_types: list[RecordType] | None = None,
+    record_types: list[Literal["A", "AAAA", "MX", "NS", "TXT", "CNAME", "SOA", "PTR", "SRV", "CAA"]]
+    | None = None,
     nameserver: str | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Query DNS records for a domain.
 
     Performs DNS lookups for the specified record types using dnspython.

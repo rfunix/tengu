@@ -29,7 +29,7 @@ async def scoutsuite_scan(
     subscription: str = "",
     report_dir: str = "/tmp/scoutsuite-report",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Perform a cloud security audit using ScoutSuite.
 
     Args:
@@ -136,7 +136,7 @@ async def scoutsuite_scan(
     }
 
 
-def _parse_scoutsuite_report(report_dir: str) -> dict:  # type: ignore[type-arg]
+def _parse_scoutsuite_report(report_dir: str) -> dict:
     """Parse the ScoutSuite JSON results file from disk."""
     result: dict[str, object] = {
         "parsed": False,
@@ -164,7 +164,7 @@ def _parse_scoutsuite_report(report_dir: str) -> dict:  # type: ignore[type-arg]
     result["parsed"] = True
     services_data = data.get("services", {})
     service_summaries: dict[str, object] = {}
-    top_findings: list[dict] = []  # type: ignore[type-arg]
+    top_findings: list[dict] = []
     total_flagged = 0
 
     for service_name, service_data in services_data.items():

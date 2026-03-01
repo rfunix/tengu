@@ -8,7 +8,7 @@ from __future__ import annotations
 # Kept in sync with the functions registered in server.py via mcp.prompt().
 # ---------------------------------------------------------------------------
 
-_PROMPTS: list[dict] = [  # type: ignore[type-arg]
+_PROMPTS: list[dict] = [
     # ── Workflow ────────────────────────────────────────────────────────────
     {
         "name": "full_pentest",
@@ -313,9 +313,9 @@ _CATEGORIES: list[str] = ["workflow", "recon", "vuln-assessment", "reporting", "
 # ---------------------------------------------------------------------------
 
 
-def get_prompts_list() -> dict:  # type: ignore[type-arg]
+def get_prompts_list() -> dict:
     """Return all prompts grouped by category with full metadata."""
-    by_category: dict[str, list[dict]] = {c: [] for c in _CATEGORIES}  # type: ignore[type-arg]
+    by_category: dict[str, list[dict]] = {c: [] for c in _CATEGORIES}
     for prompt in _PROMPTS:
         by_category[prompt["category"]].append(prompt)
 
@@ -327,7 +327,7 @@ def get_prompts_list() -> dict:  # type: ignore[type-arg]
     }
 
 
-def get_prompts_by_category(category: str) -> list[dict] | None:  # type: ignore[type-arg]
+def get_prompts_by_category(category: str) -> list[dict] | None:
     """Return prompts for a specific category, or None if the category is unknown."""
     if category not in _CATEGORIES:
         return None

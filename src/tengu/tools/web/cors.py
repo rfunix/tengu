@@ -27,7 +27,7 @@ async def test_cors(
     url: str,
     custom_origins: list[str] | None = None,
     timeout_seconds: int = 30,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Test a URL for CORS (Cross-Origin Resource Sharing) misconfigurations.
 
     Sends requests with various Origin headers to detect if the server
@@ -71,7 +71,7 @@ async def test_cors(
                 pass
 
     issues: list[str] = []
-    test_results: list[dict] = []  # type: ignore[type-arg]
+    test_results: list[dict] = []
     allow_origin: str | None = None
     allow_credentials = False
 
@@ -103,7 +103,7 @@ async def test_cors(
                 acam = response.headers.get("access-control-allow-methods", "")
                 acah = response.headers.get("access-control-allow-headers", "")
 
-                test_result: dict = {  # type: ignore[type-arg]
+                test_result: dict = {
                     "origin_tested": origin,
                     "access_control_allow_origin": acao,
                     "access_control_allow_credentials": acac,

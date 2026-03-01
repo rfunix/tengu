@@ -23,7 +23,7 @@ async def subfinder_enum(
     domain: str,
     sources: list[str] | None = None,
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Enumerate subdomains passively using Subfinder.
 
     Queries multiple passive sources (certificate transparency logs, DNS

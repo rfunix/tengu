@@ -10,7 +10,7 @@ from tengu.security.sanitizer import sanitize_target
 from tengu.types import ToolsCheckResult
 
 
-async def check_tools(ctx: Context) -> dict:  # type: ignore[type-arg]
+async def check_tools(ctx: Context) -> dict:
     """Check which external pentesting tools are installed and available.
 
     Returns a catalog of all supported tools with their installation status,
@@ -47,7 +47,7 @@ async def check_tools(ctx: Context) -> dict:  # type: ignore[type-arg]
     }
 
 
-async def validate_target(ctx: Context, target: str) -> dict:  # type: ignore[type-arg]
+async def validate_target(ctx: Context, target: str) -> dict:
     """Validate whether a target is allowed for scanning.
 
     Checks the target against:

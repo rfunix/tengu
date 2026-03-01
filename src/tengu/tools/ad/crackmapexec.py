@@ -38,7 +38,7 @@ async def nxc_enum(
     domain: str = "",
     modules: list[str] | None = None,
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Enumerate network services and AD using NetExec (successor to CrackMapExec).
 
     Args:
@@ -168,10 +168,10 @@ async def nxc_enum(
     }
 
 
-def _parse_nxc_output(output: str) -> dict:  # type: ignore[type-arg]
+def _parse_nxc_output(output: str) -> dict:
     """Parse NetExec/CrackMapExec line-based output into structured data."""
     hosts: list[str] = []
-    shares: list[dict] = []  # type: ignore[type-arg]
+    shares: list[dict] = []
     users: list[str] = []
     success_lines: list[str] = []
     info_lines: list[str] = []

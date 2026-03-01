@@ -3,8 +3,6 @@
 Generates professional penetration test reports in Markdown, HTML, and PDF formats.
 """
 
-from __future__ import annotations
-
 import json
 from datetime import datetime
 from pathlib import Path
@@ -31,7 +29,7 @@ _SEVERITY_WEIGHTS = {
 }
 
 
-def _normalize_finding(f: dict, index: int) -> dict:  # type: ignore[type-arg]
+def _normalize_finding(f: dict, index: int) -> dict:
     """Normalize a loose finding dict into a Finding-compatible dict.
 
     Accepts simplified formats from AI tool calls (e.g. url/parameter/remediation
@@ -112,14 +110,14 @@ async def generate_report(
     scope: list[str] | None = None,
     exclusions: list[str] | None = None,
     engagement_dates: str = "",
-    findings: list[dict] | None = None,  # type: ignore[type-arg]
+    findings: list[dict] | None = None,
     executive_summary: str = "",
     conclusion: str = "",
-    report_type: ReportType = "full",
-    output_format: ReportFormat = "markdown",
+    report_type: Literal["full", "executive", "technical", "finding", "risk_matrix"] = "full",
+    output_format: Literal["markdown", "html", "pdf"] = "markdown",
     output_path: str = "",
     tools_used: list[str] | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Generate a professional penetration test report.
 
     Creates a comprehensive security assessment report from collected findings,
@@ -191,7 +189,9 @@ async def generate_report(
     owasp_distribution: dict[str, int] = {}
     for finding in parsed_findings:
         if finding.owasp_category:
-            owasp_distribution[finding.owasp_category] = owasp_distribution.get(finding.owasp_category, 0) + 1
+            owasp_distribution[finding.owasp_category] = (
+                owasp_distribution.get(finding.owasp_category, 0) + 1
+            )
 
     template_context = {
         "report": report,
@@ -261,7 +261,7 @@ async def generate_report(
     }
 
 
-def _render_template(template_name: str, context: dict) -> str:  # type: ignore[type-arg]
+def _render_template(template_name: str, context: dict) -> str:
     """Render a Jinja2 template with the given context."""
     try:
         from jinja2 import Environment, FileSystemLoader, select_autoescape

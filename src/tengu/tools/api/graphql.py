@@ -42,7 +42,7 @@ async def graphql_security_check(
     authenticated: bool = False,
     auth_header: str = "",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Perform automated GraphQL security checks using direct HTTP requests.
 
     Checks performed:
@@ -107,7 +107,7 @@ async def graphql_security_check(
     await audit.log_tool_call("graphql_security_check", url, params, result="started")
     start = time.monotonic()
 
-    checks: dict[str, dict] = {}  # type: ignore[type-arg]
+    checks: dict[str, dict] = {}
     is_vulnerable = False
     recommendations: list[str] = []
 
@@ -175,7 +175,7 @@ async def graphql_security_check(
     }
 
 
-async def _check_introspection(client: httpx.AsyncClient, url: str) -> dict:  # type: ignore[type-arg]
+async def _check_introspection(client: httpx.AsyncClient, url: str) -> dict:
     """Test whether introspection is enabled on the GraphQL endpoint."""
     try:
         resp = await client.post(url, json={"query": _INTROSPECTION_QUERY})
@@ -195,7 +195,7 @@ async def _check_introspection(client: httpx.AsyncClient, url: str) -> dict:  # 
         return {"vulnerable": False, "error": str(exc), "description": "Introspection check failed"}
 
 
-async def _check_batching(client: httpx.AsyncClient, url: str) -> dict:  # type: ignore[type-arg]
+async def _check_batching(client: httpx.AsyncClient, url: str) -> dict:
     """Test whether query batching is supported (potential DoS amplification)."""
     try:
         resp = await client.post(url, json=_BATCH_QUERIES)
@@ -214,7 +214,7 @@ async def _check_batching(client: httpx.AsyncClient, url: str) -> dict:  # type:
         return {"vulnerable": False, "error": str(exc), "description": "Batching check failed"}
 
 
-async def _check_depth_limit(client: httpx.AsyncClient, url: str) -> dict:  # type: ignore[type-arg]
+async def _check_depth_limit(client: httpx.AsyncClient, url: str) -> dict:
     """Test whether deep nested queries are rejected (no depth limit)."""
     try:
         resp = await client.post(url, json={"query": _DEPTH_QUERY})
@@ -241,7 +241,7 @@ async def _check_depth_limit(client: httpx.AsyncClient, url: str) -> dict:  # ty
         return {"vulnerable": False, "error": str(exc), "description": "Depth limit check failed"}
 
 
-async def _check_field_suggestions(client: httpx.AsyncClient, url: str) -> dict:  # type: ignore[type-arg]
+async def _check_field_suggestions(client: httpx.AsyncClient, url: str) -> dict:
     """Test whether the server leaks field name suggestions in error messages."""
     try:
         resp = await client.post(url, json={"query": _SUGGESTION_QUERY})

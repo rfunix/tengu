@@ -56,8 +56,8 @@ _ATTACK_CHAINS: list[dict] = [
 
 async def correlate_findings(
     ctx: Context,
-    findings: list[dict],  # type: ignore[type-arg]
-) -> dict:  # type: ignore[type-arg]
+    findings: list[dict],
+) -> dict:
     """Correlate multiple findings to identify attack chains and compound risks.
 
     Analyzes findings from multiple tools to identify patterns, attack chains,
@@ -84,7 +84,7 @@ async def correlate_findings(
         }
 
     # Parse findings into Finding objects where possible
-    parsed: list[dict] = findings  # type: ignore[type-arg]
+    parsed: list[dict] = findings
 
     # Count by severity
     severity_counts: dict[str, int] = {}
@@ -164,8 +164,8 @@ async def correlate_findings(
 
 
 def _calculate_risk_score(
-    findings: list[dict],  # type: ignore[type-arg]
-    attack_chains: list[dict],  # type: ignore[type-arg]
+    findings: list[dict],
+    attack_chains: list[dict],
 ) -> float:
     """Calculate an overall risk score (0-10) from findings and attack chains."""
     if not findings:
@@ -199,7 +199,7 @@ def _score_to_rating(score: float) -> str:
     return "INFORMATIONAL"
 
 
-def _build_remediation_priority(findings: list[dict]) -> list[dict]:  # type: ignore[type-arg]
+def _build_remediation_priority(findings: list[dict]) -> list[dict]:
     """Build a prioritized remediation list."""
     # Sort by CVSS score descending, then by severity
     sorted_findings = sorted(
@@ -238,9 +238,9 @@ def _build_remediation_priority(findings: list[dict]) -> list[dict]:  # type: ig
 
 async def score_risk(
     ctx: Context,
-    findings: list[dict],  # type: ignore[type-arg]
+    findings: list[dict],
     context: str = "",
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Calculate a comprehensive risk score based on CVSS scores and engagement context.
 
     Args:

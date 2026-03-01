@@ -23,7 +23,7 @@ async def ssl_tls_check(
     host: str,
     port: int = 443,
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Analyze SSL/TLS configuration of a host using sslyze.
 
     Checks for:

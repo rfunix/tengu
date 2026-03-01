@@ -26,7 +26,7 @@ async def xss_scan(
     cookie: str = "",
     header: str = "",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Test for Cross-Site Scripting (XSS) vulnerabilities using Dalfox.
 
     Dalfox is a powerful XSS scanner that detects reflected, stored, and
@@ -130,7 +130,7 @@ async def xss_scan(
     }
 
 
-def _parse_dalfox_output(output: str) -> list[dict]:  # type: ignore[type-arg]
+def _parse_dalfox_output(output: str) -> list[dict]:
     """Parse Dalfox JSON output."""
     findings = []
 

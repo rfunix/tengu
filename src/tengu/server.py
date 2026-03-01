@@ -352,7 +352,7 @@ async def resource_tools_catalog() -> str:
 @mcp.resource("tools://{tool_name}/usage")
 def resource_tool_usage(tool_name: str) -> str:
     """Usage guide for a specific integrated tool."""
-    guides: dict[str, dict] = {  # type: ignore[type-arg]
+    guides: dict[str, dict] = {
         "nmap": {
             "name": "nmap",
             "description": "Network port scanner and service detector",

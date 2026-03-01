@@ -1,7 +1,5 @@
 """Nmap port scanner tool wrapper."""
 
-from __future__ import annotations
-
 import re
 import time
 import xml.etree.ElementTree as ET
@@ -39,12 +37,12 @@ async def nmap_scan(
     ctx: Context,
     target: str,
     ports: str = "1-1024",
-    scan_type: ScanType = "connect",
+    scan_type: Literal["syn", "connect", "udp", "version", "ping", "fast"] = "connect",
     timing: str = "T3",
     os_detection: bool = False,
     scripts: str = "",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Scan a target for open ports, services, and versions using Nmap.
 
     Args:

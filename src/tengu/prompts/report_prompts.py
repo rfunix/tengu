@@ -4,7 +4,7 @@ from __future__ import annotations
 
 
 def executive_report(
-    findings: list[dict],  # type: ignore[type-arg]
+    findings: list[dict],
     client_name: str,
     engagement_date: str,
 ) -> str:
@@ -49,7 +49,7 @@ Write the executive summary now.
 
 
 def technical_report(
-    findings: list[dict],  # type: ignore[type-arg]
+    findings: list[dict],
     client_name: str,
     scope: list[str],
     methodology: str = "PTES",
@@ -81,7 +81,7 @@ ID format for cross-referencing. Be specific and actionable.
 
 
 def full_pentest_report(
-    findings: list[dict],  # type: ignore[type-arg]
+    findings: list[dict],
     client_name: str,
     scope: list[str],
     rules_of_engagement: str,
@@ -127,7 +127,7 @@ Generate the complete report now.
 
 
 def remediation_plan(
-    findings: list[dict],  # type: ignore[type-arg]
+    findings: list[dict],
     priority: str = "risk",
 ) -> str:
     """Generate a remediation plan prompt."""
@@ -208,7 +208,7 @@ Document this finding now in the standard format.
 """
 
 
-def risk_matrix(findings: list[dict]) -> str:  # type: ignore[type-arg]
+def risk_matrix(findings: list[dict]) -> str:
     """Generate a risk matrix visualization prompt."""
     return f"""Create a comprehensive risk matrix for the following {len(findings)} findings.
 
@@ -234,8 +234,8 @@ Use `generate_report` with report_type="risk_matrix" for the formatted output.
 
 
 def retest_report(
-    original_findings: list[dict],  # type: ignore[type-arg]
-    retest_results: list[dict],  # type: ignore[type-arg]
+    original_findings: list[dict],
+    retest_results: list[dict],
 ) -> str:
     """Generate a retest/verification report prompt."""
     return f"""Write a professional retest report comparing original findings against retest results.
@@ -279,7 +279,7 @@ Retest Results:
 """
 
 
-def _format_findings_for_prompt(findings: list[dict]) -> str:  # type: ignore[type-arg]
+def _format_findings_for_prompt(findings: list[dict]) -> str:
     """Format findings for inclusion in prompts."""
     if not findings:
         return "No findings provided."

@@ -64,8 +64,20 @@ ignore = ["E501"]
 
 [tool.mypy]
 python_version = "3.12"
-strict = true
 ignore_missing_imports = true
 mypy_path = "src"
-# Disable checks with too many pre-existing violations (incremental adoption)
-disable_error_codes = ["type-arg", "no-any-return", "no-untyped-def"]
+# Strict checks we enforce
+warn_unused_configs = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+no_implicit_reexport = true
+strict_equality = true
+# Not enabled — pre-existing violations, adopt incrementally:
+# disallow_any_generics = true  # [type-arg]
+# disallow_untyped_defs = true  # [no-untyped-def]
+# warn_return_any = true        # [no-any-return]

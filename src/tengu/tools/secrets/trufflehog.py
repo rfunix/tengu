@@ -28,7 +28,7 @@ async def trufflehog_scan(
     scan_type: str = "git",
     branch: str = "",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Scan for leaked secrets and credentials using TruffleHog.
 
     Args:
@@ -133,9 +133,9 @@ async def trufflehog_scan(
     }
 
 
-def _parse_trufflehog_output(output: str) -> list[dict]:  # type: ignore[type-arg]
+def _parse_trufflehog_output(output: str) -> list[dict]:
     """Parse TruffleHog JSON-lines output into structured findings."""
-    findings: list[dict] = []  # type: ignore[type-arg]
+    findings: list[dict] = []
 
     for line in output.splitlines():
         line = line.strip()

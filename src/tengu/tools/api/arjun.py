@@ -27,7 +27,7 @@ async def arjun_discover(
     method: str = "GET",
     wordlist: str = "",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Discover hidden HTTP parameters in web endpoints using Arjun.
 
     Args:

@@ -33,7 +33,7 @@ def _get_zap_config() -> tuple[str, str]:
 async def _zap_request(
     path: str,
     params: dict | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Make a request to the ZAP REST API."""
     base_url, api_key = _get_zap_config()
 
@@ -59,7 +59,7 @@ async def zap_spider(
     max_depth: int = 5,
     wait_for_completion: bool = True,
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Spider/crawl a web application using OWASP ZAP.
 
     Discovers all links and application URLs by crawling the target application.
@@ -159,7 +159,7 @@ async def zap_active_scan(
     url: str,
     policy: str = "",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Run an active vulnerability scan using OWASP ZAP.
 
     Active scanning sends crafted requests to identify vulnerabilities.
@@ -244,7 +244,7 @@ async def zap_get_alerts(
     url: str | None = None,
     risk_level: str | None = None,
     max_alerts: int = 100,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Retrieve vulnerability alerts from OWASP ZAP.
 
     Fetches the list of vulnerabilities found during active/passive scanning.

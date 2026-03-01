@@ -1,7 +1,5 @@
 """Hash identification and cracking tools."""
 
-from __future__ import annotations
-
 import contextlib
 import re
 from typing import Literal
@@ -46,7 +44,7 @@ HashcrackTool = Literal["john", "hashcat", "auto"]
 async def hash_identify(
     ctx: Context,
     hash_value: str,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Identify the algorithm used to produce a hash value.
 
     Uses pattern matching to determine the likely hash type(s) based on
@@ -104,9 +102,9 @@ async def hash_crack(
     hash_value: str,
     hash_type: str = "",
     wordlist: str | None = None,
-    tool_preference: HashcrackTool = "auto",
+    tool_preference: Literal["john", "hashcat", "auto"] = "auto",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Attempt to crack a hash using a dictionary attack.
 
     Uses John the Ripper or Hashcat to perform a wordlist-based attack
@@ -188,7 +186,7 @@ async def _crack_with_john(
     hash_type: str,
     wordlist: str,
     timeout: int,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Attempt cracking with John the Ripper."""
     import tempfile
     from pathlib import Path
@@ -244,7 +242,7 @@ async def _crack_with_hashcat(
     hash_type: str,
     wordlist: str,
     timeout: int,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Attempt cracking with Hashcat."""
     hashcat_path = resolve_tool_path("hashcat")
 

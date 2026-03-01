@@ -40,7 +40,7 @@ async def impacket_kerberoast(
     password: str = "",
     hashes: str = "",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Perform Kerberoasting using Impacket GetUserSPNs.
 
     Requests TGS tickets for service accounts with SPNs registered in Active Directory.
@@ -172,9 +172,9 @@ async def impacket_kerberoast(
     }
 
 
-def _parse_kerberoast_output(output: str) -> dict:  # type: ignore[type-arg]
+def _parse_kerberoast_output(output: str) -> dict:
     """Parse Impacket GetUserSPNs output for TGS hashes and account information."""
-    accounts: list[dict] = []  # type: ignore[type-arg]
+    accounts: list[dict] = []
     tgs_hashes: list[str] = []
     current_account: dict[str, object] = {}
 

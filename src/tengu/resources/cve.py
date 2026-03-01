@@ -58,7 +58,7 @@ class CVECache:
             """)
             conn.commit()
 
-    def get_cve(self, cve_id: str, ttl_hours: int = 24) -> dict | None:  # type: ignore[type-arg]
+    def get_cve(self, cve_id: str, ttl_hours: int = 24) -> dict | None:
         cutoff = time.time() - ttl_hours * 3600
         with sqlite3.connect(self._path) as conn:
             row = conn.execute(
@@ -66,10 +66,10 @@ class CVECache:
                 (cve_id.upper(), cutoff),
             ).fetchone()
         if row:
-            return json.loads(row[0])  # type: ignore[no-any-return]
+            return json.loads(row[0])
         return None
 
-    def set_cve(self, cve_id: str, data: dict) -> None:  # type: ignore[type-arg]
+    def set_cve(self, cve_id: str, data: dict) -> None:
         with sqlite3.connect(self._path) as conn:
             conn.execute(
                 "INSERT OR REPLACE INTO cve_cache (cve_id, data, cached_at) VALUES (?, ?, ?)",
@@ -77,7 +77,7 @@ class CVECache:
             )
             conn.commit()
 
-    def get_search(self, query_key: str, ttl_hours: int = 24) -> dict | None:  # type: ignore[type-arg]
+    def get_search(self, query_key: str, ttl_hours: int = 24) -> dict | None:
         cutoff = time.time() - ttl_hours * 3600
         with sqlite3.connect(self._path) as conn:
             row = conn.execute(
@@ -85,10 +85,10 @@ class CVECache:
                 (query_key, cutoff),
             ).fetchone()
         if row:
-            return json.loads(row[0])  # type: ignore[no-any-return]
+            return json.loads(row[0])
         return None
 
-    def set_search(self, query_key: str, data: dict) -> None:  # type: ignore[type-arg]
+    def set_search(self, query_key: str, data: dict) -> None:
         with sqlite3.connect(self._path) as conn:
             conn.execute(
                 "INSERT OR REPLACE INTO search_cache (query_key, data, cached_at) VALUES (?, ?, ?)",
@@ -243,7 +243,7 @@ async def search_cves(
         return []
 
 
-def _parse_nvd_cve(vuln_data: dict) -> CVERecord:  # type: ignore[type-arg]
+def _parse_nvd_cve(vuln_data: dict) -> CVERecord:
     """Parse NVD API CVE data into a CVERecord."""
     cve = vuln_data.get("cve", {})
     cve_id = cve.get("id", "")
@@ -310,7 +310,7 @@ def _parse_nvd_cve(vuln_data: dict) -> CVERecord:  # type: ignore[type-arg]
     )
 
 
-def _parse_cveorg(data: dict) -> CVERecord:  # type: ignore[type-arg]
+def _parse_cveorg(data: dict) -> CVERecord:
     """Parse CVE.org API data into a CVERecord (fallback, no CVSS)."""
     cve_meta = data.get("cveMetadata", {})
     cve_id = cve_meta.get("cveId", "")

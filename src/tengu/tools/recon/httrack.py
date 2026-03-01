@@ -93,7 +93,7 @@ async def httrack_mirror(
     max_size: int = 100,
     include_assets: bool = True,
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]  # FastMCP cannot serialize generic dict
+) -> dict:
     """Mirror a website locally for offline analysis using HTTrack.
 
     Downloads the full website (HTML, JS, CSS, images) to a local directory,

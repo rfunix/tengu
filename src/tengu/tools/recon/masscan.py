@@ -26,7 +26,7 @@ async def masscan_scan(
     ports: str = "1-1024",
     rate: int = 1000,
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Scan a network range for open ports at high speed using Masscan.
 
     Masscan is significantly faster than Nmap for large networks but produces

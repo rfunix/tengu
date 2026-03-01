@@ -27,7 +27,7 @@ async def gitleaks_scan(
     scan_type: str = "detect",
     report_format: str = "json",
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Scan a repository or directory for secrets and credentials using Gitleaks.
 
     Args:
@@ -121,9 +121,9 @@ async def gitleaks_scan(
     }
 
 
-def _parse_gitleaks_output(output: str, report_format: str) -> list[dict]:  # type: ignore[type-arg]
+def _parse_gitleaks_output(output: str, report_format: str) -> list[dict]:
     """Parse Gitleaks output into structured findings."""
-    findings: list[dict] = []  # type: ignore[type-arg]
+    findings: list[dict] = []
 
     if not output.strip():
         return findings

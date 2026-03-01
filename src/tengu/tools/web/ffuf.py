@@ -1,7 +1,5 @@
 """FFUF directory/endpoint fuzzer tool wrapper."""
 
-from __future__ import annotations
-
 import json
 import re
 import time
@@ -27,7 +25,7 @@ async def ffuf_fuzz(
     ctx: Context,
     url: str,
     wordlist: str | None = None,
-    method: HTTPMethod = "GET",
+    method: Literal["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "PATCH"] = "GET",
     filter_codes: list[int] | None = None,
     match_codes: list[int] | None = None,
     extensions: list[str] | None = None,
@@ -35,7 +33,7 @@ async def ffuf_fuzz(
     rate: int = 0,
     headers: dict[str, str] | None = None,
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Fuzz directories, files, and endpoints using FFUF.
 
     Uses a wordlist to discover hidden files, directories, APIs, and endpoints
@@ -169,7 +167,7 @@ async def ffuf_fuzz(
     }
 
 
-def _parse_ffuf_output(output: str) -> list[dict]:  # type: ignore[type-arg]
+def _parse_ffuf_output(output: str) -> list[dict]:
     """Parse FFUF JSON output."""
     results = []
 

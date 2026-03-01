@@ -27,7 +27,7 @@ async def nikto_scan(
     ssl: bool = False,
     port: int | None = None,
     timeout: int | None = None,
-) -> dict:  # type: ignore[type-arg]
+) -> dict:
     """Scan a web server for vulnerabilities using Nikto.
 
     Nikto checks for outdated server software, dangerous files/programs,
@@ -128,7 +128,7 @@ async def nikto_scan(
     }
 
 
-def _parse_nikto_output(output: str) -> list[dict]:  # type: ignore[type-arg]
+def _parse_nikto_output(output: str) -> list[dict]:
     """Parse Nikto JSON output."""
     findings = []
 
