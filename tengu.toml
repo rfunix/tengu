@@ -4,15 +4,15 @@ log_level = "INFO"
 audit_log_path = "./logs/tengu-audit.log"
 
 [targets]
-# Hosts/CIDRs permitidos como alvo de scans
-# Exemplos: "example.com", "*.example.com", "192.168.1.0/24", "10.0.0.0/8"
+# Allowed hosts/CIDRs for scanning — REQUIRED before running any scan
+# Examples: "example.com", "*.example.com", "192.168.1.0/24", "10.0.0.0/8"
 allowed_hosts = []
 
-# Hosts sempre bloqueados (além dos defaults internos)
+# Always blocked, even if listed in allowed_hosts
 blocked_hosts = []
 
 [tools.paths]
-# Deixe vazio para auto-detecção via PATH
+# Leave empty for auto-detection via PATH
 nmap = ""
 masscan = ""
 nuclei = ""
@@ -30,7 +30,7 @@ metasploit_rpc = "https://127.0.0.1:55553"
 [tools.defaults]
 nmap_timing = "T3"
 nuclei_severity = ["medium", "high", "critical"]
-scan_timeout = 600  # segundos
+scan_timeout = 600  # seconds
 wordlist_path = "/usr/share/seclists/Discovery/Web-Content/common.txt"
 
 [rate_limiting]
@@ -38,7 +38,7 @@ max_scans_per_minute = 10
 max_concurrent_scans = 3
 
 [cve]
-nvd_api_key = ""                      # Opcional
+nvd_api_key = ""                      # Optional — increases NVD rate limit
 cache_path = "~/.tengu/cve_cache.db"
 cache_ttl_hours = 24
 
