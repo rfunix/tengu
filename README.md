@@ -9,7 +9,9 @@
 </p>
 
 <p align="center">
-  <video src="docs/tengu-demo.mp4" autoplay loop muted playsinline width="800"></video>
+  <a href="https://asciinema.org/a/ZdvkN5ZHOynmfjTO">
+    <img src="https://asciinema.org/a/ZdvkN5ZHOynmfjTO.svg" alt="Tengu demo" width="800"/>
+  </a>
 </p>
 
 <p align="center">
