@@ -59,7 +59,7 @@ def technical_report(
 for a report to {client_name}.
 
 ## Context
-- Scope: {', '.join(scope)}
+- Scope: {", ".join(scope)}
 - Methodology: {methodology}
 - Total Findings: {len(findings)}
 
@@ -93,7 +93,7 @@ def full_pentest_report(
 
 ## Report Parameters
 - Client: {client_name}
-- Scope: {', '.join(scope)}
+- Scope: {", ".join(scope)}
 - Engagement Dates: {engagement_dates}
 - Methodology: {methodology}
 - Rules of Engagement: {rules_of_engagement}
@@ -111,7 +111,7 @@ def full_pentest_report(
    - findings=(the findings list below)
    - report_type="full"
    - output_format="html"
-   - output_path="./reports/{client_name.replace(' ', '_')}_pentest_report.html"
+   - output_path="./reports/{client_name.replace(" ", "_")}_pentest_report.html"
 
 3. Also generate with output_format="markdown" for version control.
 
@@ -188,7 +188,7 @@ def finding_detail(
 
 Generate a complete finding document with:
 
-1. **Finding ID**: TENGU-{__import__('datetime').datetime.now().year}-XXX (assign appropriate number)
+1. **Finding ID**: TENGU-{__import__("datetime").datetime.now().year}-XXX (assign appropriate number)
 2. **Title**: Concise, descriptive title (max 80 chars)
 3. **Severity**: Critical/High/Medium/Low/Informational
 4. **CVSS Score**: Calculate from vector if provided, or estimate based on impact
@@ -287,7 +287,7 @@ def _format_findings_for_prompt(findings: list[dict]) -> str:  # type: ignore[ty
     lines = []
     for i, f in enumerate(findings[:20]):
         lines.append(
-            f"{i+1}. [{f.get('severity', 'unknown').upper()}] "
+            f"{i + 1}. [{f.get('severity', 'unknown').upper()}] "
             f"{f.get('title', f.get('template_name', 'Unknown'))} "
             f"— {f.get('affected_asset', f.get('url', 'N/A'))} "
             f"(CVSS: {f.get('cvss_score', 'N/A')})"

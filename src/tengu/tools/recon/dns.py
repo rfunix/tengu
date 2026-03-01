@@ -21,7 +21,16 @@ logger = structlog.get_logger(__name__)
 RecordType = Literal["A", "AAAA", "MX", "NS", "TXT", "CNAME", "SOA", "PTR", "SRV", "CAA"]
 
 _ALL_RECORD_TYPES: list[RecordType] = [
-    "A", "AAAA", "MX", "NS", "TXT", "CNAME", "SOA", "PTR", "SRV", "CAA"
+    "A",
+    "AAAA",
+    "MX",
+    "NS",
+    "TXT",
+    "CNAME",
+    "SOA",
+    "PTR",
+    "SRV",
+    "CAA",
 ]
 
 
@@ -68,6 +77,7 @@ async def dns_enumerate(
     if nameserver:
         # Validate nameserver is a valid IP
         import ipaddress
+
         try:
             ipaddress.ip_address(nameserver)
             resolver.nameservers = [nameserver]
@@ -84,12 +94,14 @@ async def dns_enumerate(
         try:
             answers = await resolver.resolve(domain, rtype)
             for rdata in answers:
-                records.append(DNSRecord(
-                    name=domain,
-                    record_type=rtype,
-                    value=str(rdata),
-                    ttl=answers.ttl,
-                ))
+                records.append(
+                    DNSRecord(
+                        name=domain,
+                        record_type=rtype,
+                        value=str(rdata),
+                        ttl=answers.ttl,
+                    )
+                )
         except dns.resolver.NXDOMAIN:
             errors[rtype] = "NXDOMAIN"
         except dns.resolver.NoAnswer:

@@ -73,11 +73,16 @@ async def masscan_scan(
     args = [
         tool_path,
         target,
-        "-p", ports,
-        "--rate", str(rate),
-        "--output-format", "json",
-        "--output-filename", "-",  # stdout
-        "--wait", "3",  # wait 3s after last packet
+        "-p",
+        ports,
+        "--rate",
+        str(rate),
+        "--output-format",
+        "json",
+        "--output-filename",
+        "-",  # stdout
+        "--wait",
+        "3",  # wait 3s after last packet
     ]
 
     await ctx.report_progress(0, 100, f"Starting masscan on {target} at {rate} pps...")
@@ -131,22 +136,26 @@ def _parse_masscan_json(output: str) -> list[dict[str, object]]:
         for entry in data:
             ip = entry.get("ip", "")
             for port_info in entry.get("ports", []):
-                results.append({
-                    "ip": ip,
-                    "port": port_info.get("port"),
-                    "protocol": port_info.get("proto", "tcp"),
-                    "status": port_info.get("status", "open"),
-                })
+                results.append(
+                    {
+                        "ip": ip,
+                        "port": port_info.get("port"),
+                        "protocol": port_info.get("proto", "tcp"),
+                        "status": port_info.get("status", "open"),
+                    }
+                )
     except json.JSONDecodeError:
         # Fall back to line-by-line parsing
         for line in output.splitlines():
             m = re.match(r"Discovered open port (\d+)/(\w+) on (.+)", line)
             if m:
-                results.append({
-                    "port": int(m.group(1)),
-                    "protocol": m.group(2),
-                    "ip": m.group(3).strip(),
-                    "status": "open",
-                })
+                results.append(
+                    {
+                        "port": int(m.group(1)),
+                        "protocol": m.group(2),
+                        "ip": m.group(3).strip(),
+                        "status": "open",
+                    }
+                )
 
     return results

@@ -71,10 +71,14 @@ async def nikto_scan(
 
     args = [
         tool_path,
-        "-h", target,
-        "-Tuning", tuning,
-        "-Format", "json",
-        "-output", "/dev/stdout",
+        "-h",
+        target,
+        "-Tuning",
+        tuning,
+        "-Format",
+        "json",
+        "-output",
+        "/dev/stdout",
         "-nointeractive",
     ]
 
@@ -86,6 +90,7 @@ async def nikto_scan(
 
     # Stealth: inject -useproxy flag if proxy is active
     from tengu.stealth import get_stealth_layer
+
     stealth = get_stealth_layer()
     if stealth.enabled and stealth.proxy_url:
         args = stealth.inject_proxy_flags("nikto", args)
@@ -131,14 +136,16 @@ def _parse_nikto_output(output: str) -> list[dict]:  # type: ignore[type-arg]
         data = json.loads(output)
         vulnerabilities = data.get("vulnerabilities", [])
         for vuln in vulnerabilities:
-            findings.append({
-                "id": vuln.get("id", ""),
-                "osvdb": vuln.get("OSVDB", ""),
-                "method": vuln.get("method", ""),
-                "url": vuln.get("url", ""),
-                "message": vuln.get("msg", ""),
-                "references": vuln.get("references", {}).get("url", []),
-            })
+            findings.append(
+                {
+                    "id": vuln.get("id", ""),
+                    "osvdb": vuln.get("OSVDB", ""),
+                    "method": vuln.get("method", ""),
+                    "url": vuln.get("url", ""),
+                    "message": vuln.get("msg", ""),
+                    "references": vuln.get("references", {}).get("url", []),
+                }
+            )
         return findings
     except (json.JSONDecodeError, KeyError):
         pass
@@ -147,11 +154,13 @@ def _parse_nikto_output(output: str) -> list[dict]:  # type: ignore[type-arg]
     for line in output.splitlines():
         line = line.strip()
         if line.startswith("+ ") and len(line) > 2:
-            findings.append({
-                "message": line[2:],
-                "id": "",
-                "url": "",
-                "method": "",
-            })
+            findings.append(
+                {
+                    "message": line[2:],
+                    "id": "",
+                    "url": "",
+                    "method": "",
+                }
+            )
 
     return findings

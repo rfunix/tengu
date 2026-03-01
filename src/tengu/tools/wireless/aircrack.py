@@ -1,4 +1,5 @@
 """Aircrack-ng wireless network scanner (passive mode only)."""
+
 from __future__ import annotations
 
 import asyncio
@@ -60,13 +61,18 @@ async def aircrack_scan(
 
     args = [
         tool_path,
-        "--write", output_prefix,
-        "--write-interval", "1",
-        "--output-format", "csv",
+        "--write",
+        output_prefix,
+        "--write-interval",
+        "1",
+        "--output-format",
+        "csv",
         safe_interface,
     ]
 
-    await ctx.report_progress(0, 100, f"Scanning wireless networks on {safe_interface} for {scan_time}s...")
+    await ctx.report_progress(
+        0, 100, f"Scanning wireless networks on {safe_interface} for {scan_time}s..."
+    )
 
     async with rate_limited("airodump-ng"):
         start = time.monotonic()
@@ -82,7 +88,9 @@ async def aircrack_scan(
             proc.terminate()
             await proc.communicate()
         except Exception as exc:
-            await audit.log_tool_call("airodump-ng", safe_interface, params, result="failed", error=str(exc))
+            await audit.log_tool_call(
+                "airodump-ng", safe_interface, params, result="failed", error=str(exc)
+            )
             raise
 
         duration = time.monotonic() - start
@@ -107,18 +115,20 @@ async def aircrack_scan(
                 if in_ap_section and "BSSID" not in line:
                     parts = [p.strip() for p in line.split(",")]
                     if len(parts) >= 14:
-                        access_points.append({
-                            "bssid": parts[0],
-                            "first_seen": parts[1],
-                            "channel": parts[3],
-                            "speed": parts[4],
-                            "privacy": parts[5],
-                            "cipher": parts[6],
-                            "auth": parts[7],
-                            "power": parts[8],
-                            "beacons": parts[9],
-                            "ssid": parts[13] if len(parts) > 13 else "",
-                        })
+                        access_points.append(
+                            {
+                                "bssid": parts[0],
+                                "first_seen": parts[1],
+                                "channel": parts[3],
+                                "speed": parts[4],
+                                "privacy": parts[5],
+                                "cipher": parts[6],
+                                "auth": parts[7],
+                                "power": parts[8],
+                                "beacons": parts[9],
+                                "ssid": parts[13] if len(parts) > 13 else "",
+                            }
+                        )
         except Exception:
             pass
         finally:
@@ -126,7 +136,9 @@ async def aircrack_scan(
                 csv_file.unlink()
 
     await ctx.report_progress(100, 100, "Wireless scan complete")
-    await audit.log_tool_call("airodump-ng", safe_interface, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        "airodump-ng", safe_interface, params, result="completed", duration_seconds=duration
+    )
 
     return {
         "tool": "airodump-ng",

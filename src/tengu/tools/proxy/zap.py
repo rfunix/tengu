@@ -24,6 +24,7 @@ logger = structlog.get_logger(__name__)
 def _get_zap_config() -> tuple[str, str]:
     """Return (base_url, api_key) from environment/config."""
     import os
+
     base_url = os.environ.get("ZAP_BASE_URL", "http://localhost:8080")
     api_key = os.environ.get("ZAP_API_KEY", "")
     return base_url, api_key
@@ -190,6 +191,7 @@ async def zap_active_scan(
     scan_params: dict[str, str] = {"url": url}
     if policy:
         import re
+
         safe_policy = re.sub(r"[^a-zA-Z0-9 _\-]", "", policy)[:100]
         if safe_policy:
             scan_params["scanPolicyName"] = safe_policy
@@ -290,21 +292,23 @@ async def zap_get_alerts(
     # Structure alerts
     structured = []
     for alert in alerts[:max_alerts]:
-        structured.append({
-            "alert_id": alert.get("id", ""),
-            "name": alert.get("alert", ""),
-            "risk": alert.get("risk", ""),
-            "confidence": alert.get("confidence", ""),
-            "url": alert.get("url", ""),
-            "description": alert.get("description", ""),
-            "solution": alert.get("solution", ""),
-            "reference": alert.get("reference", ""),
-            "cweid": alert.get("cweid", ""),
-            "wascid": alert.get("wascid", ""),
-            "evidence": alert.get("evidence", ""),
-            "param": alert.get("param", ""),
-            "attack": alert.get("attack", ""),
-        })
+        structured.append(
+            {
+                "alert_id": alert.get("id", ""),
+                "name": alert.get("alert", ""),
+                "risk": alert.get("risk", ""),
+                "confidence": alert.get("confidence", ""),
+                "url": alert.get("url", ""),
+                "description": alert.get("description", ""),
+                "solution": alert.get("solution", ""),
+                "reference": alert.get("reference", ""),
+                "cweid": alert.get("cweid", ""),
+                "wascid": alert.get("wascid", ""),
+                "evidence": alert.get("evidence", ""),
+                "param": alert.get("param", ""),
+                "attack": alert.get("attack", ""),
+            }
+        )
 
     # Count by risk
     risk_counts: dict[str, int] = {}

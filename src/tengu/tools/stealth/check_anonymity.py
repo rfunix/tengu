@@ -80,9 +80,7 @@ async def check_anonymity() -> dict:
             "DNS leak detected. Set stealth.dns.method = 'doh' or 'tor' in tengu.toml"
         )
     if not stealth.enabled:
-        recommendations.append(
-            "Enable stealth mode in tengu.toml: [stealth] enabled = true"
-        )
+        recommendations.append("Enable stealth mode in tengu.toml: [stealth] enabled = true")
 
     return {
         "real_ip_exposed": real_ip_exposed,

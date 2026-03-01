@@ -1,4 +1,5 @@
 """Gobuster directory, file, and vhost brute-force tool wrapper."""
+
 from __future__ import annotations
 
 import re
@@ -67,10 +68,14 @@ async def gobuster_scan(
     effective_timeout = timeout or cfg.tools.defaults.scan_timeout
 
     args = [
-        tool_path, mode,
-        "-u", target,
-        "-w", wordlist,
-        "-t", str(threads),
+        tool_path,
+        mode,
+        "-u",
+        target,
+        "-w",
+        wordlist,
+        "-t",
+        str(threads),
         "--no-error",
     ]
 
@@ -104,7 +109,9 @@ async def gobuster_scan(
             findings.append(line)
 
     await ctx.report_progress(100, 100, "Gobuster complete")
-    await audit.log_tool_call("gobuster", target, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        "gobuster", target, params, result="completed", duration_seconds=duration
+    )
 
     return {
         "tool": "gobuster",

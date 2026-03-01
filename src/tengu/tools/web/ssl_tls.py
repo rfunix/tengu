@@ -15,9 +15,7 @@ from tengu.types import SSLResult
 logger = structlog.get_logger(__name__)
 
 _WEAK_PROTOCOLS = {"SSLv2", "SSLv3", "TLSv1.0", "TLSv1.1"}
-_WEAK_CIPHERS_PATTERNS = [
-    "RC4", "DES", "3DES", "MD5", "NULL", "EXPORT", "anon", "ADH", "AECDH"
-]
+_WEAK_CIPHERS_PATTERNS = ["RC4", "DES", "3DES", "MD5", "NULL", "EXPORT", "anon", "ADH", "AECDH"]
 
 
 async def ssl_tls_check(
@@ -180,7 +178,11 @@ def _build_ssl_result(host: str, port: int, scan_result: object) -> SSLResult:
             cmd_result = scan_result.scan_result.__dict__.get(  # type: ignore[union-attr]
                 command.value.lower().replace("-", "_"), None
             )
-            if cmd_result and hasattr(cmd_result, "accepted_cipher_suites") and cmd_result.accepted_cipher_suites:
+            if (
+                cmd_result
+                and hasattr(cmd_result, "accepted_cipher_suites")
+                and cmd_result.accepted_cipher_suites
+            ):
                 result.protocols.append(proto_name)
                 if proto_name in _WEAK_PROTOCOLS:
                     result.weak_protocols.append(proto_name)

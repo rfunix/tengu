@@ -119,17 +119,13 @@ class TestAuditLogger:
         assert record["result"] == "started"
 
     @pytest.mark.asyncio
-    async def test_log_tool_call_custom_result(
-        self, logger: AuditLogger, log_path: Path
-    ):
+    async def test_log_tool_call_custom_result(self, logger: AuditLogger, log_path: Path):
         await logger.log_tool_call("nmap_scan", "example.com", {}, result="completed")
         record = json.loads(log_path.read_text().strip())
         assert record["result"] == "completed"
 
     @pytest.mark.asyncio
-    async def test_log_tool_call_error_field(
-        self, logger: AuditLogger, log_path: Path
-    ):
+    async def test_log_tool_call_error_field(self, logger: AuditLogger, log_path: Path):
         await logger.log_tool_call(
             "nmap_scan", "example.com", {}, result="error", error="timed out"
         )
@@ -137,27 +133,19 @@ class TestAuditLogger:
         assert record["error"] == "timed out"
 
     @pytest.mark.asyncio
-    async def test_log_tool_call_duration_rounded(
-        self, logger: AuditLogger, log_path: Path
-    ):
-        await logger.log_tool_call(
-            "nmap_scan", "example.com", {}, duration_seconds=1.23456789
-        )
+    async def test_log_tool_call_duration_rounded(self, logger: AuditLogger, log_path: Path):
+        await logger.log_tool_call("nmap_scan", "example.com", {}, duration_seconds=1.23456789)
         record = json.loads(log_path.read_text().strip())
         assert record["duration_seconds"] == 1.235
 
     @pytest.mark.asyncio
-    async def test_log_tool_call_no_duration_when_none(
-        self, logger: AuditLogger, log_path: Path
-    ):
+    async def test_log_tool_call_no_duration_when_none(self, logger: AuditLogger, log_path: Path):
         await logger.log_tool_call("nmap_scan", "example.com", {})
         record = json.loads(log_path.read_text().strip())
         assert "duration_seconds" not in record
 
     @pytest.mark.asyncio
-    async def test_log_tool_call_redacts_password(
-        self, logger: AuditLogger, log_path: Path
-    ):
+    async def test_log_tool_call_redacts_password(self, logger: AuditLogger, log_path: Path):
         await logger.log_tool_call(
             "hydra_attack", "example.com", {"password": "s3cr3t", "port": 22}
         )
@@ -166,9 +154,7 @@ class TestAuditLogger:
         assert record["params"]["port"] == 22
 
     @pytest.mark.asyncio
-    async def test_log_target_blocked_writes_record(
-        self, logger: AuditLogger, log_path: Path
-    ):
+    async def test_log_target_blocked_writes_record(self, logger: AuditLogger, log_path: Path):
         await logger.log_target_blocked("nmap_scan", "8.8.8.8", "not in allowlist")
         record = json.loads(log_path.read_text().strip())
         assert record["event"] == "target_blocked"
@@ -177,9 +163,7 @@ class TestAuditLogger:
         assert record["reason"] == "not in allowlist"
 
     @pytest.mark.asyncio
-    async def test_log_rate_limit_writes_record(
-        self, logger: AuditLogger, log_path: Path
-    ):
+    async def test_log_rate_limit_writes_record(self, logger: AuditLogger, log_path: Path):
         await logger.log_rate_limit("nuclei_scan", "max 10 calls/minute")
         record = json.loads(log_path.read_text().strip())
         assert record["event"] == "rate_limit"
@@ -199,18 +183,14 @@ class TestAuditLogger:
         assert records[1]["tool"] == "nuclei_scan"
 
     @pytest.mark.asyncio
-    async def test_record_has_timestamp_field(
-        self, logger: AuditLogger, log_path: Path
-    ):
+    async def test_record_has_timestamp_field(self, logger: AuditLogger, log_path: Path):
         await logger.log_tool_call("nmap_scan", "example.com", {})
         record = json.loads(log_path.read_text().strip())
         assert "timestamp" in record
         assert "T" in record["timestamp"]  # ISO 8601 format
 
     @pytest.mark.asyncio
-    async def test_each_record_is_valid_json(
-        self, logger: AuditLogger, log_path: Path
-    ):
+    async def test_each_record_is_valid_json(self, logger: AuditLogger, log_path: Path):
         await logger.log_tool_call("nmap_scan", "example.com", {"port": 80})
         await logger.log_target_blocked("nmap_scan", "8.8.8.8", "reason")
         await logger.log_rate_limit("nuclei_scan", "exceeded")

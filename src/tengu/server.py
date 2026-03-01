@@ -431,10 +431,12 @@ def resource_tool_usage(tool_name: str) -> str:
 
     guide = guides.get(tool_name.lower())
     if not guide:
-        return json.dumps({
-            "error": f"No usage guide for '{tool_name}'",
-            "available": list(guides.keys()),
-        })
+        return json.dumps(
+            {
+                "error": f"No usage guide for '{tool_name}'",
+                "available": list(guides.keys()),
+            }
+        )
     return json.dumps(guide, indent=2)
 
 
@@ -467,6 +469,7 @@ def resource_mitre_technique(technique_id: str) -> str:
 
     try:
         import json as _json
+
         data = _json.loads(data_path.read_text())
         for tactic in data.get("tactics", []):
             for technique in tactic.get("techniques", []):
@@ -481,6 +484,7 @@ def resource_mitre_technique(technique_id: str) -> str:
 def resource_owasp_api_top10() -> str:
     """OWASP API Security Top 10 (2023) — categories with examples, prevention, and test tools."""
     from pathlib import Path
+
     data_path = Path(__file__).parent / "resources" / "data" / "owasp_api_top10.json"
     if data_path.exists():
         return data_path.read_text()
@@ -501,6 +505,7 @@ def resource_owasp_api_category(category_id: str) -> str:
 
     try:
         import json as _json
+
         data = _json.loads(data_path.read_text())
         for cat in data.get("categories", []):
             if cat.get("id", "").upper() == safe_id:
@@ -524,18 +529,24 @@ def resource_default_credentials(product: str) -> str:
 
     try:
         import json as _json
+
         data = _json.loads(data_path.read_text())
         creds = data.get("credentials", [])
 
         if safe_product in ("all", "list", ""):
-            return _json.dumps({"total": len(creds), "categories": data.get("categories", [])}, indent=2)
+            return _json.dumps(
+                {"total": len(creds), "categories": data.get("categories", [])}, indent=2
+            )
 
         matches = [
-            c for c in creds
+            c
+            for c in creds
             if safe_product in c.get("product", "").lower()
             or safe_product in c.get("category", "").lower()
         ]
-        return _json.dumps({"product": safe_product, "count": len(matches), "credentials": matches}, indent=2)
+        return _json.dumps(
+            {"product": safe_product, "count": len(matches), "credentials": matches}, indent=2
+        )
     except Exception as exc:
         return json.dumps({"error": str(exc)})
 
@@ -554,6 +565,7 @@ def resource_payloads(payload_type: str) -> str:
 
     try:
         import json as _json
+
         data = _json.loads(data_path.read_text())
         payloads = data.get("payloads", {})
 
@@ -562,10 +574,12 @@ def resource_payloads(payload_type: str) -> str:
 
         payload_set = payloads.get(safe_type)
         if not payload_set:
-            return json.dumps({
-                "error": f"Payload type '{safe_type}' not found.",
-                "available": list(payloads.keys()),
-            })
+            return json.dumps(
+                {
+                    "error": f"Payload type '{safe_type}' not found.",
+                    "available": list(payloads.keys()),
+                }
+            )
         return _json.dumps(payload_set, indent=2)
     except Exception as exc:
         return json.dumps({"error": str(exc)})
@@ -575,6 +589,7 @@ def resource_payloads(payload_type: str) -> str:
 def resource_stealth_techniques() -> str:
     """OPSEC and stealth techniques reference — Tor, proxychains, timing, DNS privacy."""
     from pathlib import Path
+
     data_path = Path(__file__).parent / "resources" / "data" / "stealth_techniques.json"
     if data_path.exists():
         return data_path.read_text()
@@ -585,6 +600,7 @@ def resource_stealth_techniques() -> str:
 def resource_proxy_guide() -> str:
     """Proxy configuration guide — Tor, proxychains4, torsocks setup and troubleshooting."""
     from pathlib import Path
+
     data_path = Path(__file__).parent / "resources" / "data" / "proxy_guide.json"
     if data_path.exists():
         return data_path.read_text()
@@ -669,6 +685,7 @@ mcp.prompt()(pwn_target)
 
 
 # ── ENTRY POINT ────────────────────────────────────────────────────────────────
+
 
 def main() -> None:
     """Start the Tengu MCP server."""

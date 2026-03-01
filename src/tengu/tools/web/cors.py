@@ -78,6 +78,7 @@ async def test_cors(
     await ctx.report_progress(0, len(test_origins), f"Testing CORS on {url}...")
 
     from tengu.stealth import get_stealth_layer
+
     stealth = get_stealth_layer()
     async with stealth.create_http_client(
         follow_redirects=True,
@@ -168,7 +169,9 @@ async def test_cors(
             "Implement a strict allowlist of trusted origins. "
             "Never reflect the Origin header value back. "
             "Only set Access-Control-Allow-Credentials: true for explicitly trusted origins."
-        ) if result.vulnerable else None,
+        )
+        if result.vulnerable
+        else None,
     }
 
 

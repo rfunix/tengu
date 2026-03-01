@@ -118,6 +118,7 @@ async def analyze_headers(
 
     try:
         from tengu.stealth import get_stealth_layer
+
         stealth = get_stealth_layer()
         async with stealth.create_http_client(
             follow_redirects=follow_redirects,
@@ -156,23 +157,27 @@ async def analyze_headers(
         else:
             header_score = "fail"
 
-        security_headers.append(SecurityHeader(
-            name=name,
-            value=value,
-            present=present,
-            score=header_score,  # type: ignore[arg-type]
-            recommendation=None if present else recommendation,
-        ))
+        security_headers.append(
+            SecurityHeader(
+                name=name,
+                value=value,
+                present=present,
+                score=header_score,  # type: ignore[arg-type]
+                recommendation=None if present else recommendation,
+            )
+        )
 
     # Check information disclosure headers
     disclosure_found = []
     for header_name in _INFORMATION_DISCLOSURE_HEADERS:
         if header_name.lower() in response_headers:
-            disclosure_found.append({
-                "header": header_name,
-                "value": response_headers[header_name.lower()],
-                "recommendation": f"Remove '{header_name}' header to prevent technology fingerprinting.",
-            })
+            disclosure_found.append(
+                {
+                    "header": header_name,
+                    "value": response_headers[header_name.lower()],
+                    "recommendation": f"Remove '{header_name}' header to prevent technology fingerprinting.",
+                }
+            )
 
     # Calculate grade
     percentage = (score / max_score * 100) if max_score > 0 else 0

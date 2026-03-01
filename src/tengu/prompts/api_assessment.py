@@ -1,4 +1,5 @@
 """API security assessment prompts."""
+
 from __future__ import annotations
 
 
@@ -14,11 +15,15 @@ def api_security_assessment(
         api_type: API type — rest, graphql, grpc, soap.
         authenticated: Whether to include authenticated testing steps.
     """
-    graphql_steps = f"""
+    graphql_steps = (
+        f"""
 ## GraphQL-Specific Tests
 4a. `graphql_security_check(url="{url}")` — introspection, batching, depth limit, field suggestions
 4b. Test for authorization bypass: access other users' data via ID manipulation
-4c. Test for injection via GraphQL variables""" if api_type == "graphql" else ""
+4c. Test for injection via GraphQL variables"""
+        if api_type == "graphql"
+        else ""
+    )
 
     return f"""# API Security Assessment: {url}
 

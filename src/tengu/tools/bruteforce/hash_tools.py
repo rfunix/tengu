@@ -63,10 +63,12 @@ async def hash_identify(
     matches = []
     for pattern, name, _expected_len in _HASH_PATTERNS:
         if pattern.match(hash_value):
-            matches.append({
-                "type": name,
-                "pattern_match": True,
-            })
+            matches.append(
+                {
+                    "type": name,
+                    "pattern_match": True,
+                }
+            )
 
     # Add hashcat modes for common types
     hashcat_modes = {
@@ -90,7 +92,8 @@ async def hash_identify(
         "length": len(hash_value),
         "possible_types": matches,
         "recommendation": (
-            f"Most likely: {matches[0]['type']}" if matches
+            f"Most likely: {matches[0]['type']}"
+            if matches
             else "Unknown hash type. Check for encoding (base64, hex)."
         ),
     }
@@ -263,8 +266,10 @@ async def _crack_with_hashcat(
 
     args = [
         hashcat_path,
-        "-m", mode,
-        "-a", "0",  # Straight/dictionary attack
+        "-m",
+        mode,
+        "-a",
+        "0",  # Straight/dictionary attack
         "--quiet",
         "--potfile-disable",
         hash_value,

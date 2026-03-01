@@ -62,14 +62,17 @@ async def xss_scan(
 
     args = [
         tool_path,
-        "url", url,
-        "--format", "json",
+        "url",
+        url,
+        "--format",
+        "json",
         "--no-color",
         "--silence",
     ]
 
     if parameter:
         import re
+
         safe_param = re.sub(r"[^a-zA-Z0-9_\-\[\]]", "", parameter)
         if safe_param:
             args.extend(["-p", safe_param])
@@ -77,12 +80,14 @@ async def xss_scan(
     if cookie:
         # Cookie validation — remove dangerous chars
         import re
+
         safe_cookie = re.sub(r"[\r\n<>]", "", cookie)
         if safe_cookie:
             args.extend(["--cookie", safe_cookie])
 
     if header:
         import re
+
         safe_header = re.sub(r"[\r\n]", "", header)
         if safe_header:
             args.extend(["-H", safe_header])
@@ -119,7 +124,9 @@ async def xss_scan(
             "Encode all user-supplied data before rendering in HTML context. "
             "Implement a strict Content-Security-Policy. "
             "Use modern framework auto-escaping features."
-        ) if findings else None,
+        )
+        if findings
+        else None,
     }
 
 
@@ -131,13 +138,15 @@ def _parse_dalfox_output(output: str) -> list[dict]:  # type: ignore[type-arg]
         data = json.loads(output)
         if isinstance(data, list):
             for item in data:
-                findings.append({
-                    "type": item.get("type", ""),
-                    "parameter": item.get("param", ""),
-                    "payload": item.get("payload", ""),
-                    "evidence": item.get("evidence", ""),
-                    "poc": item.get("poc", ""),
-                })
+                findings.append(
+                    {
+                        "type": item.get("type", ""),
+                        "parameter": item.get("param", ""),
+                        "payload": item.get("payload", ""),
+                        "evidence": item.get("evidence", ""),
+                        "poc": item.get("poc", ""),
+                    }
+                )
         elif isinstance(data, dict):
             findings.append(data)
         return findings

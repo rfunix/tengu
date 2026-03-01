@@ -1,4 +1,5 @@
 """WhatWeb web technology fingerprinting tool wrapper."""
+
 from __future__ import annotations
 
 import json
@@ -98,11 +99,13 @@ async def whatweb_scan(
                 for plugin_name, plugin_info in plugin_data.items():
                     versions = plugin_info.get("version", [])
                     string = plugin_info.get("string", [])
-                    plugins.append({
-                        "name": plugin_name,
-                        "version": versions[0] if versions else None,
-                        "detail": string[0] if string else None,
-                    })
+                    plugins.append(
+                        {
+                            "name": plugin_name,
+                            "version": versions[0] if versions else None,
+                            "detail": string[0] if string else None,
+                        }
+                    )
     except (json.JSONDecodeError, KeyError, IndexError):
         # Fallback: parse plain text output
         for line in stdout.splitlines():
@@ -110,7 +113,9 @@ async def whatweb_scan(
                 plugins.append({"name": line.strip(), "version": None, "detail": None})
 
     await ctx.report_progress(100, 100, "WhatWeb complete")
-    await audit.log_tool_call("whatweb", target, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        "whatweb", target, params, result="completed", duration_seconds=duration
+    )
 
     return {
         "tool": "whatweb",

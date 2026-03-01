@@ -87,11 +87,15 @@ async def ffuf_fuzz(
 
     args = [
         tool_path,
-        "-u", url,
-        "-w", effective_wordlist,
-        "-X", method,
+        "-u",
+        url,
+        "-w",
+        effective_wordlist,
+        "-X",
+        method,
         "-json",
-        "-t", str(max(1, min(threads, 200))),
+        "-t",
+        str(max(1, min(threads, 200))),
         "-noninteractive",
     ]
 
@@ -128,6 +132,7 @@ async def ffuf_fuzz(
 
     # Stealth: inject -x proxy flag if proxy is active
     from tengu.stealth import get_stealth_layer
+
     stealth = get_stealth_layer()
     if stealth.enabled and stealth.proxy_url:
         args = stealth.inject_proxy_flags("ffuf", args)
@@ -151,9 +156,7 @@ async def ffuf_fuzz(
     results = _parse_ffuf_output(stdout)
 
     await ctx.report_progress(100, 100, "Fuzzing complete")
-    await audit.log_tool_call(
-        "ffuf", url, params, result="completed", duration_seconds=duration
-    )
+    await audit.log_tool_call("ffuf", url, params, result="completed", duration_seconds=duration)
 
     return {
         "tool": "ffuf",
@@ -173,15 +176,17 @@ def _parse_ffuf_output(output: str) -> list[dict]:  # type: ignore[type-arg]
     try:
         data = json.loads(output)
         for entry in data.get("results", []):
-            results.append({
-                "url": entry.get("url", ""),
-                "status": entry.get("status", 0),
-                "length": entry.get("length", 0),
-                "words": entry.get("words", 0),
-                "lines": entry.get("lines", 0),
-                "redirect_location": entry.get("redirectlocation", ""),
-                "input": entry.get("input", {}).get("FUZZ", ""),
-            })
+            results.append(
+                {
+                    "url": entry.get("url", ""),
+                    "status": entry.get("status", 0),
+                    "length": entry.get("length", 0),
+                    "words": entry.get("words", 0),
+                    "lines": entry.get("lines", 0),
+                    "redirect_location": entry.get("redirectlocation", ""),
+                    "input": entry.get("input", {}).get("FUZZ", ""),
+                }
+            )
     except (json.JSONDecodeError, KeyError):
         pass
 

@@ -1,4 +1,5 @@
 """Quick action prompts — practical task-oriented workflows."""
+
 from __future__ import annotations
 
 
@@ -39,7 +40,7 @@ sudo airmon-ng start {interface}
 
 ## Step 4 — Crack the Handshake
 5. `hash_crack(hash="<handshake.cap>", mode="hashcat", wordlist="/usr/share/wordlists/rockyou.txt")`
-   - If rockyou fails, try: `cewl_generate(url="https://{ssid.lower().replace(' ', '')}.com")` for custom wordlist
+   - If rockyou fails, try: `cewl_generate(url="https://{ssid.lower().replace(" ", "")}.com")` for custom wordlist
 
 ## Step 5 — Check WPS Vulnerability
 6. If WPS is enabled on "{ssid}":
@@ -83,14 +84,17 @@ def explore_url(url: str, depth: str = "normal") -> str:
 ## Phase 1 — Headers and TLS (always)
 1. `analyze_headers(url="{url}")` — check security headers (CSP, HSTS, X-Frame-Options, etc.)
 2. `test_cors(url="{url}")` — test CORS misconfiguration (wildcard origins, credentials)
-3. `ssl_tls_check(host="{url.split('//')[-1].split('/')[0]}")` — TLS version, cipher suites, certificate chain
+3. `ssl_tls_check(host="{
+        url.split("//")[-1].split("/")[0]
+    }")` — TLS version, cipher suites, certificate chain
 {"" if depth == "quick" else ""}
 ## Phase 2 — Technology Fingerprint (always)
 4. `whatweb_scan(url="{url}")` — detect CMS, frameworks, server version, JavaScript libraries
 5. Based on detected tech, check for CMS-specific vulnerabilities:
    - WordPress: `wpscan_scan(url="{url}")`
-   - Testssl: `testssl_check(host="{url.split('//')[-1].split('/')[0]}")`
-{"""
+   - Testssl: `testssl_check(host="{url.split("//")[-1].split("/")[0]}")`
+{
+        '''
 ## Phase 3 — Directory and File Fuzzing (normal + deep)
 6. `ffuf_fuzz(url="{url}/FUZZ", wordlist="/usr/share/seclists/Discovery/Web-Content/common.txt")` — hidden paths
 7. `gobuster_scan(url="{url}", mode="dir")` — directory brute-force (parallel confirmation)
@@ -99,8 +103,12 @@ def explore_url(url: str, depth: str = "normal") -> str:
 ## Phase 4 — Vulnerability Scanning (normal + deep)
 9. `nuclei_scan(target="{url}", severity=["medium","high","critical"])` — known CVEs and misconfigs
 10. `nikto_scan(url="{url}")` — web server misconfigurations, dangerous files
-""" if depth in ("normal", "deep") else ""}
-{f"""
+'''
+        if depth in ("normal", "deep")
+        else ""
+    }
+{
+        f'''
 ## Phase 5 — Injection Testing (deep only)
 11. `sqlmap_scan(url="{url}", level=1, risk=1)` — SQL injection (safe mode)
 12. `xss_scan(url="{url}")` — reflected and stored XSS
@@ -116,7 +124,10 @@ def explore_url(url: str, depth: str = "normal") -> str:
     - Review `interesting_findings` in the result: hardcoded API keys, credentials, dev comments, internal URLs
     - The mirrored JS bundle captures secrets that never appear in git repos (compiled/minified frontend code)
     - Output dir: /tmp/httrack — search with `grep -r -e api_key -e secret -e token /tmp/httrack/`
-""" if depth == "deep" else ""}
+'''
+        if depth == "deep"
+        else ""
+    }
 ## Scoring
 - After all scans: `score_risk(findings=[...])` — prioritize by CVSS
 - `correlate_findings(findings=[...])` — identify attack chains
@@ -242,11 +253,15 @@ def find_secrets(target: str, scan_type: str = "git") -> str:
 - All historic commits with secrets are considered compromised
 
 ## Phase 4 — Expand Search
-{"""
+{
+        '''
 - For GitHub orgs: enumerate all repos first, then scan each
 - Check: GitHub Actions secrets, environment variables in CI/CD
 - Look for: `.env` files committed by accident, hardcoded credentials in test files
-""" if scan_type == "github" else ""}
+'''
+        if scan_type == "github"
+        else ""
+    }
 - Search for additional secret locations:
   - `ffuf_fuzz(url="<target-url>/FUZZ", wordlist="...")` — exposed `.env`, `.git`, config files
   - Check: `/.git/config`, `/.env`, `/config.json`, `/appsettings.json`
@@ -296,7 +311,7 @@ def map_network(network: str) -> str:
    - OS fingerprinting: add `-O` flag if root access available
 
 ## Phase 3 — DNS Reverse Resolution
-4. `dns_enumerate(domain="{network.split('/')[0]}", record_types=["PTR"])` — reverse DNS
+4. `dns_enumerate(domain="{network.split("/")[0]}", record_types=["PTR"])` — reverse DNS
    - Maps IPs to hostnames for target context
    - Reveals internal naming conventions (dev-, prod-, db-, etc.)
 

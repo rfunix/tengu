@@ -48,8 +48,12 @@ async def enum4linux_scan(
     target = sanitize_target(target)
 
     # Sanitize credentials — redact password from audit logs
-    safe_username = sanitize_free_text(username, field="username", max_length=256) if username else ""
-    safe_password = sanitize_free_text(password, field="password", max_length=256) if password else ""
+    safe_username = (
+        sanitize_free_text(username, field="username", max_length=256) if username else ""
+    )
+    safe_password = (
+        sanitize_free_text(password, field="password", max_length=256) if password else ""
+    )
 
     # Audit params with redacted password
     params: dict[str, object] = {
@@ -102,7 +106,9 @@ async def enum4linux_scan(
     parsed = _parse_enum4linux_output(stdout)
 
     await ctx.report_progress(100, 100, "Enum4linux enumeration complete")
-    await audit.log_tool_call(tool_name, target, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        tool_name, target, params, result="completed", duration_seconds=duration
+    )
 
     return {
         "tool": tool_name,
@@ -151,32 +157,38 @@ def _parse_enum4linux_output(output: str) -> dict:  # type: ignore[type-arg]
     if isinstance(users_data, dict):
         for uid, user_info in users_data.items():
             if isinstance(user_info, dict):
-                users.append({
-                    "rid": uid,
-                    "username": user_info.get("username", ""),
-                    "full_name": user_info.get("fullname", ""),
-                    "description": user_info.get("description", ""),
-                    "flags": user_info.get("acb_text", ""),
-                })
+                users.append(
+                    {
+                        "rid": uid,
+                        "username": user_info.get("username", ""),
+                        "full_name": user_info.get("fullname", ""),
+                        "description": user_info.get("description", ""),
+                        "flags": user_info.get("acb_text", ""),
+                    }
+                )
     elif isinstance(users_data, list):
         for user_info in users_data:
             if isinstance(user_info, dict):
-                users.append({
-                    "username": user_info.get("username", user_info.get("name", "")),
-                    "rid": user_info.get("rid", ""),
-                    "description": user_info.get("description", ""),
-                })
+                users.append(
+                    {
+                        "username": user_info.get("username", user_info.get("name", "")),
+                        "rid": user_info.get("rid", ""),
+                        "description": user_info.get("description", ""),
+                    }
+                )
 
     # Groups
     groups_data = data.get("groups", {})
     if isinstance(groups_data, dict):
         for gid, group_info in groups_data.items():
             if isinstance(group_info, dict):
-                groups.append({
-                    "rid": gid,
-                    "name": group_info.get("groupname", group_info.get("name", "")),
-                    "members": group_info.get("members", []),
-                })
+                groups.append(
+                    {
+                        "rid": gid,
+                        "name": group_info.get("groupname", group_info.get("name", "")),
+                        "members": group_info.get("members", []),
+                    }
+                )
 
     # Shares
     shares_data = data.get("shares", {})
@@ -194,9 +206,15 @@ def _parse_enum4linux_output(output: str) -> dict:  # type: ignore[type-arg]
     if isinstance(pol_data, dict):
         password_policy = {
             "min_length": pol_data.get("min_password_length", pol_data.get("MinPasswordLength")),
-            "lockout_threshold": pol_data.get("account_lockout_threshold", pol_data.get("LockoutThreshold")),
-            "lockout_duration": pol_data.get("account_lockout_duration", pol_data.get("LockoutDuration")),
-            "password_history": pol_data.get("password_history_length", pol_data.get("PasswordHistoryLength")),
+            "lockout_threshold": pol_data.get(
+                "account_lockout_threshold", pol_data.get("LockoutThreshold")
+            ),
+            "lockout_duration": pol_data.get(
+                "account_lockout_duration", pol_data.get("LockoutDuration")
+            ),
+            "password_history": pol_data.get(
+                "password_history_length", pol_data.get("PasswordHistoryLength")
+            ),
             "complexity": pol_data.get("password_properties", pol_data.get("PasswordComplexity")),
         }
 

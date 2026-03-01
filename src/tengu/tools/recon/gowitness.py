@@ -1,4 +1,5 @@
 """Gowitness web screenshot tool wrapper for visual reconnaissance."""
+
 from __future__ import annotations
 
 import re
@@ -89,7 +90,9 @@ async def gowitness_screenshot(
         duration = time.monotonic() - start
 
     await ctx.report_progress(100, 100, "Gowitness complete")
-    await audit.log_tool_call("gowitness", target, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        "gowitness", target, params, result="completed", duration_seconds=duration
+    )
 
     # List screenshots taken
     screenshots: list[str] = []
@@ -97,8 +100,7 @@ async def gowitness_screenshot(
         safe_path = Path(safe_dir)
         if safe_path.is_dir():
             screenshots = [
-                str(f) for f in safe_path.iterdir()
-                if f.suffix in (".png", ".jpg", ".jpeg")
+                str(f) for f in safe_path.iterdir() if f.suffix in (".png", ".jpg", ".jpeg")
             ]
     except Exception:
         pass

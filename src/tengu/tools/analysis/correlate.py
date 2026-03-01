@@ -107,18 +107,17 @@ async def correlate_findings(
     for chain in _ATTACK_CHAINS:
         required = set(chain["required_owasp"])
         if required.issubset(owasp_present):
-            attack_chains.append({
-                "name": chain["name"],
-                "description": chain["description"],
-                "severity": chain["severity"],
-                "relevant_owasp_categories": list(required),
-            })
+            attack_chains.append(
+                {
+                    "name": chain["name"],
+                    "description": chain["description"],
+                    "severity": chain["severity"],
+                    "relevant_owasp_categories": list(required),
+                }
+            )
 
     # Find findings with CVE IDs that have public exploits
-    exploitable_findings = [
-        f for f in parsed
-        if f.get("cve_ids") or f.get("exploit_available")
-    ]
+    exploitable_findings = [f for f in parsed if f.get("cve_ids") or f.get("exploit_available")]
 
     await ctx.report_progress(2, 3, "Calculating compound risk score...")
 
@@ -174,8 +173,7 @@ def _calculate_risk_score(
 
     # Base score from CVSS average
     cvss_scores = [
-        f.get("cvss_score", _SEVERITY_WEIGHTS.get(f.get("severity", "info"), 0))
-        for f in findings
+        f.get("cvss_score", _SEVERITY_WEIGHTS.get(f.get("severity", "info"), 0)) for f in findings
     ]
     base_score = sum(cvss_scores) / len(cvss_scores) if cvss_scores else 0.0
 
@@ -223,15 +221,17 @@ def _build_remediation_priority(findings: list[dict]) -> list[dict]:  # type: ig
         else:
             timeframe = "90-180 days"
 
-        priority_list.append({
-            "priority": i + 1,
-            "title": finding.get("title", finding.get("template_name", "Unknown finding")),
-            "severity": sev,
-            "cvss_score": finding.get("cvss_score", 0),
-            "affected_asset": finding.get("affected_asset", finding.get("url", "")),
-            "recommended_timeframe": timeframe,
-            "tool": finding.get("tool", ""),
-        })
+        priority_list.append(
+            {
+                "priority": i + 1,
+                "title": finding.get("title", finding.get("template_name", "Unknown finding")),
+                "severity": sev,
+                "cvss_score": finding.get("cvss_score", 0),
+                "affected_asset": finding.get("affected_asset", finding.get("url", "")),
+                "recommended_timeframe": timeframe,
+                "tool": finding.get("tool", ""),
+            }
+        )
 
     return priority_list
 
@@ -270,8 +270,7 @@ async def score_risk(
 
     # Weight by severity distribution
     weighted_score = sum(
-        count * _SEVERITY_WEIGHTS.get(sev, 0)
-        for sev, count in severity_counts.items()
+        count * _SEVERITY_WEIGHTS.get(sev, 0) for sev, count in severity_counts.items()
     )
 
     # Normalize to 0-10

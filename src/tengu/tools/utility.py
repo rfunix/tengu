@@ -41,7 +41,9 @@ async def check_tools(ctx: Context) -> dict:  # type: ignore[type-arg]
         "install_hint": (
             "Run 'make install-tools' or './scripts/install-tools.sh --all' "
             "to install missing tools."
-        ) if result.missing > 0 else None,
+        )
+        if result.missing > 0
+        else None,
     }
 
 

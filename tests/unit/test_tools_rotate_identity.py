@@ -42,8 +42,15 @@ class TestRotateIdentity:
         reset_stealth_layer()
         tor_result = {"success": True, "message": "New identity requested", "response": "250 OK"}
 
-        with patch("tengu.tools.stealth.rotate_identity.tor_new_identity", AsyncMock(return_value=tor_result)), \
-             patch("tengu.tools.stealth.rotate_identity.get_stealth_layer", return_value=_ua_stealth()):
+        with (
+            patch(
+                "tengu.tools.stealth.rotate_identity.tor_new_identity",
+                AsyncMock(return_value=tor_result),
+            ),
+            patch(
+                "tengu.tools.stealth.rotate_identity.get_stealth_layer", return_value=_ua_stealth()
+            ),
+        ):
             from tengu.tools.stealth.rotate_identity import rotate_identity
 
             result = await rotate_identity()
@@ -56,8 +63,15 @@ class TestRotateIdentity:
         reset_stealth_layer()
         tor_result = {"success": True, "message": "New identity requested", "response": "250 OK"}
 
-        with patch("tengu.tools.stealth.rotate_identity.tor_new_identity", AsyncMock(return_value=tor_result)), \
-             patch("tengu.tools.stealth.rotate_identity.get_stealth_layer", return_value=_ua_stealth()):
+        with (
+            patch(
+                "tengu.tools.stealth.rotate_identity.tor_new_identity",
+                AsyncMock(return_value=tor_result),
+            ),
+            patch(
+                "tengu.tools.stealth.rotate_identity.get_stealth_layer", return_value=_ua_stealth()
+            ),
+        ):
             from tengu.tools.stealth.rotate_identity import rotate_identity
 
             result = await rotate_identity()
@@ -70,8 +84,15 @@ class TestRotateIdentity:
         reset_stealth_layer()
         tor_result = {"success": False, "message": "Authentication failed", "response": "515 Error"}
 
-        with patch("tengu.tools.stealth.rotate_identity.tor_new_identity", AsyncMock(return_value=tor_result)), \
-             patch("tengu.tools.stealth.rotate_identity.get_stealth_layer", return_value=_ua_stealth()):
+        with (
+            patch(
+                "tengu.tools.stealth.rotate_identity.tor_new_identity",
+                AsyncMock(return_value=tor_result),
+            ),
+            patch(
+                "tengu.tools.stealth.rotate_identity.get_stealth_layer", return_value=_ua_stealth()
+            ),
+        ):
             from tengu.tools.stealth.rotate_identity import rotate_identity
 
             result = await rotate_identity()
@@ -86,8 +107,16 @@ class TestRotateIdentity:
         tor_result = {"success": True, "message": "New identity requested"}
         expected_ua = "Mozilla/5.0 (X11; Linux x86_64) TestAgent"
 
-        with patch("tengu.tools.stealth.rotate_identity.tor_new_identity", AsyncMock(return_value=tor_result)), \
-             patch("tengu.tools.stealth.rotate_identity.get_stealth_layer", return_value=_ua_stealth(expected_ua)):
+        with (
+            patch(
+                "tengu.tools.stealth.rotate_identity.tor_new_identity",
+                AsyncMock(return_value=tor_result),
+            ),
+            patch(
+                "tengu.tools.stealth.rotate_identity.get_stealth_layer",
+                return_value=_ua_stealth(expected_ua),
+            ),
+        ):
             from tengu.tools.stealth.rotate_identity import rotate_identity
 
             result = await rotate_identity()
@@ -100,8 +129,16 @@ class TestRotateIdentity:
         reset_stealth_layer()
         tor_result = {"success": True, "message": "New identity requested"}
 
-        with patch("tengu.tools.stealth.rotate_identity.tor_new_identity", AsyncMock(return_value=tor_result)), \
-             patch("tengu.tools.stealth.rotate_identity.get_stealth_layer", return_value=_no_ua_stealth()):
+        with (
+            patch(
+                "tengu.tools.stealth.rotate_identity.tor_new_identity",
+                AsyncMock(return_value=tor_result),
+            ),
+            patch(
+                "tengu.tools.stealth.rotate_identity.get_stealth_layer",
+                return_value=_no_ua_stealth(),
+            ),
+        ):
             from tengu.tools.stealth.rotate_identity import rotate_identity
 
             result = await rotate_identity()
@@ -114,8 +151,16 @@ class TestRotateIdentity:
         reset_stealth_layer()
         tor_result = {"success": False, "message": "Tor control port 9051 is not accessible"}
 
-        with patch("tengu.tools.stealth.rotate_identity.tor_new_identity", AsyncMock(return_value=tor_result)), \
-             patch("tengu.tools.stealth.rotate_identity.get_stealth_layer", return_value=_no_ua_stealth()):
+        with (
+            patch(
+                "tengu.tools.stealth.rotate_identity.tor_new_identity",
+                AsyncMock(return_value=tor_result),
+            ),
+            patch(
+                "tengu.tools.stealth.rotate_identity.get_stealth_layer",
+                return_value=_no_ua_stealth(),
+            ),
+        ):
             from tengu.tools.stealth.rotate_identity import rotate_identity
 
             result = await rotate_identity()
@@ -128,8 +173,15 @@ class TestRotateIdentity:
         reset_stealth_layer()
         tor_result = {"success": True, "message": "OK"}
 
-        with patch("tengu.tools.stealth.rotate_identity.tor_new_identity", AsyncMock(return_value=tor_result)), \
-             patch("tengu.tools.stealth.rotate_identity.get_stealth_layer", return_value=_ua_stealth()):
+        with (
+            patch(
+                "tengu.tools.stealth.rotate_identity.tor_new_identity",
+                AsyncMock(return_value=tor_result),
+            ),
+            patch(
+                "tengu.tools.stealth.rotate_identity.get_stealth_layer", return_value=_ua_stealth()
+            ),
+        ):
             from tengu.tools.stealth.rotate_identity import rotate_identity
 
             result = await rotate_identity()

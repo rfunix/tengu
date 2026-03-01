@@ -1,4 +1,5 @@
 """HTTrack website mirror tool wrapper for offline analysis and forensics."""
+
 from __future__ import annotations
 
 import re
@@ -27,8 +28,10 @@ _INTERESTING_PATTERNS: list[tuple[str, str]] = [
     (r"(?i)(secret|token|password)\s*[=:]\s*['\"]?\w+", "potential credential"),
     (r"TODO|FIXME|HACK|XXX", "development note"),
     (r"<!--.*?(debug|internal|staging|test).*?-->", "HTML comment with env hint"),
-    (r"https?://(?:localhost|127\.0\.0\.1|10\.|192\.168\.|172\.1[6-9]\.|172\.2\d\.|172\.3[01]\.)",
-     "internal URL reference"),
+    (
+        r"https?://(?:localhost|127\.0\.0\.1|10\.|192\.168\.|172\.1[6-9]\.|172\.2\d\.|172\.3[01]\.)",
+        "internal URL reference",
+    ),
 ]
 
 
@@ -151,17 +154,29 @@ async def httrack_mirror(
     args: list[str] = [
         tool_path,
         target,
-        "-O", safe_dir,
+        "-O",
+        safe_dir,
         f"-r{depth}",
         f"-M{max_size_bytes}",
-        "-%v",        # verbose progress
-        "--quiet",    # suppress interactive prompts
+        "-%v",  # verbose progress
+        "--quiet",  # suppress interactive prompts
     ]
 
     if not include_assets:
         # Exclude images, CSS, audio, video
-        args += ["-*.png", "-*.jpg", "-*.jpeg", "-*.gif", "-*.css",
-                 "-*.ico", "-*.mp4", "-*.mp3", "-*.svg", "-*.woff", "-*.woff2"]
+        args += [
+            "-*.png",
+            "-*.jpg",
+            "-*.jpeg",
+            "-*.gif",
+            "-*.css",
+            "-*.ico",
+            "-*.mp4",
+            "-*.mp3",
+            "-*.svg",
+            "-*.woff",
+            "-*.woff2",
+        ]
 
     await ctx.report_progress(0, 100, f"Starting HTTrack mirror of {target} (depth={depth})...")
 
@@ -186,7 +201,9 @@ async def httrack_mirror(
     total_size = _dir_size_mb(mirror_path)
     interesting = _find_interesting(mirror_path)
 
-    await audit.log_tool_call("httrack", target, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        "httrack", target, params, result="completed", duration_seconds=duration
+    )
     await ctx.report_progress(100, 100, "Mirror and analysis complete")
 
     return {

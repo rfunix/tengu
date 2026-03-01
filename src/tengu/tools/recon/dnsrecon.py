@@ -1,4 +1,5 @@
 """DNSRecon DNS enumeration tool wrapper."""
+
 from __future__ import annotations
 
 import json
@@ -90,7 +91,9 @@ async def dnsrecon_scan(
                 records.append({"raw": line})
 
     await ctx.report_progress(100, 100, "DNSRecon complete")
-    await audit.log_tool_call("dnsrecon", domain, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        "dnsrecon", domain, params, result="completed", duration_seconds=duration
+    )
 
     return {
         "tool": "dnsrecon",

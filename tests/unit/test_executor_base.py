@@ -132,9 +132,7 @@ class TestValidateTarget:
             with pytest.raises(TargetNotAllowedError):
                 ex._validate_target("blocked.com")
 
-    def test_not_in_allowlist_raises(
-        self, audit_log: Path, restrictive_allowlist: TargetAllowlist
-    ):
+    def test_not_in_allowlist_raises(self, audit_log: Path, restrictive_allowlist: TargetAllowlist):
         with (
             patch(
                 "tengu.executor.base.make_allowlist_from_config",

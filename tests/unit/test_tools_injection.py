@@ -34,7 +34,9 @@ def _mock_stealth(enabled: bool = False, proxy_url: str = ""):
     stealth = MagicMock()
     stealth.enabled = enabled
     stealth.proxy_url = proxy_url
-    stealth.inject_proxy_flags = MagicMock(side_effect=lambda tool, args: args + ["--proxy", proxy_url])
+    stealth.inject_proxy_flags = MagicMock(
+        side_effect=lambda tool, args: args + ["--proxy", proxy_url]
+    )
     return stealth
 
 
@@ -307,7 +309,10 @@ class TestSqlmapScan:
             patch("tengu.tools.injection.sqlmap.rate_limited", return_value=mock_rl_ctx),
             patch("tengu.tools.injection.sqlmap.make_allowlist_from_config") as mock_allowlist,
             patch("tengu.stealth.get_stealth_layer", return_value=_mock_stealth()),
-            patch("tengu.tools.injection.sqlmap.run_command", AsyncMock(return_value=(sqlmap_output, "", 0))),
+            patch(
+                "tengu.tools.injection.sqlmap.run_command",
+                AsyncMock(return_value=(sqlmap_output, "", 0)),
+            ),
         ):
             mock_allowlist.return_value.check.return_value = None
             result = await sqlmap_scan(mock_ctx, "https://example.com/?id=1")
@@ -331,7 +336,10 @@ class TestSqlmapScan:
             patch("tengu.tools.injection.sqlmap.rate_limited", return_value=mock_rl_ctx),
             patch("tengu.tools.injection.sqlmap.make_allowlist_from_config") as mock_allowlist,
             patch("tengu.stealth.get_stealth_layer", return_value=_mock_stealth()),
-            patch("tengu.tools.injection.sqlmap.run_command", AsyncMock(return_value=("No parameters found to test", "", 0))),
+            patch(
+                "tengu.tools.injection.sqlmap.run_command",
+                AsyncMock(return_value=("No parameters found to test", "", 0)),
+            ),
         ):
             mock_allowlist.return_value.check.return_value = None
             result = await sqlmap_scan(mock_ctx, "https://example.com/static")
@@ -383,6 +391,7 @@ class TestSqlmapScan:
 
         assert mock_audit.log_tool_call.call_count >= 1
 
+
 # ---------------------------------------------------------------------------
 # TestParseSqlmapOutput
 # ---------------------------------------------------------------------------
@@ -401,20 +410,14 @@ class TestParseSqlmapOutput:
         assert "id" in result["vulnerable_params"]
 
     def test_multiple_params_detected(self):
-        output = (
-            "parameter 'id' is vulnerable.\n"
-            "parameter 'username' is vulnerable.\n"
-        )
+        output = "parameter 'id' is vulnerable.\nparameter 'username' is vulnerable.\n"
         result = _parse_sqlmap_output(output)
         assert "id" in result["vulnerable_params"]
         assert "username" in result["vulnerable_params"]
         assert len(result["vulnerable_params"]) == 2
 
     def test_duplicate_params_not_repeated(self):
-        output = (
-            "parameter 'id' is vulnerable.\n"
-            "parameter 'id' is vulnerable.\n"
-        )
+        output = "parameter 'id' is vulnerable.\nparameter 'id' is vulnerable.\n"
         result = _parse_sqlmap_output(output)
         assert result["vulnerable_params"].count("id") == 1
 

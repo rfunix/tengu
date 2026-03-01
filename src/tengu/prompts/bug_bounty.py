@@ -1,4 +1,5 @@
 """Bug bounty optimized workflow prompts."""
+
 from __future__ import annotations
 
 

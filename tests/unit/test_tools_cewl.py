@@ -1,4 +1,5 @@
 """Unit tests for cewl_generate: parameter clamping, output file sanitization, word parsing."""
+
 from __future__ import annotations
 
 import asyncio
@@ -45,9 +46,18 @@ def ctx():
     return _make_ctx()
 
 
-async def _run_cewl_async(ctx, url="http://example.com", depth=2, min_word_length=6,
-                          include_emails=False, output_file="/tmp/cewl_wordlist.txt",
-                          stdout="", file_content=None, returncode=0, blocked=False):
+async def _run_cewl_async(
+    ctx,
+    url="http://example.com",
+    depth=2,
+    min_word_length=6,
+    include_emails=False,
+    output_file="/tmp/cewl_wordlist.txt",
+    stdout="",
+    file_content=None,
+    returncode=0,
+    blocked=False,
+):
     """Run cewl_generate under full mock."""
     from tengu.tools.bruteforce.cewl import cewl_generate
 
@@ -74,8 +84,14 @@ async def _run_cewl_async(ctx, url="http://example.com", depth=2, min_word_lengt
         else:
             mock_path_instance.read_text.side_effect = OSError("File not found")
 
-        return await cewl_generate(ctx, url, depth=depth, min_word_length=min_word_length,
-                                   include_emails=include_emails, output_file=output_file)
+        return await cewl_generate(
+            ctx,
+            url,
+            depth=depth,
+            min_word_length=min_word_length,
+            include_emails=include_emails,
+            output_file=output_file,
+        )
 
 
 def _run_cewl(ctx, **kwargs):
@@ -200,9 +216,15 @@ class TestCewlReturnStructure:
     def test_return_keys_present(self, ctx):
         result = _run_cewl(ctx)
         expected_keys = {
-            "tool", "url", "depth", "min_word_length",
-            "command", "duration_seconds", "words_generated",
-            "wordlist_path", "sample_words",
+            "tool",
+            "url",
+            "depth",
+            "min_word_length",
+            "command",
+            "duration_seconds",
+            "words_generated",
+            "wordlist_path",
+            "sample_words",
         }
         assert expected_keys.issubset(result.keys())
 

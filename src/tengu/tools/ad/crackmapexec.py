@@ -65,8 +65,12 @@ async def nxc_enum(
             "error": f"Unsupported protocol '{protocol}'. Supported: {', '.join(sorted(_SUPPORTED_PROTOCOLS))}",
         }
 
-    safe_username = sanitize_free_text(username, field="username", max_length=256) if username else ""
-    safe_password = sanitize_free_text(password, field="password", max_length=256) if password else ""
+    safe_username = (
+        sanitize_free_text(username, field="username", max_length=256) if username else ""
+    )
+    safe_password = (
+        sanitize_free_text(password, field="password", max_length=256) if password else ""
+    )
     safe_domain = sanitize_free_text(domain, field="domain", max_length=256) if domain else ""
 
     # Sanitize module names
@@ -120,7 +124,9 @@ async def nxc_enum(
     for module in safe_modules:
         args.extend(["-M", module])
 
-    await ctx.report_progress(0, 100, f"Starting {tool_name} {protocol.upper()} enumeration on {target}...")
+    await ctx.report_progress(
+        0, 100, f"Starting {tool_name} {protocol.upper()} enumeration on {target}..."
+    )
 
     async with rate_limited("nxc"):
         start = time.monotonic()
@@ -139,7 +145,9 @@ async def nxc_enum(
     parsed = _parse_nxc_output(stdout)
 
     await ctx.report_progress(100, 100, f"{tool_name} enumeration complete")
-    await audit.log_tool_call(tool_name, target, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        tool_name, target, params, result="completed", duration_seconds=duration
+    )
 
     return {
         "tool": tool_name,
@@ -204,12 +212,16 @@ def _parse_nxc_output(output: str) -> dict:  # type: ignore[type-arg]
                 hosts.append(ip)
 
         # Share enumeration
-        share_match = re.search(r"SHARE\s+(\S+)\s+(READ|WRITE|NO ACCESS|READ,WRITE)", line_stripped, re.IGNORECASE)
+        share_match = re.search(
+            r"SHARE\s+(\S+)\s+(READ|WRITE|NO ACCESS|READ,WRITE)", line_stripped, re.IGNORECASE
+        )
         if share_match:
-            shares.append({
-                "name": share_match.group(1),
-                "access": share_match.group(2),
-            })
+            shares.append(
+                {
+                    "name": share_match.group(1),
+                    "access": share_match.group(2),
+                }
+            )
 
         # User enumeration
         user_match = re.search(r"User:\s+(\S+)", line_stripped, re.IGNORECASE)

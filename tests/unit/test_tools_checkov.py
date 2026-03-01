@@ -1,4 +1,5 @@
 """Unit tests for checkov_scan: framework validation, ID sanitization, and JSON parsing."""
+
 from __future__ import annotations
 
 import asyncio
@@ -38,8 +39,9 @@ def ctx():
     return _make_ctx()
 
 
-async def _run_checkov_async(ctx, path="/tmp/iac", framework="all", check_ids="",
-                             skip_check_ids="", stdout="", returncode=0):
+async def _run_checkov_async(
+    ctx, path="/tmp/iac", framework="all", check_ids="", skip_check_ids="", stdout="", returncode=0
+):
     """Run checkov_scan under full mock."""
     from tengu.tools.iac.checkov import checkov_scan
 
@@ -56,8 +58,9 @@ async def _run_checkov_async(ctx, path="/tmp/iac", framework="all", check_ids=""
         patch(f"{_MOD}.resolve_tool_path", return_value="/usr/bin/checkov"),
         patch(f"{_MOD}.run_command", new=AsyncMock(return_value=(stdout, "", returncode))),
     ):
-        return await checkov_scan(ctx, path, framework=framework,
-                                  check_ids=check_ids, skip_check_ids=skip_check_ids)
+        return await checkov_scan(
+            ctx, path, framework=framework, check_ids=check_ids, skip_check_ids=skip_check_ids
+        )
 
 
 def _run_checkov(ctx, **kwargs):
@@ -158,8 +161,12 @@ class TestCheckovCheckIdSanitization:
 # ---------------------------------------------------------------------------
 
 
-def _make_check(check_id: str = "CKV_AWS_1", resource: str = "aws_s3_bucket.my_bucket",
-                file: str = "/main.tf", severity: str = "HIGH") -> dict:
+def _make_check(
+    check_id: str = "CKV_AWS_1",
+    resource: str = "aws_s3_bucket.my_bucket",
+    file: str = "/main.tf",
+    severity: str = "HIGH",
+) -> dict:
     return {
         "check_id": check_id,
         "check_type": "terraform",
@@ -242,8 +249,15 @@ class TestCheckovReturnStructure:
     def test_return_keys_present(self, ctx):
         result = _run_checkov(ctx)
         expected_keys = {
-            "tool", "path", "framework", "command",
-            "duration_seconds", "passed", "failed", "findings", "raw_output",
+            "tool",
+            "path",
+            "framework",
+            "command",
+            "duration_seconds",
+            "passed",
+            "failed",
+            "findings",
+            "raw_output",
         }
         assert expected_keys.issubset(result.keys())
 
@@ -258,6 +272,7 @@ class TestCheckovReturnStructure:
     def test_no_allowlist_check_performed(self, ctx):
         # checkov scans local paths only — no allowlist import in the module
         import tengu.tools.iac.checkov as mod
+
         assert not hasattr(mod, "make_allowlist_from_config")
         # Verify that a successful scan returns the tool name without needing allowlist
         result = _run_checkov(ctx)

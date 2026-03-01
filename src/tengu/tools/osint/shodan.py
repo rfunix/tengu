@@ -1,4 +1,5 @@
 """Shodan API integration for host lookup and search."""
+
 from __future__ import annotations
 
 import structlog
@@ -61,6 +62,7 @@ async def shodan_lookup(
 
     try:
         import httpx
+
         headers = {"Accept": "application/json"}
 
         async with httpx.AsyncClient(timeout=30) as client:
@@ -106,16 +108,18 @@ async def shodan_lookup(
                 matches = data.get("matches", [])
                 results = []
                 for m in matches[:limit]:
-                    results.append({
-                        "ip": m.get("ip_str"),
-                        "port": m.get("port"),
-                        "org": m.get("org"),
-                        "country": m.get("location", {}).get("country_name"),
-                        "hostnames": m.get("hostnames", []),
-                        "product": m.get("product"),
-                        "version": m.get("version"),
-                        "cpe": m.get("cpe", []),
-                    })
+                    results.append(
+                        {
+                            "ip": m.get("ip_str"),
+                            "port": m.get("port"),
+                            "org": m.get("org"),
+                            "country": m.get("location", {}).get("country_name"),
+                            "hostnames": m.get("hostnames", []),
+                            "product": m.get("product"),
+                            "version": m.get("version"),
+                            "cpe": m.get("cpe", []),
+                        }
+                    )
 
                 await ctx.report_progress(3, 3, "Shodan search complete")
                 await audit.log_tool_call("shodan", target, params, result="completed")

@@ -36,7 +36,9 @@ def _sanitize_docker_image(value: str) -> str:
         raise InvalidInputError("target", value, "docker image name too long")
     if not _DOCKER_IMAGE_PATTERN.match(value):
         raise InvalidInputError(
-            "target", value, "docker image name contains forbidden characters (allowed: alphanumeric :/_.-@)"
+            "target",
+            value,
+            "docker image name contains forbidden characters (allowed: alphanumeric :/_.-@)",
         )
     return value
 
@@ -88,6 +90,7 @@ async def trivy_scan(
         target = _sanitize_docker_image(target)
     elif scan_type == "repo":
         from tengu.security.sanitizer import sanitize_url
+
         target = sanitize_url(target)
     else:
         # fs, config, sbom — local path
@@ -99,8 +102,10 @@ async def trivy_scan(
     args: list[str] = [
         tool_path,
         scan_type,
-        "--format", "json",
-        "--severity", safe_severity,
+        "--format",
+        "json",
+        "--severity",
+        safe_severity,
         "--no-progress",
         target,
     ]
@@ -124,7 +129,9 @@ async def trivy_scan(
     parsed = _parse_trivy_output(stdout)
 
     await ctx.report_progress(100, 100, "Trivy scan complete")
-    await audit.log_tool_call("trivy", target, params, result="completed", duration_seconds=duration)
+    await audit.log_tool_call(
+        "trivy", target, params, result="completed", duration_seconds=duration
+    )
 
     return {
         "tool": "trivy",
@@ -163,7 +170,13 @@ def _parse_trivy_output(output: str) -> dict:  # type: ignore[type-arg]
     all_vulns: list[dict] = []  # type: ignore[type-arg]
     structured_results: list[dict] = []  # type: ignore[type-arg]
 
-    severity_counts: dict[str, int] = {"UNKNOWN": 0, "LOW": 0, "MEDIUM": 0, "HIGH": 0, "CRITICAL": 0}
+    severity_counts: dict[str, int] = {
+        "UNKNOWN": 0,
+        "LOW": 0,
+        "MEDIUM": 0,
+        "HIGH": 0,
+        "CRITICAL": 0,
+    }
 
     for scan_result in raw_results:
         if not isinstance(scan_result, dict):
@@ -221,7 +234,10 @@ def _parse_trivy_output(output: str) -> dict:  # type: ignore[type-arg]
     _sev_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "UNKNOWN": 4}
     all_vulns_sorted = sorted(
         all_vulns,
-        key=lambda v: (_sev_order.get(str(v.get("severity", "UNKNOWN")), 4), -(v.get("cvss_score") or 0)),
+        key=lambda v: (
+            _sev_order.get(str(v.get("severity", "UNKNOWN")), 4),
+            -(v.get("cvss_score") or 0),
+        ),
     )
 
     result["total"] = len(all_vulns)

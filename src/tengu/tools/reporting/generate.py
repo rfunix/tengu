@@ -99,9 +99,7 @@ def _build_risk_matrix(findings: list[Finding]) -> RiskMatrix:
     )
 
     if findings:
-        weighted = sum(
-            _SEVERITY_WEIGHTS.get(f.severity, 0) for f in findings
-        )
+        weighted = sum(_SEVERITY_WEIGHTS.get(f.severity, 0) for f in findings)
         matrix.risk_score = round(min(weighted / len(findings), 10.0), 1)
 
     return matrix
@@ -151,7 +149,7 @@ async def generate_report(
 
     # Parse findings
     parsed_findings: list[Finding] = []
-    for f in (findings or []):
+    for f in findings or []:
         try:
             normalized = _normalize_finding(f, len(parsed_findings) + 1)
             parsed_findings.append(Finding(**normalized))
@@ -302,6 +300,7 @@ def _markdown_to_html(markdown: str, title: str = "Pentest Report") -> str:
     except ImportError:
         # Basic HTML escaping fallback
         import html as html_module
+
         html_body = f"<pre>{html_module.escape(markdown)}</pre>"
 
     return f"""<!DOCTYPE html>

@@ -219,6 +219,7 @@ async def search_cves(
 
     if days_back:
         from datetime import datetime, timedelta
+
         end_date = datetime.now(tz=UTC)
         start_date = end_date - timedelta(days=days_back)
         params["pubStartDate"] = start_date.strftime("%Y-%m-%dT%H:%M:%S.000")
@@ -232,10 +233,7 @@ async def search_cves(
             response.raise_for_status()
             data = response.json()
 
-        records = [
-            _parse_nvd_cve(vuln)
-            for vuln in data.get("vulnerabilities", [])
-        ]
+        records = [_parse_nvd_cve(vuln) for vuln in data.get("vulnerabilities", [])]
 
         cache.set_search(query_key, {"records": [r.model_dump(mode="json") for r in records]})
         return records
@@ -269,14 +267,16 @@ def _parse_nvd_cve(vuln_data: dict) -> CVERecord:  # type: ignore[type-arg]
     ]:
         for metric in metrics.get(version_key, []):
             cvss_data = metric.get("cvssData", {})
-            cvss_list.append(CVSSMetrics(
-                version=version_str,
-                vector_string=cvss_data.get("vectorString", ""),
-                base_score=float(cvss_data.get("baseScore", 0.0)),
-                severity=cvss_data.get("baseSeverity", metric.get("baseSeverity", "UNKNOWN")),
-                exploitability_score=metric.get("exploitabilityScore"),
-                impact_score=metric.get("impactScore"),
-            ))
+            cvss_list.append(
+                CVSSMetrics(
+                    version=version_str,
+                    vector_string=cvss_data.get("vectorString", ""),
+                    base_score=float(cvss_data.get("baseScore", 0.0)),
+                    severity=cvss_data.get("baseSeverity", metric.get("baseSeverity", "UNKNOWN")),
+                    exploitability_score=metric.get("exploitabilityScore"),
+                    impact_score=metric.get("impactScore"),
+                )
+            )
 
     # CWE IDs
     cwe_ids: list[str] = []
@@ -288,11 +288,7 @@ def _parse_nvd_cve(vuln_data: dict) -> CVERecord:  # type: ignore[type-arg]
                     cwe_ids.append(value)
 
     # References
-    references = [
-        ref.get("url", "")
-        for ref in cve.get("references", [])
-        if ref.get("url")
-    ]
+    references = [ref.get("url", "") for ref in cve.get("references", []) if ref.get("url")]
 
     # Affected products (CPE)
     affected_products: list[str] = []
@@ -328,11 +324,7 @@ def _parse_cveorg(data: dict) -> CVERecord:  # type: ignore[type-arg]
         "No description available.",
     )
 
-    references = [
-        ref.get("url", "")
-        for ref in cna.get("references", [])
-        if ref.get("url")
-    ]
+    references = [ref.get("url", "") for ref in cna.get("references", []) if ref.get("url")]
 
     return CVERecord(
         id=cve_id,

@@ -75,7 +75,9 @@ class TestZapRequest:
     async def test_zap_request_http_error_raises_zap_error(self, mock_httpx_cls):
         mock_client = AsyncMock()
         mock_response = MagicMock()
-        mock_response.raise_for_status = MagicMock(side_effect=httpx.HTTPStatusError("500", request=MagicMock(), response=MagicMock()))
+        mock_response.raise_for_status = MagicMock(
+            side_effect=httpx.HTTPStatusError("500", request=MagicMock(), response=MagicMock())
+        )
         mock_client.get = AsyncMock(return_value=mock_response)
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
@@ -125,7 +127,9 @@ class TestZapSpider:
     @patch("tengu.tools.proxy.zap._zap_request", new_callable=AsyncMock)
     @patch("tengu.tools.proxy.zap.get_audit_logger")
     @patch("tengu.tools.proxy.zap.make_allowlist_from_config")
-    async def test_zap_spider_zap_connection_error(self, mock_allowlist_fn, mock_audit_fn, mock_zap_req, mock_ctx):
+    async def test_zap_spider_zap_connection_error(
+        self, mock_allowlist_fn, mock_audit_fn, mock_zap_req, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -142,7 +146,9 @@ class TestZapSpider:
     @patch("tengu.tools.proxy.zap._zap_request", new_callable=AsyncMock)
     @patch("tengu.tools.proxy.zap.get_audit_logger")
     @patch("tengu.tools.proxy.zap.make_allowlist_from_config")
-    async def test_zap_spider_no_wait(self, mock_allowlist_fn, mock_audit_fn, mock_zap_req, mock_ctx):
+    async def test_zap_spider_no_wait(
+        self, mock_allowlist_fn, mock_audit_fn, mock_zap_req, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -161,7 +167,9 @@ class TestZapSpider:
     @patch("tengu.tools.proxy.zap._zap_request", new_callable=AsyncMock)
     @patch("tengu.tools.proxy.zap.get_audit_logger")
     @patch("tengu.tools.proxy.zap.make_allowlist_from_config")
-    async def test_zap_spider_wait_completion(self, mock_allowlist_fn, mock_audit_fn, mock_zap_req, mock_sleep, mock_ctx):
+    async def test_zap_spider_wait_completion(
+        self, mock_allowlist_fn, mock_audit_fn, mock_zap_req, mock_sleep, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -172,8 +180,8 @@ class TestZapSpider:
 
         # sequence: start → status 100 → results
         mock_zap_req.side_effect = [
-            {"scan": "7"},            # start spider
-            {"status": "100"},        # poll status → complete
+            {"scan": "7"},  # start spider
+            {"status": "100"},  # poll status → complete
             {"results": ["https://example.com/admin", "https://example.com/login"]},  # results
         ]
 
@@ -186,7 +194,9 @@ class TestZapSpider:
     @patch("tengu.tools.proxy.zap._zap_request", new_callable=AsyncMock)
     @patch("tengu.tools.proxy.zap.get_audit_logger")
     @patch("tengu.tools.proxy.zap.make_allowlist_from_config")
-    async def test_zap_spider_timeout(self, mock_allowlist_fn, mock_audit_fn, mock_zap_req, mock_sleep, mock_time, mock_ctx):
+    async def test_zap_spider_timeout(
+        self, mock_allowlist_fn, mock_audit_fn, mock_zap_req, mock_sleep, mock_time, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -199,11 +209,13 @@ class TestZapSpider:
         mock_time.side_effect = [0, 9999, 9999, 9999]
 
         mock_zap_req.side_effect = [
-            {"scan": "3"},       # start
-            {"results": []},     # get results after timeout
+            {"scan": "3"},  # start
+            {"results": []},  # get results after timeout
         ]
 
-        result = await zap_spider(mock_ctx, "https://example.com", wait_for_completion=True, timeout=1)
+        result = await zap_spider(
+            mock_ctx, "https://example.com", wait_for_completion=True, timeout=1
+        )
         assert result["tool"] == "zap_spider"
 
 
@@ -230,7 +242,9 @@ class TestZapActiveScan:
     @patch("tengu.tools.proxy.zap._zap_request", new_callable=AsyncMock)
     @patch("tengu.tools.proxy.zap.get_audit_logger")
     @patch("tengu.tools.proxy.zap.make_allowlist_from_config")
-    async def test_zap_active_scan_connection_error(self, mock_allowlist_fn, mock_audit_fn, mock_zap_req, mock_ctx):
+    async def test_zap_active_scan_connection_error(
+        self, mock_allowlist_fn, mock_audit_fn, mock_zap_req, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -248,7 +262,9 @@ class TestZapActiveScan:
     @patch("tengu.tools.proxy.zap._zap_request", new_callable=AsyncMock)
     @patch("tengu.tools.proxy.zap.get_audit_logger")
     @patch("tengu.tools.proxy.zap.make_allowlist_from_config")
-    async def test_zap_active_scan_with_policy(self, mock_allowlist_fn, mock_audit_fn, mock_zap_req, mock_sleep, mock_ctx):
+    async def test_zap_active_scan_with_policy(
+        self, mock_allowlist_fn, mock_audit_fn, mock_zap_req, mock_sleep, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -272,7 +288,9 @@ class TestZapActiveScan:
     @patch("tengu.tools.proxy.zap._zap_request", new_callable=AsyncMock)
     @patch("tengu.tools.proxy.zap.get_audit_logger")
     @patch("tengu.tools.proxy.zap.make_allowlist_from_config")
-    async def test_zap_active_scan_completes(self, mock_allowlist_fn, mock_audit_fn, mock_zap_req, mock_sleep, mock_ctx):
+    async def test_zap_active_scan_completes(
+        self, mock_allowlist_fn, mock_audit_fn, mock_zap_req, mock_sleep, mock_ctx
+    ):
         mock_allowlist = MagicMock()
         mock_allowlist.check.return_value = None
         mock_allowlist_fn.return_value = mock_allowlist
@@ -301,10 +319,21 @@ class TestZapGetAlerts:
     async def test_zap_get_alerts_no_filters(self, mock_zap_req, mock_ctx):
         mock_zap_req.return_value = {
             "alerts": [
-                {"id": "1", "alert": "XSS", "risk": "High", "confidence": "High",
-                 "url": "https://example.com", "description": "XSS found",
-                 "solution": "Sanitize output", "reference": "", "cweid": "79",
-                 "wascid": "8", "evidence": "<script>", "param": "q", "attack": "<script>alert(1)</script>"},
+                {
+                    "id": "1",
+                    "alert": "XSS",
+                    "risk": "High",
+                    "confidence": "High",
+                    "url": "https://example.com",
+                    "description": "XSS found",
+                    "solution": "Sanitize output",
+                    "reference": "",
+                    "cweid": "79",
+                    "wascid": "8",
+                    "evidence": "<script>",
+                    "param": "q",
+                    "attack": "<script>alert(1)</script>",
+                },
             ]
         }
 
@@ -357,15 +386,51 @@ class TestZapGetAlerts:
     async def test_zap_get_alerts_risk_summary(self, mock_zap_req, mock_ctx):
         mock_zap_req.return_value = {
             "alerts": [
-                {"id": "1", "alert": "XSS", "risk": "High", "confidence": "High",
-                 "url": "", "description": "", "solution": "", "reference": "",
-                 "cweid": "", "wascid": "", "evidence": "", "param": "", "attack": ""},
-                {"id": "2", "alert": "SQLi", "risk": "High", "confidence": "High",
-                 "url": "", "description": "", "solution": "", "reference": "",
-                 "cweid": "", "wascid": "", "evidence": "", "param": "", "attack": ""},
-                {"id": "3", "alert": "Info", "risk": "Informational", "confidence": "Low",
-                 "url": "", "description": "", "solution": "", "reference": "",
-                 "cweid": "", "wascid": "", "evidence": "", "param": "", "attack": ""},
+                {
+                    "id": "1",
+                    "alert": "XSS",
+                    "risk": "High",
+                    "confidence": "High",
+                    "url": "",
+                    "description": "",
+                    "solution": "",
+                    "reference": "",
+                    "cweid": "",
+                    "wascid": "",
+                    "evidence": "",
+                    "param": "",
+                    "attack": "",
+                },
+                {
+                    "id": "2",
+                    "alert": "SQLi",
+                    "risk": "High",
+                    "confidence": "High",
+                    "url": "",
+                    "description": "",
+                    "solution": "",
+                    "reference": "",
+                    "cweid": "",
+                    "wascid": "",
+                    "evidence": "",
+                    "param": "",
+                    "attack": "",
+                },
+                {
+                    "id": "3",
+                    "alert": "Info",
+                    "risk": "Informational",
+                    "confidence": "Low",
+                    "url": "",
+                    "description": "",
+                    "solution": "",
+                    "reference": "",
+                    "cweid": "",
+                    "wascid": "",
+                    "evidence": "",
+                    "param": "",
+                    "attack": "",
+                },
             ]
         }
 

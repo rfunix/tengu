@@ -1,4 +1,5 @@
 """Active Directory assessment prompts."""
+
 from __future__ import annotations
 
 

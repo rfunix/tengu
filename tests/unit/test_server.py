@@ -399,7 +399,12 @@ class TestResourceToolsHandlers:
         from unittest.mock import AsyncMock, MagicMock, patch
 
         mock_result = MagicMock()
-        mock_result.model_dump.return_value = {"tools": [], "total": 0, "available": 0, "missing": 0}
+        mock_result.model_dump.return_value = {
+            "tools": [],
+            "total": 0,
+            "available": 0,
+            "missing": 0,
+        }
         with patch("tengu.server.check_all", new=AsyncMock(return_value=mock_result)) as mock_ca:
             await server.resource_tools_catalog()
         mock_ca.assert_called_once_with(verbose=False)
@@ -788,9 +793,11 @@ class TestMainFunctionBehavior:
         """main() calls mcp.run() exactly once."""
         from unittest.mock import patch
 
-        with patch.object(server.mcp, "run") as mock_run, \
-                patch("tengu.config.get_config") as mock_cfg, \
-                patch("sys.argv", ["tengu"]):
+        with (
+            patch.object(server.mcp, "run") as mock_run,
+            patch("tengu.config.get_config") as mock_cfg,
+            patch("sys.argv", ["tengu"]),
+        ):
             mock_cfg.return_value.server.log_level = "INFO"
             mock_cfg.return_value.targets.allowed_hosts = []
             mock_cfg.return_value.stealth.enabled = False
@@ -801,10 +808,12 @@ class TestMainFunctionBehavior:
         """main() reads log_level from server config."""
         from unittest.mock import patch
 
-        with patch.object(server.mcp, "run"), \
-                patch("tengu.config.get_config") as mock_cfg, \
-                patch("logging.basicConfig") as mock_logging, \
-                patch("sys.argv", ["tengu"]):
+        with (
+            patch.object(server.mcp, "run"),
+            patch("tengu.config.get_config") as mock_cfg,
+            patch("logging.basicConfig") as mock_logging,
+            patch("sys.argv", ["tengu"]),
+        ):
             mock_cfg.return_value.server.log_level = "DEBUG"
             mock_cfg.return_value.targets.allowed_hosts = []
             mock_cfg.return_value.stealth.enabled = False

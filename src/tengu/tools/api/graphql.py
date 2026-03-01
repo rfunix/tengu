@@ -23,10 +23,10 @@ _DEPTH_QUERY = """
 """
 
 # Query with a typo to trigger field suggestion leak
-_SUGGESTION_QUERY = '{ __typ }'
+_SUGGESTION_QUERY = "{ __typ }"
 
 # Introspection query
-_INTROSPECTION_QUERY = '{ __schema { types { name } } }'
+_INTROSPECTION_QUERY = "{ __schema { types { name } } }"
 
 # Batch query payload (list of two identical introspection queries)
 _BATCH_QUERIES = [
@@ -111,8 +111,9 @@ async def graphql_security_check(
     is_vulnerable = False
     recommendations: list[str] = []
 
-    async with httpx.AsyncClient(headers=headers, verify=True, follow_redirects=True, timeout=request_timeout) as client:
-
+    async with httpx.AsyncClient(
+        headers=headers, verify=True, follow_redirects=True, timeout=request_timeout
+    ) as client:
         # 1. Introspection check
         if check_introspection:
             await ctx.report_progress(10, 100, "Checking GraphQL introspection...")
@@ -179,17 +180,14 @@ async def _check_introspection(client: httpx.AsyncClient, url: str) -> dict:  # 
     try:
         resp = await client.post(url, json={"query": _INTROSPECTION_QUERY})
         data = resp.json()
-        types = (
-            data.get("data", {})
-            .get("__schema", {})
-            .get("types", [])
-        )
+        types = data.get("data", {}).get("__schema", {}).get("types", [])
         enabled = isinstance(types, list) and len(types) > 0
         return {
             "vulnerable": enabled,
             "status_code": resp.status_code,
-            "description": "Introspection is enabled — full schema is publicly accessible" if enabled
-                           else "Introspection is disabled",
+            "description": "Introspection is enabled — full schema is publicly accessible"
+            if enabled
+            else "Introspection is disabled",
             "severity": "high" if enabled else "info",
             "type_count": len(types) if enabled else 0,
         }
@@ -207,8 +205,9 @@ async def _check_batching(client: httpx.AsyncClient, url: str) -> dict:  # type:
         return {
             "vulnerable": batch_supported,
             "status_code": resp.status_code,
-            "description": "Query batching is enabled — may allow DoS amplification" if batch_supported
-                           else "Query batching does not appear to be enabled",
+            "description": "Query batching is enabled — may allow DoS amplification"
+            if batch_supported
+            else "Query batching does not appear to be enabled",
             "severity": "medium" if batch_supported else "info",
         }
     except Exception as exc:
@@ -232,8 +231,9 @@ async def _check_depth_limit(client: httpx.AsyncClient, url: str) -> dict:  # ty
         return {
             "vulnerable": vulnerable,
             "status_code": resp.status_code,
-            "description": "No query depth limit detected — deeply nested queries succeed" if vulnerable
-                           else "Query depth limit appears to be in place",
+            "description": "No query depth limit detected — deeply nested queries succeed"
+            if vulnerable
+            else "Query depth limit appears to be in place",
             "severity": "high" if vulnerable else "info",
             "depth_tested": 10,
         }
@@ -248,15 +248,19 @@ async def _check_field_suggestions(client: httpx.AsyncClient, url: str) -> dict:
         data = resp.json()
         errors = data.get("errors", [])
         has_suggestions = any(
-            "did you mean" in str(e).lower() or "suggestion" in str(e).lower()
-            for e in errors
+            "did you mean" in str(e).lower() or "suggestion" in str(e).lower() for e in errors
         )
         return {
             "vulnerable": has_suggestions,
             "status_code": resp.status_code,
-            "description": "Field suggestions enabled — error messages reveal valid field names" if has_suggestions
-                           else "No field suggestions detected in error messages",
+            "description": "Field suggestions enabled — error messages reveal valid field names"
+            if has_suggestions
+            else "No field suggestions detected in error messages",
             "severity": "low" if has_suggestions else "info",
         }
     except Exception as exc:
-        return {"vulnerable": False, "error": str(exc), "description": "Field suggestion check failed"}
+        return {
+            "vulnerable": False,
+            "error": str(exc),
+            "description": "Field suggestion check failed",
+        }
