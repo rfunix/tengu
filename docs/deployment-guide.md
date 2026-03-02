@@ -43,7 +43,7 @@ tools via `check_tools`. Install only what you need for your engagement type.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/tengu-project/tengu.git
+git clone https://github.com/rfunix/tengu.git
 cd tengu
 ```
 
@@ -331,7 +331,7 @@ uv --version
 ```bash
 sudo mkdir -p /opt/tengu
 sudo chown $USER:$USER /opt/tengu
-git clone https://github.com/tengu-project/tengu.git /opt/tengu
+git clone https://github.com/rfunix/tengu.git /opt/tengu
 cd /opt/tengu
 make setup          # installs Python dependencies
 make install-tools  # installs any missing pentesting tools

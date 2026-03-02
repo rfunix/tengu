@@ -20,8 +20,8 @@ pentesting tools to AI assistants through a clean, secure interface.
 | Entry point     | `src/tengu/server.py` → `FastMCP("Tengu")`        |
 | Config file     | `tengu.toml` at project root                      |
 | Test suite      | 1931+ tests, 0 lint errors |
-| Tools           | 57 MCP tools                                      |
-| Resources       | 19 MCP resources                                  |
+| Tools           | 63 MCP tools                                      |
+| Resources       | 20 MCP resources                                  |
 | Prompts         | 34 MCP prompts                                    |
 
 ---

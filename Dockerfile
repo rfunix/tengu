@@ -119,8 +119,8 @@ WORKDIR /app
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD curl -f http://localhost:8000/sse || exit 1
+HEALTHCHECK --interval=30s --timeout=15s --start-period=30s --retries=3 \
+    CMD /bin/sh -c "curl -s --max-time 5 -o /dev/null -w '%{http_code}' http://localhost:8000/sse | grep -q 200"
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["--transport", "sse", "--host", "0.0.0.0", "--port", "8000"]

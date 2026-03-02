@@ -32,7 +32,6 @@ services:
       - MSF_RPC_HOST=tengu-msf
       - MSF_RPC_PORT=55553
       - MSF_RPC_PASSWORD=${MSF_RPC_PASSWORD:-tengu}
-      - MSF_RPC_SSL=true
     restart: unless-stopped
     networks:
       tengu-net:
@@ -88,17 +87,6 @@ services:
       tengu-net:
         aliases:
           - dvwa
-
-  # ── Vulnerable FTP Server (profile: lab) ─────────────────────────────────────
-  vulnerable-ftp:
-    image: tengu-lab:vulnerable-ftp
-    profiles:
-      - lab
-    restart: unless-stopped
-    networks:
-      tengu-net:
-        aliases:
-          - vulnerable-ftp
 
   # ── Tengu Autonomous Agent (profile: agent) ──────────────────────────────────
   tengu-agent:

@@ -13,14 +13,14 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
   <a href="https://python.org"><img src="https://img.shields.io/badge/python-3.12+-blue.svg" alt="Python"></a>
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-compatible-green.svg" alt="MCP"></a>
-  <img src="https://img.shields.io/badge/tools-57-orange.svg" alt="Tools">
+  <img src="https://img.shields.io/badge/tools-63-orange.svg" alt="Tools">
   <img src="https://img.shields.io/badge/version-0.2.1-brightgreen.svg" alt="Version">
   <img src="https://img.shields.io/badge/agent-LangGraph-purple.svg" alt="Agent">
 </p>
 
 ---
 
-**Tengu** is an MCP server that turns Claude into a penetration testing copilot. It orchestrates 57 security tools — from Nmap to Metasploit — with built-in safety controls, audit logging, and professional reporting.
+**Tengu** is an MCP server that turns Claude into a penetration testing copilot. It orchestrates 63 security tools — from Nmap to Metasploit — with built-in safety controls, audit logging, and professional reporting.
 
 - **What is it?** An MCP server that connects Claude to industry-standard pentest tools
 - **Why use it?** Automates recon and scanning while keeping the human in control of exploits
@@ -28,12 +28,12 @@
 
 ### Key Features
 
-- **57 Tools** — Nmap, Metasploit, SQLMap, Nuclei, Hydra, Burp-compatible ZAP, and more
+- **63 Tools** — Nmap, Metasploit, SQLMap, Nuclei, Hydra, Burp-compatible ZAP, and more
 - **AI-Orchestrated** — Claude decides the next tool based on previous findings
 - **Safety First** — Allowlist, rate limiting, audit logs, and human-in-the-loop for destructive actions
 - **Auto Reports** — Correlate findings and generate professional pentest reports (MD/HTML/PDF)
 - **34 Workflows** — Pre-built prompts for full pentest, web app, AD, cloud, and more
-- **19 Resources** — Built-in OWASP Top 10, MITRE ATT&CK, PTES, and pentest checklists
+- **20 Resources** — Built-in OWASP Top 10, MITRE ATT&CK, PTES, and pentest checklists
 - **Stealth Layer** — Optional Tor/SOCKS5 proxy routing, UA rotation, and timing jitter
 
 ---
@@ -90,7 +90,7 @@ Choose the right size for your use case:
 |------|------|-----------|----------|
 | `minimal` | ~480MB | 17 | Lightweight analysis, CVE research, reporting |
 | `core` | ~7GB | 47 | Full pentest toolkit (default) |
-| `full` | ~8GB | 57 | Everything + AD, wireless, stealth/OPSEC |
+| `full` | ~8GB | 63 | Everything + AD, wireless, stealth/OPSEC |
 
 ```bash
 TENGU_TIER=minimal make docker-build   # lightweight
@@ -98,7 +98,7 @@ TENGU_TIER=core    make docker-build   # default
 TENGU_TIER=full    make docker-build   # everything
 ```
 
-> **All tiers include all 34 prompts and 19 resources** — only the binary tools differ.
+> **All tiers include all 34 prompts and 20 resources** — only the binary tools differ.
 
 <details>
 <summary>Manual Install (without Docker)</summary>
@@ -174,7 +174,7 @@ cp .env.example .env
 # Edit .env: set ANTHROPIC_API_KEY and TENGU_AGENT_TARGET
 ```
 
-**Lab targets (Juice Shop, DVWA, vulnerable-ftp):**
+**Lab targets (Juice Shop, DVWA):**
 
 ```bash
 make docker-lab
@@ -217,8 +217,8 @@ START → initializer → strategist ─┬─→ executor → analyst ─┬─
 
 ## Tool Catalog
 
-> `minimal` (17 tools, ~480MB) · `core` (47 tools, ~7GB, default) · `full` (57 tools, ~8GB)
-> Build with: `TENGU_TIER=<tier> make docker-build`. All tiers include all 34 prompts and 19 resources.
+> `minimal` (17 tools, ~480MB) · `core` (47 tools, ~7GB, default) · `full` (63 tools, ~8GB)
+> Build with: `TENGU_TIER=<tier> make docker-build`. All tiers include all 34 prompts and 20 resources.
 
 | Category | Tools | Count |
 |----------|-------|-------|
@@ -240,7 +240,7 @@ START → initializer → strategist ─┬─→ executor → analyst ─┬─
 | Utility | Tool checker, target validator | 2 |
 
 <details>
-<summary>Full tool list (57 tools)</summary>
+<summary>Full tool list (63 tools)</summary>
 
 ### Reconnaissance
 | Tool | Description |
