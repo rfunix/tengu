@@ -29,7 +29,7 @@ GitHub will keep the report private until a fix is ready.
 
 ### Option 2 — Email
 
-Send details to: **security@rfunix.dev**
+Send details to: **rafinha.unix@gmail.com**
 
 Include:
 - Description of the vulnerability
