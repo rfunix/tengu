@@ -35,6 +35,7 @@ from tengu.prompts.quick_actions import (
     go_stealth,
     hunt_subdomains,
     map_network,
+    msf_exploit_workflow,
     pwn_target,
 )
 
@@ -87,6 +88,7 @@ from tengu.tools.exploit.metasploit import (
     msf_module_info,
     msf_run_module,
     msf_search,
+    msf_session_cmd,
     msf_sessions_list,
 )
 from tengu.tools.exploit.searchsploit import searchsploit_query
@@ -225,6 +227,7 @@ mcp.tool()(msf_search)
 mcp.tool()(msf_module_info)
 mcp.tool()(msf_run_module)
 mcp.tool()(msf_sessions_list)
+mcp.tool()(msf_session_cmd)
 mcp.tool()(searchsploit_query)
 
 # Brute force tools (v0.1)
@@ -697,6 +700,7 @@ mcp.prompt()(map_network)
 mcp.prompt()(hunt_subdomains)
 mcp.prompt()(find_vulns)
 mcp.prompt()(pwn_target)
+mcp.prompt()(msf_exploit_workflow)
 
 
 # ── ENTRY POINT ────────────────────────────────────────────────────────────────
