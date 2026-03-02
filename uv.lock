@@ -2356,6 +2356,8 @@ dependencies = [
     { name = "dnspython" },
     { name = "fastmcp" },
     { name = "httpx" },
+    { name = "jinja2" },
+    { name = "markdown" },
     { name = "pydantic" },
     { name = "python-whois" },
     { name = "sslyze" },
@@ -2381,8 +2383,6 @@ metasploit = [
     { name = "pymetasploit3" },
 ]
 reporting = [
-    { name = "jinja2" },
-    { name = "markdown" },
     { name = "weasyprint" },
 ]
 
@@ -2393,9 +2393,9 @@ requires-dist = [
     { name = "dnspython", specifier = ">=2.6" },
     { name = "fastmcp", specifier = ">=2.0" },
     { name = "httpx", specifier = ">=0.27" },
-    { name = "jinja2", marker = "extra == 'reporting'", specifier = ">=3.1" },
+    { name = "jinja2", specifier = ">=3.1" },
     { name = "langgraph", marker = "extra == 'agent'", specifier = ">=1.0" },
-    { name = "markdown", marker = "extra == 'reporting'", specifier = ">=3.5" },
+    { name = "markdown", specifier = ">=3.5" },
     { name = "mcp", marker = "extra == 'agent'", specifier = ">=1.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10" },
     { name = "pydantic", specifier = ">=2.7" },
