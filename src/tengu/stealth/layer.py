@@ -77,6 +77,10 @@ class StealthLayer:
                 "--execute=use_proxy=on",
                 f"--execute=http_proxy={proxy}",
             ],
+            # v0.3 tools
+            "commix": ["--proxy", proxy],
+            "feroxbuster": ["--proxy", proxy],
+            "wafw00f": ["--proxy", proxy],
         }
 
         flags = injections.get(tool)

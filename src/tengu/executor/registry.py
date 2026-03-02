@@ -21,6 +21,10 @@ _TOOL_CATALOG: list[dict[str, str]] = [
     {"name": "dnsrecon", "category": "recon"},
     {"name": "subjack", "category": "recon"},
     {"name": "gowitness", "category": "recon"},
+    {"name": "katana", "category": "recon"},
+    {"name": "httpx", "category": "recon"},
+    {"name": "snmpwalk", "category": "recon"},
+    {"name": "rustscan", "category": "recon"},
     # Web scanning
     {"name": "nuclei", "category": "web"},
     {"name": "nikto", "category": "web"},
@@ -29,9 +33,13 @@ _TOOL_CATALOG: list[dict[str, str]] = [
     {"name": "gobuster", "category": "web"},
     {"name": "wpscan", "category": "web"},
     {"name": "testssl.sh", "category": "web"},
+    {"name": "wafw00f", "category": "web"},
+    {"name": "feroxbuster", "category": "web"},
     # Injection
     {"name": "sqlmap", "category": "injection"},
     {"name": "dalfox", "category": "injection"},
+    {"name": "commix", "category": "injection"},
+    {"name": "crlfuzz", "category": "injection"},
     # Exploitation
     {"name": "msfconsole", "category": "exploit"},
     {"name": "msfvenom", "category": "exploit"},
@@ -47,6 +55,7 @@ _TOOL_CATALOG: list[dict[str, str]] = [
     # OSINT
     {"name": "theHarvester", "category": "osint"},
     {"name": "whatweb", "category": "osint"},
+    {"name": "dnstwist", "category": "osint"},
     # Secrets
     {"name": "trufflehog", "category": "secrets"},
     {"name": "gitleaks", "category": "secrets"},
@@ -62,6 +71,13 @@ _TOOL_CATALOG: list[dict[str, str]] = [
     {"name": "enum4linux-ng", "category": "ad"},
     {"name": "nxc", "category": "ad"},
     {"name": "GetUserSPNs.py", "category": "ad"},
+    {"name": "impacket-secretsdump", "category": "ad"},
+    {"name": "impacket-psexec", "category": "ad"},
+    {"name": "impacket-wmiexec", "category": "ad"},
+    {"name": "impacket-smbclient", "category": "ad"},
+    {"name": "bloodhound-python", "category": "ad"},
+    {"name": "responder", "category": "ad"},
+    {"name": "smbmap", "category": "ad"},
     # Wireless
     {"name": "aircrack-ng", "category": "wireless"},
     {"name": "airodump-ng", "category": "wireless"},

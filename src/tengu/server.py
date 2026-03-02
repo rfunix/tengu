@@ -66,9 +66,18 @@ from tengu.resources.checklists import get_checklist
 from tengu.resources.owasp import get_category, get_category_checklist, get_top10_list
 from tengu.resources.prompts import get_prompts_by_category, get_prompts_list, list_categories
 from tengu.resources.ptes import get_phase, get_phases_overview
+from tengu.tools.ad.bloodhound import bloodhound_collect
 from tengu.tools.ad.crackmapexec import nxc_enum
 from tengu.tools.ad.enum4linux import enum4linux_scan
-from tengu.tools.ad.impacket import impacket_kerberoast
+from tengu.tools.ad.impacket import (
+    impacket_kerberoast,
+    impacket_psexec,
+    impacket_secretsdump,
+    impacket_smbclient,
+    impacket_wmiexec,
+)
+from tengu.tools.ad.responder import responder_capture
+from tengu.tools.ad.smbmap import smbmap_scan
 
 # Core tools (v0.1)
 from tengu.tools.analysis.correlate import correlate_findings, score_risk
@@ -82,6 +91,7 @@ from tengu.tools.api.graphql import graphql_security_check
 from tengu.tools.bruteforce.cewl import cewl_generate
 from tengu.tools.bruteforce.hash_tools import hash_crack, hash_identify
 from tengu.tools.bruteforce.hydra import hydra_attack
+from tengu.tools.cloud.prowler import prowler_scan
 from tengu.tools.cloud.scoutsuite import scoutsuite_scan
 from tengu.tools.container.trivy import trivy_scan
 from tengu.tools.exploit.metasploit import (
@@ -93,8 +103,11 @@ from tengu.tools.exploit.metasploit import (
 )
 from tengu.tools.exploit.searchsploit import searchsploit_query
 from tengu.tools.iac.checkov import checkov_scan
+from tengu.tools.injection.commix import commix_scan
+from tengu.tools.injection.crlfuzz import crlfuzz_scan
 from tengu.tools.injection.sqlmap import sqlmap_scan
 from tengu.tools.injection.xss import xss_scan
+from tengu.tools.osint.dnstwist import dnstwist_scan
 from tengu.tools.osint.shodan import shodan_lookup
 from tengu.tools.osint.theharvester import theharvester_scan
 from tengu.tools.osint.webtech import whatweb_scan
@@ -105,9 +118,13 @@ from tengu.tools.recon.amass import amass_enum
 from tengu.tools.recon.dns import dns_enumerate
 from tengu.tools.recon.dnsrecon import dnsrecon_scan
 from tengu.tools.recon.gowitness import gowitness_screenshot
+from tengu.tools.recon.httpx_probe import httpx_probe
 from tengu.tools.recon.httrack import httrack_mirror
+from tengu.tools.recon.katana import katana_crawl
 from tengu.tools.recon.masscan import masscan_scan
 from tengu.tools.recon.nmap import nmap_scan
+from tengu.tools.recon.rustscan import rustscan_scan
+from tengu.tools.recon.snmpwalk import snmpwalk_scan
 from tengu.tools.recon.subfinder import subfinder_enum
 from tengu.tools.recon.subjack import subjack_check
 from tengu.tools.recon.whois import whois_lookup
@@ -130,6 +147,9 @@ from tengu.tools.stealth.tor_check import tor_check
 from tengu.tools.stealth.tor_new_identity import tor_new_identity
 from tengu.tools.utility import check_tools, validate_target
 from tengu.tools.web.cors import test_cors
+
+# New tools v0.3 — Web
+from tengu.tools.web.feroxbuster import feroxbuster_scan
 from tengu.tools.web.ffuf import ffuf_fuzz
 from tengu.tools.web.gobuster import gobuster_scan
 from tengu.tools.web.headers import analyze_headers
@@ -137,6 +157,7 @@ from tengu.tools.web.nikto import nikto_scan
 from tengu.tools.web.nuclei import nuclei_scan
 from tengu.tools.web.ssl_tls import ssl_tls_check
 from tengu.tools.web.testssl import testssl_check
+from tengu.tools.web.wafw00f import wafw00f_scan
 
 # New tools v0.2 — Web Tier 2
 from tengu.tools.web.wpscan import wpscan_scan
@@ -200,6 +221,12 @@ mcp.tool()(subjack_check)
 mcp.tool()(gowitness_screenshot)
 mcp.tool()(httrack_mirror)
 
+# Recon tools (v0.3)
+mcp.tool()(katana_crawl)
+mcp.tool()(httpx_probe)
+mcp.tool()(snmpwalk_scan)
+mcp.tool()(rustscan_scan)
+
 # Web scanning tools (v0.1)
 mcp.tool()(nuclei_scan)
 mcp.tool()(nikto_scan)
@@ -213,14 +240,25 @@ mcp.tool()(gobuster_scan)
 mcp.tool()(wpscan_scan)
 mcp.tool()(testssl_check)
 
+# Web scanning tools (v0.3)
+mcp.tool()(wafw00f_scan)
+mcp.tool()(feroxbuster_scan)
+
 # OSINT tools (v0.2)
 mcp.tool()(theharvester_scan)
 mcp.tool()(shodan_lookup)
 mcp.tool()(whatweb_scan)
 
-# Injection tools
+# OSINT tools (v0.3)
+mcp.tool()(dnstwist_scan)
+
+# Injection tools (v0.1/v0.2)
 mcp.tool()(sqlmap_scan)
 mcp.tool()(xss_scan)
+
+# Injection tools (v0.3)
+mcp.tool()(commix_scan)
+mcp.tool()(crlfuzz_scan)
 
 # Exploitation tools
 mcp.tool()(msf_search)
@@ -262,6 +300,9 @@ mcp.tool()(trivy_scan)
 # Cloud tools (v0.2)
 mcp.tool()(scoutsuite_scan)
 
+# Cloud tools (v0.3)
+mcp.tool()(prowler_scan)
+
 # API tools (v0.2)
 mcp.tool()(arjun_discover)
 mcp.tool()(graphql_security_check)
@@ -270,6 +311,15 @@ mcp.tool()(graphql_security_check)
 mcp.tool()(enum4linux_scan)
 mcp.tool()(nxc_enum)
 mcp.tool()(impacket_kerberoast)
+
+# Active Directory tools (v0.3)
+mcp.tool()(impacket_secretsdump)
+mcp.tool()(impacket_psexec)
+mcp.tool()(impacket_wmiexec)
+mcp.tool()(impacket_smbclient)
+mcp.tool()(bloodhound_collect)
+mcp.tool()(responder_capture)
+mcp.tool()(smbmap_scan)
 
 # Wireless tools (v0.2)
 mcp.tool()(aircrack_scan)

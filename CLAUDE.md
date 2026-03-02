@@ -19,8 +19,8 @@ pentesting tools to AI assistants through a clean, secure interface.
 | Logging         | structlog (JSON, structured)                      |
 | Entry point     | `src/tengu/server.py` → `FastMCP("Tengu")`        |
 | Config file     | `tengu.toml` at project root                      |
-| Test suite      | 1931+ tests, 0 lint errors |
-| Tools           | 63 MCP tools                                      |
+| Test suite      | 2562+ tests, 0 lint errors |
+| Tools           | 83 MCP tools                                      |
 | Resources       | 20 MCP resources                                  |
 | Prompts         | 34 MCP prompts                                    |
 
