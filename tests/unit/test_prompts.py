@@ -19,6 +19,7 @@ from tengu.prompts.quick_actions import (
     go_stealth,
     hunt_subdomains,
     map_network,
+    msf_exploit_workflow,
     pwn_target,
 )
 from tengu.prompts.report_prompts import (
@@ -1168,6 +1169,52 @@ class TestPwnTarget:
 
 
 # ---------------------------------------------------------------------------
+# TestMsfExploitWorkflow
+# ---------------------------------------------------------------------------
+
+
+class TestMsfExploitWorkflow:
+    def test_returns_string(self):
+        assert_prompt_basics(msf_exploit_workflow("192.168.1.10"))
+
+    def test_target_interpolated(self):
+        result = msf_exploit_workflow("10.0.0.5")
+        assert "10.0.0.5" in result
+
+    def test_service_interpolated(self):
+        result = msf_exploit_workflow("192.168.1.1", service="smb")
+        assert "SMB" in result
+
+    def test_default_service_is_ftp(self):
+        result = msf_exploit_workflow("192.168.1.1")
+        assert "FTP" in result
+
+    def test_human_confirmation_required(self):
+        result = msf_exploit_workflow("192.168.1.1")
+        assert "HUMAN CONFIRMATION" in result
+
+    def test_bind_shell_explained(self):
+        result = msf_exploit_workflow("192.168.1.1")
+        assert "Bind" in result or "bind" in result
+
+    def test_cmd_unix_interact_mentioned(self):
+        result = msf_exploit_workflow("192.168.1.1")
+        assert "cmd/unix/interact" in result
+
+    def test_session_id_auto_return_mentioned(self):
+        result = msf_exploit_workflow("192.168.1.1")
+        assert "session_id" in result
+
+    def test_msf_run_module_referenced(self):
+        result = msf_exploit_workflow("192.168.1.1")
+        assert "msf_run_module" in result
+
+    def test_msf_session_cmd_referenced(self):
+        result = msf_exploit_workflow("192.168.1.1")
+        assert "msf_session_cmd" in result
+
+
+# ---------------------------------------------------------------------------
 # TestParametrizedEdgeCases — cross-cutting smoke + edge cases
 # ---------------------------------------------------------------------------
 
@@ -1238,6 +1285,9 @@ class TestParametrizedEdgeCases:
             lambda: hunt_subdomains("example.com"),
             lambda: find_vulns("192.168.1.1"),
             lambda: pwn_target("192.168.1.1", "CVE-2021-44228"),
+            lambda: msf_exploit_workflow("192.168.1.10"),
+            lambda: msf_exploit_workflow("192.168.1.10", service="smb"),
+            lambda: msf_exploit_workflow("192.168.1.10", service="ssh"),
         ],
     )
     def test_returns_nonempty_string(self, call):

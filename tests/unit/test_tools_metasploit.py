@@ -36,26 +36,25 @@ def _make_msf_client(modules=None, sessions=None) -> MagicMock:
 class TestGetMsfClientImportError:
     def test_import_error_raises_metasploit_connection_error(self):
         """ImportError for pymetasploit3 raises MetasploitConnectionError."""
-        import sys
+        # Avoid touching sys.modules (setting None entries triggers a beartype/Python 3.14
+        # circular import bug). Instead, intercept at the builtins.__import__ level.
+        import builtins
 
-        saved = {k: v for k, v in sys.modules.items() if "pymetasploit3" in k}
-        for key in list(sys.modules.keys()):
-            if "pymetasploit3" in key:
-                del sys.modules[key]
+        from tengu.tools.exploit import metasploit as msf_mod
 
-        with patch.dict("sys.modules", {"pymetasploit3": None, "pymetasploit3.msfrpc": None}):
-            # Force reload to pick up the patched modules dict
-            import importlib
+        original_import = builtins.__import__
 
-            from tengu.tools.exploit import metasploit as msf_mod
+        def fake_import(name: str, *args: object, **kwargs: object) -> object:
+            if "pymetasploit3" in name:
+                raise ImportError(f"No module named '{name}'")
+            return original_import(name, *args, **kwargs)
 
-            importlib.reload(msf_mod)
-            with pytest.raises(MetasploitConnectionError) as exc_info:
-                msf_mod._get_msf_client()
-            assert "pymetasploit3" in str(exc_info.value).lower() or "N/A" in str(exc_info.value)
-
-        # Restore
-        sys.modules.update(saved)
+        with (
+            patch("builtins.__import__", side_effect=fake_import),
+            pytest.raises(MetasploitConnectionError) as exc_info,
+        ):
+            msf_mod._get_msf_client()
+        assert "pymetasploit3" in str(exc_info.value).lower() or "N/A" in str(exc_info.value)
 
 
 # ---------------------------------------------------------------------------
@@ -229,7 +228,7 @@ class TestMsfRunModule:
 
         captured_options: dict = {}
 
-        def fake_run(path, opts, target):
+        def fake_run(path, opts, target_index, payload="", payload_options=None):
             captured_options.update(opts)
             return run_result
 
@@ -251,7 +250,7 @@ class TestMsfRunModule:
 
         captured_options: dict = {}
 
-        def fake_run(path, opts, target):
+        def fake_run(path, opts, target_index, payload="", payload_options=None):
             captured_options.update(opts)
             return run_result
 
@@ -270,7 +269,7 @@ class TestMsfRunModule:
 
         captured_options: dict = {}
 
-        def fake_run(path, opts, target):
+        def fake_run(path, opts, target_index, payload="", payload_options=None):
             captured_options.update(opts)
             return run_result
 
@@ -320,7 +319,7 @@ class TestMsfRunModule:
 
         captured_options: dict = {}
 
-        def fake_run(path, opts, target):
+        def fake_run(path, opts, target_index, payload="", payload_options=None):
             captured_options.update(opts)
             return run_result
 
@@ -542,18 +541,18 @@ class TestSearchModulesInternal:
 
 class TestGetModuleInfoInternal:
     def test_returns_module_info_dict(self):
-        mock_module = MagicMock()
-        mock_module.name = "EternalBlue"
-        mock_module.description = "SMB exploit"
-        mock_module.references = ["CVE-2017-0144"]
-        mock_module.options = {
-            "RHOSTS": {"required": True, "desc": "Target host", "default": "", "type": "string"}
-        }
-        mock_module.targets = {0: "Windows 7", 1: "Windows 10"}
-        mock_module.rank = "great"
-
+        # _get_module_info uses client.call("module.info", ...) — not client.modules.use
         mock_client = MagicMock()
-        mock_client.modules.use.return_value = mock_module
+        mock_client.call.return_value = {
+            "name": "EternalBlue",
+            "description": "SMB exploit",
+            "references": ["CVE-2017-0144"],
+            "options": {
+                "RHOSTS": {"required": True, "desc": "Target host", "default": "", "type": "string"}
+            },
+            "targets": {0: "Windows 7", 1: "Windows 10"},
+            "rank": "great",
+        }
 
         with patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client):
             from tengu.tools.exploit.metasploit import _get_module_info
@@ -566,19 +565,18 @@ class TestGetModuleInfoInternal:
         assert result["rank"] == "great"
 
     def test_options_parsed_with_required_flag(self):
-        mock_module = MagicMock()
-        mock_module.name = "Test"
-        mock_module.description = "test"
-        mock_module.references = []
-        mock_module.options = {
-            "RHOSTS": {"required": True, "desc": "Target", "default": "", "type": "string"},
-            "PORT": {"required": False, "desc": "Port", "default": "445", "type": "integer"},
-        }
-        mock_module.targets = {}
-        mock_module.rank = "normal"
-
         mock_client = MagicMock()
-        mock_client.modules.use.return_value = mock_module
+        mock_client.call.return_value = {
+            "name": "Test",
+            "description": "test",
+            "references": [],
+            "options": {
+                "RHOSTS": {"required": True, "desc": "Target", "default": "", "type": "string"},
+                "PORT": {"required": False, "desc": "Port", "default": "445", "type": "integer"},
+            },
+            "targets": {},
+            "rank": "normal",
+        }
 
         with patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client):
             from tengu.tools.exploit.metasploit import _get_module_info
@@ -590,7 +588,7 @@ class TestGetModuleInfoInternal:
 
     def test_exception_returns_error_dict(self):
         mock_client = MagicMock()
-        mock_client.modules.use.side_effect = Exception("Module not found")
+        mock_client.call.side_effect = Exception("Module not found")
 
         with patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client):
             from tengu.tools.exploit.metasploit import _get_module_info
@@ -600,16 +598,15 @@ class TestGetModuleInfoInternal:
         assert "error" in result
 
     def test_targets_parsed_as_list(self):
-        mock_module = MagicMock()
-        mock_module.name = "Test"
-        mock_module.description = "test"
-        mock_module.references = []
-        mock_module.options = {}
-        mock_module.targets = {0: "Windows 7", 1: "Windows 10", 2: "Windows Server 2016"}
-        mock_module.rank = "great"
-
         mock_client = MagicMock()
-        mock_client.modules.use.return_value = mock_module
+        mock_client.call.return_value = {
+            "name": "Test",
+            "description": "test",
+            "references": [],
+            "options": {},
+            "targets": {0: "Windows 7", 1: "Windows 10", 2: "Windows Server 2016"},
+            "rank": "great",
+        }
 
         with patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client):
             from tengu.tools.exploit.metasploit import _get_module_info
@@ -633,7 +630,10 @@ class TestRunModuleInternal:
         mock_client = MagicMock()
         mock_client.modules.use.return_value = mock_module
 
-        with patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client):
+        with (
+            patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client),
+            patch("tengu.tools.exploit.metasploit._poll_for_session", return_value=None),
+        ):
             from tengu.tools.exploit.metasploit import _run_module
 
             _run_module("exploit/windows/smb/ms17_010_eternalblue", {}, 0)
@@ -641,6 +641,7 @@ class TestRunModuleInternal:
         mock_module.execute.assert_called_once()
         call_kwargs = mock_module.execute.call_args
         assert "payload" in call_kwargs.kwargs
+        assert mock_module.target == 0
 
     def test_non_exploit_module_uses_execute_without_payload(self):
         mock_module = MagicMock()
@@ -665,7 +666,10 @@ class TestRunModuleInternal:
         mock_client = MagicMock()
         mock_client.modules.use.return_value = mock_module
 
-        with patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client):
+        with (
+            patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client),
+            patch("tengu.tools.exploit.metasploit._poll_for_session", return_value=None),
+        ):
             from tengu.tools.exploit.metasploit import _run_module
 
             result = _run_module("exploit/test", {}, 0)
@@ -696,13 +700,200 @@ class TestRunModuleInternal:
         mock_client = MagicMock()
         mock_client.modules.use.return_value = mock_module
 
-        with patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client):
+        with (
+            patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client),
+            patch("tengu.tools.exploit.metasploit._poll_for_session", return_value=None),
+        ):
             from tengu.tools.exploit.metasploit import _run_module
 
             _run_module("exploit/test", {"RHOSTS": "192.168.1.1", "LHOST": "10.0.0.1"}, 0)
 
         # Verify options were set on the module object
         mock_module.__setitem__.assert_called()
+
+
+# ---------------------------------------------------------------------------
+# TestMsfSessionCmd
+# ---------------------------------------------------------------------------
+
+
+class TestMsfSessionCmd:
+    @pytest.mark.asyncio
+    async def test_session_cmd_returns_output(self):
+        """Successful command returns tool, session_id, command, output."""
+        ctx = _make_ctx()
+        run_result = {"output": "uid=1(daemon)\n", "session_type": "shell"}
+
+        with patch("tengu.tools.exploit.metasploit._run_session_cmd", return_value=run_result):
+            from tengu.tools.exploit.metasploit import msf_session_cmd
+
+            result = await msf_session_cmd(ctx, "1", "id")
+
+        assert result["tool"] == "msf_session_cmd"
+        assert result["session_id"] == "1"
+        assert result["command"] == "id"
+        assert result["output"] == "uid=1(daemon)\n"
+        assert result["session_type"] == "shell"
+
+    @pytest.mark.asyncio
+    async def test_session_cmd_connection_error(self):
+        """MetasploitConnectionError returns error dict with tool=msf_session_cmd."""
+        ctx = _make_ctx()
+        err = MetasploitConnectionError("127.0.0.1:55553", "refused")
+
+        with patch("tengu.tools.exploit.metasploit._run_session_cmd", side_effect=err):
+            from tengu.tools.exploit.metasploit import msf_session_cmd
+
+            result = await msf_session_cmd(ctx, "1", "id")
+
+        assert result["tool"] == "msf_session_cmd"
+        assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_session_cmd_sanitizes_session_id(self):
+        """Non-digit characters are stripped from session_id."""
+        ctx = _make_ctx()
+        run_result = {"output": "root\n", "session_type": "shell"}
+
+        captured: dict = {}
+
+        def fake_run(session_id, command, timeout):
+            captured["session_id"] = session_id
+            return run_result
+
+        with patch("tengu.tools.exploit.metasploit._run_session_cmd", side_effect=fake_run):
+            from tengu.tools.exploit.metasploit import msf_session_cmd
+
+            await msf_session_cmd(ctx, "abc1def2", "whoami")
+
+        assert captured["session_id"] == "12"
+
+    @pytest.mark.asyncio
+    async def test_session_cmd_reports_progress(self):
+        """ctx.report_progress is called at least twice."""
+        ctx = _make_ctx()
+        run_result = {"output": "ok", "session_type": "shell"}
+
+        with patch("tengu.tools.exploit.metasploit._run_session_cmd", return_value=run_result):
+            from tengu.tools.exploit.metasploit import msf_session_cmd
+
+            await msf_session_cmd(ctx, "1", "id")
+
+        assert ctx.report_progress.await_count >= 2
+
+
+# ---------------------------------------------------------------------------
+# TestRunSessionCmdInternal
+# ---------------------------------------------------------------------------
+
+
+class TestRunSessionCmdInternal:
+    def test_shell_session_prompt_detection(self):
+        """Shell session exits loop immediately on prompt detection (# or $)."""
+        mock_session = MagicMock()
+        # First read returns content without a prompt; second returns the shell prompt
+        mock_session.read.side_effect = ["uid=0(root)\n", "# "]
+
+        mock_client = MagicMock()
+        mock_client.sessions.list = {"1": {"type": "shell"}}
+        mock_client.sessions.session.return_value = mock_session
+
+        # monotonic always returns 0.0 so elapsed never reaches timeout
+        with (
+            patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client),
+            patch("tengu.tools.exploit.metasploit.time.sleep"),
+            patch("tengu.tools.exploit.metasploit.time.monotonic", return_value=0.0),
+        ):
+            from tengu.tools.exploit.metasploit import _run_session_cmd
+
+            result = _run_session_cmd("1", "id", 30)
+
+        mock_session.write.assert_called_once_with("id")
+        assert mock_session.read.call_count == 2
+        assert "uid=0(root)" in result["output"]
+        assert result["session_type"] == "shell"
+
+    def test_shell_session_inactivity_timeout(self):
+        """Shell session exits when no new data arrives for _SESSION_READ_INACTIVITY_TIMEOUT."""
+        mock_session = MagicMock()
+        # Returns data once, then empty (simulates bind shell with no prompt)
+        mock_session.read.side_effect = ["partial output", ""]
+
+        mock_client = MagicMock()
+        mock_client.sessions.list = {"1": {"type": "shell"}}
+        mock_client.sessions.session.return_value = mock_session
+
+        # Provide monotonic values that trigger inactivity timeout on the 2nd read
+        # start_time=0.0, elapsed_check1=0.0, last_data_time=0.5, elapsed_check2=0.9, inactivity=2.9
+        monotonic_values = iter([0.0, 0.0, 0.5, 0.9, 2.9])
+
+        with (
+            patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client),
+            patch("tengu.tools.exploit.metasploit.time.sleep"),
+            patch(
+                "tengu.tools.exploit.metasploit.time.monotonic",
+                side_effect=monotonic_values,
+            ),
+        ):
+            from tengu.tools.exploit.metasploit import _run_session_cmd
+
+            result = _run_session_cmd("1", "id", 30)
+
+        assert "partial output" in result["output"]
+        assert result["session_type"] == "shell"
+
+    def test_meterpreter_session_run_with_output(self):
+        """Meterpreter session uses run_with_output and returns output."""
+        mock_session = MagicMock()
+        mock_session.run_with_output.return_value = "meterpreter output\n"
+
+        mock_client = MagicMock()
+        mock_client.sessions.list = {"2": {"type": "meterpreter"}}
+        mock_client.sessions.session.return_value = mock_session
+
+        with patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client):
+            from tengu.tools.exploit.metasploit import _run_session_cmd
+
+            result = _run_session_cmd("2", "sysinfo", 30)
+
+        mock_session.run_with_output.assert_called_once_with(
+            "sysinfo",
+            end_strs=None,
+            timeout=30,
+            timeout_exception=False,
+        )
+        assert result["output"] == "meterpreter output\n"
+        assert result["session_type"] == "meterpreter"
+
+    def test_session_not_found(self):
+        """Non-existent session ID returns error dict."""
+        mock_client = MagicMock()
+        mock_client.sessions.list = {}
+
+        with patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client):
+            from tengu.tools.exploit.metasploit import _run_session_cmd
+
+            result = _run_session_cmd("99", "id", 10)
+
+        assert "error" in result
+        assert "99" in result["error"]
+
+    def test_session_error_handling(self):
+        """Exception during read/write returns error dict."""
+        mock_session = MagicMock()
+        mock_session.write.side_effect = Exception("broken pipe")
+
+        mock_client = MagicMock()
+        mock_client.sessions.list = {"1": {"type": "shell"}}
+        mock_client.sessions.session.return_value = mock_session
+
+        with patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client):
+            from tengu.tools.exploit.metasploit import _run_session_cmd
+
+            result = _run_session_cmd("1", "id", 5)
+
+        assert "error" in result
+        assert "broken pipe" in result["error"]
 
 
 # ---------------------------------------------------------------------------
@@ -775,3 +966,138 @@ class TestListSessionsInternal:
         assert len(sessions) == 1
         for key in ("id", "type", "target_host", "tunnel_peer", "platform", "arch", "info"):
             assert key in sessions[0]
+
+
+# ---------------------------------------------------------------------------
+# TestPollForSession
+# ---------------------------------------------------------------------------
+
+
+class TestPollForSession:
+    def test_finds_session_by_uuid(self):
+        """Returns session_id when exploit_uuid matches a session in sessions.list."""
+        mock_client = MagicMock()
+        mock_client.sessions.list = {
+            "3": {"type": "shell", "exploit_uuid": "deadbeef-1234"},
+        }
+
+        # monotonic: start=0.0, first loop check=0.5 (within timeout)
+        monotonic_values = iter([0.0, 0.5])
+
+        with patch(
+            "tengu.tools.exploit.metasploit.time.monotonic", side_effect=monotonic_values
+        ):
+            from tengu.tools.exploit.metasploit import _poll_for_session
+
+            result = _poll_for_session(mock_client, "deadbeef-1234")
+
+        assert result == "3"
+
+    def test_returns_none_no_match(self):
+        """Returns None when no session matches exploit_uuid within timeout."""
+        mock_client = MagicMock()
+        mock_client.sessions.list = {
+            "1": {"type": "shell", "exploit_uuid": "different-uuid"},
+        }
+
+        # Advance time beyond _EXPLOIT_SESSION_POLL_TIMEOUT (10.0s) immediately
+        monotonic_values = iter([0.0, 11.0])
+
+        with (
+            patch(
+                "tengu.tools.exploit.metasploit.time.monotonic", side_effect=monotonic_values
+            ),
+            patch("tengu.tools.exploit.metasploit.time.sleep"),
+        ):
+            from tengu.tools.exploit.metasploit import _poll_for_session
+
+            result = _poll_for_session(mock_client, "target-uuid")
+
+        assert result is None
+
+    def test_handles_exception_gracefully(self):
+        """Returns None without raising when sessions.list raises an exception."""
+        mock_client = MagicMock()
+        mock_client.sessions.list = MagicMock(side_effect=Exception("RPC error"))
+
+        # Advance time beyond timeout so the loop exits after the first failed iteration
+        monotonic_values = iter([0.0, 11.0])
+
+        with (
+            patch(
+                "tengu.tools.exploit.metasploit.time.monotonic", side_effect=monotonic_values
+            ),
+            patch("tengu.tools.exploit.metasploit.time.sleep"),
+        ):
+            from tengu.tools.exploit.metasploit import _poll_for_session
+
+            result = _poll_for_session(mock_client, "any-uuid")
+
+        assert result is None
+
+
+# ---------------------------------------------------------------------------
+# TestRunModuleSessionPolling
+# ---------------------------------------------------------------------------
+
+
+class TestRunModuleSessionPolling:
+    def test_exploit_polls_for_session(self):
+        """_run_module calls _poll_for_session for exploit modules and includes session_id."""
+        mock_module = MagicMock()
+        mock_module.execute.return_value = {"job_id": 1, "uuid": "test-uuid-123"}
+
+        mock_client = MagicMock()
+        mock_client.modules.use.return_value = mock_module
+
+        with (
+            patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client),
+            patch(
+                "tengu.tools.exploit.metasploit._poll_for_session", return_value="5"
+            ) as mock_poll,
+        ):
+            from tengu.tools.exploit.metasploit import _run_module
+
+            result = _run_module("exploit/unix/ftp/vsftpd_234_backdoor", {}, 0)
+
+        mock_poll.assert_called_once_with(mock_client, "test-uuid-123")
+        assert result["session_id"] == "5"
+
+    def test_auxiliary_does_not_poll(self):
+        """_run_module does NOT call _poll_for_session for auxiliary modules."""
+        mock_module = MagicMock()
+        mock_module.execute.return_value = {"job_id": 2, "uuid": "aux-uuid"}
+
+        mock_client = MagicMock()
+        mock_client.modules.use.return_value = mock_module
+
+        with (
+            patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client),
+            patch(
+                "tengu.tools.exploit.metasploit._poll_for_session"
+            ) as mock_poll,
+        ):
+            from tengu.tools.exploit.metasploit import _run_module
+
+            _run_module("auxiliary/scanner/smb/smb_ms17_010", {}, 0)
+
+        mock_poll.assert_not_called()
+
+    def test_session_id_absent_when_poll_returns_none(self):
+        """session_id key is absent in result when _poll_for_session returns None."""
+        mock_module = MagicMock()
+        mock_module.execute.return_value = {"job_id": 3, "uuid": "no-session-uuid"}
+
+        mock_client = MagicMock()
+        mock_client.modules.use.return_value = mock_module
+
+        with (
+            patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client),
+            patch("tengu.tools.exploit.metasploit._poll_for_session", return_value=None),
+        ):
+            from tengu.tools.exploit.metasploit import _run_module
+
+            result = _run_module("exploit/test", {}, 0)
+
+        assert result["success"] is True
+        assert "session_id" not in result

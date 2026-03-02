@@ -207,10 +207,10 @@ class TestGetPromptsByCategory:
         assert result is not None
         assert len(result) == 7
 
-    def test_quick_has_eight_prompts(self) -> None:
+    def test_quick_has_nine_prompts(self) -> None:
         result = get_prompts_by_category("quick")
         assert result is not None
-        assert len(result) == 8
+        assert len(result) == 9
 
     def test_opsec_checklist_has_no_parameters(self) -> None:
         result = get_prompts_by_category("stealth")

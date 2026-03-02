@@ -141,6 +141,10 @@ class TestPromptsRegistered:
         """At least 20 prompts are registered (v0.2.1 has 34)."""
         assert len(_REGISTERED_PROMPT_NAMES) >= 20
 
+    def test_msf_exploit_workflow_prompt_registered(self):
+        """msf_exploit_workflow prompt is registered."""
+        assert "msf_exploit_workflow" in _REGISTERED_PROMPT_NAMES
+
 
 # ---------------------------------------------------------------------------
 # TestModuleImport

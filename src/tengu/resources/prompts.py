@@ -303,6 +303,15 @@ _PROMPTS: list[dict] = [
             {"name": "cve", "required": True, "default": None},
         ],
     },
+    {
+        "name": "msf_exploit_workflow",
+        "category": "quick",
+        "description": "Focused Metasploit exploitation workflow for a specific service.",
+        "parameters": [
+            {"name": "target", "required": True, "default": None},
+            {"name": "service", "required": False, "default": "ftp"},
+        ],
+    },
 ]
 
 _CATEGORIES: list[str] = ["workflow", "recon", "vuln-assessment", "reporting", "stealth", "quick"]

