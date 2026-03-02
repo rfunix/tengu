@@ -42,7 +42,7 @@ RUN mkdir -p /root/go/bin && \
 # README.md is required by hatchling (referenced in pyproject.toml)
 WORKDIR /app
 COPY pyproject.toml uv.lock README.md ./
-RUN uv sync --frozen --no-dev --extra agent
+RUN uv sync --frozen --no-dev --extra agent --extra metasploit
 
 # Copy application source (invalidates only on src/ changes, not on dep changes)
 COPY . /app

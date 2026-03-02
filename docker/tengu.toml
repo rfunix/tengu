@@ -28,7 +28,7 @@ hydra = ""
 john = ""
 hashcat = ""
 searchsploit = ""
-metasploit_rpc = "https://tengu-msf:55553"
+metasploit_rpc = "http://tengu-msf:55553"
 setoolkit = ""
 
 [tools.defaults]

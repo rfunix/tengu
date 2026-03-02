@@ -291,6 +291,7 @@ START → initializer → strategist ─┬─→ executor → analyst ─┬─
 | `msf_module_info` | Get detailed Metasploit module information |
 | `msf_run_module` | Execute a Metasploit module (requires explicit confirmation) |
 | `msf_sessions_list` | List active Metasploit sessions |
+| `msf_session_cmd` | Execute a command on an active session (shell/Meterpreter) |
 | `searchsploit_query` | Search Exploit-DB offline database |
 
 ### Brute Force

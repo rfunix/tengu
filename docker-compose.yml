@@ -46,12 +46,7 @@ services:
       - exploit
     environment:
       - MSF_RPC_PASSWORD=${MSF_RPC_PASSWORD:-tengu}
-    command: >
-      bash -c "
-        gem install metasploit-framework --no-document 2>/dev/null || true;
-        msfdb init &&
-        msfrpcd -P ${MSF_RPC_PASSWORD:-tengu} -S -f -a 0.0.0.0
-      "
+    command: bash -c "/usr/src/metasploit-framework/msfrpcd -P $$MSF_RPC_PASSWORD -S -f -a 0.0.0.0"
     restart: unless-stopped
     networks:
       tengu-net:
