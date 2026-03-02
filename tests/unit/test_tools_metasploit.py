@@ -984,9 +984,7 @@ class TestPollForSession:
         # monotonic: start=0.0, first loop check=0.5 (within timeout)
         monotonic_values = iter([0.0, 0.5])
 
-        with patch(
-            "tengu.tools.exploit.metasploit.time.monotonic", side_effect=monotonic_values
-        ):
+        with patch("tengu.tools.exploit.metasploit.time.monotonic", side_effect=monotonic_values):
             from tengu.tools.exploit.metasploit import _poll_for_session
 
             result = _poll_for_session(mock_client, "deadbeef-1234")
@@ -1004,9 +1002,7 @@ class TestPollForSession:
         monotonic_values = iter([0.0, 11.0])
 
         with (
-            patch(
-                "tengu.tools.exploit.metasploit.time.monotonic", side_effect=monotonic_values
-            ),
+            patch("tengu.tools.exploit.metasploit.time.monotonic", side_effect=monotonic_values),
             patch("tengu.tools.exploit.metasploit.time.sleep"),
         ):
             from tengu.tools.exploit.metasploit import _poll_for_session
@@ -1024,9 +1020,7 @@ class TestPollForSession:
         monotonic_values = iter([0.0, 11.0])
 
         with (
-            patch(
-                "tengu.tools.exploit.metasploit.time.monotonic", side_effect=monotonic_values
-            ),
+            patch("tengu.tools.exploit.metasploit.time.monotonic", side_effect=monotonic_values),
             patch("tengu.tools.exploit.metasploit.time.sleep"),
         ):
             from tengu.tools.exploit.metasploit import _poll_for_session
@@ -1073,9 +1067,7 @@ class TestRunModuleSessionPolling:
 
         with (
             patch("tengu.tools.exploit.metasploit._get_msf_client", return_value=mock_client),
-            patch(
-                "tengu.tools.exploit.metasploit._poll_for_session"
-            ) as mock_poll,
+            patch("tengu.tools.exploit.metasploit._poll_for_session") as mock_poll,
         ):
             from tengu.tools.exploit.metasploit import _run_module
 
