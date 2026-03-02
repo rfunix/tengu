@@ -37,7 +37,7 @@
 - **AI-Orchestrated** — Claude decides the next tool based on previous findings
 - **Safety First** — Allowlist, rate limiting, audit logs, and human-in-the-loop for destructive actions
 - **Auto Reports** — Correlate findings and generate professional pentest reports (MD/HTML/PDF)
-- **32 Workflows** — Pre-built prompts for full pentest, web app, AD, cloud, and more
+- **34 Workflows** — Pre-built prompts for full pentest, web app, AD, cloud, and more
 - **19 Resources** — Built-in OWASP Top 10, MITRE ATT&CK, PTES, and pentest checklists
 - **Stealth Layer** — Optional Tor/SOCKS5 proxy routing, UA rotation, and timing jitter
 
@@ -45,7 +45,7 @@
 
 ## Quick Start
 
-### Docker Quickstart (Recommended)
+### Docker (Recommended)
 
 The fastest way to get Tengu running — no manual tool installation required.
 
@@ -93,23 +93,14 @@ TENGU_ALLOWED_HOSTS="192.168.1.0/24,10.0.0.0/8" docker compose up -d
 ```
 
 > **All tiers include all 34 prompts and 19 resources** — only the binary tools differ.
-> See [Docker Image Tiers](#docker-image-tiers) for the full breakdown.
 
----
+<details>
+<summary>Manual Install (without Docker)</summary>
 
-### Manual Install & Run
-
-### Prerequisites
-
-- Python 3.12+
-- [`uv`](https://github.com/astral-sh/uv) package manager
-- Kali Linux (recommended) or any Linux with security tools
-
-### Install & Run
+**Prerequisites:** Python 3.12+, [`uv`](https://github.com/astral-sh/uv), Kali Linux (recommended)
 
 ```bash
-git clone https://github.com/rfunix/tengu.git
-cd tengu
+git clone https://github.com/rfunix/tengu.git && cd tengu
 
 # Install Python dependencies
 uv sync
@@ -121,278 +112,29 @@ make install-tools
 uv run tengu
 ```
 
-### Connect to Claude Code
+Connect Claude Code:
 
 ```bash
 claude mcp add --scope user tengu -- uv run --directory /path/to/tengu tengu
 ```
 
-Or add manually to `~/.claude/settings.json`:
-
-```json
-{
-  "mcpServers": {
-    "tengu": {
-      "command": "uv",
-      "args": ["run", "--directory", "/path/to/tengu", "tengu"]
-    }
-  }
-}
-```
-
-### Connect to Claude Desktop
-
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "tengu": {
-      "command": "uv",
-      "args": ["run", "--directory", "/path/to/tengu", "tengu"]
-    }
-  }
-}
-```
-
-### Remote / VM Setup (SSE Transport)
-
-Run Tengu on a remote machine (e.g. Kali Linux in a VM):
-
-```bash
-uv run tengu --transport sse --host 0.0.0.0 --port 8000
-```
-
-Then connect from your host:
-
-```json
-{
-  "mcpServers": {
-    "tengu": {
-      "url": "http://<kali-ip>:8000/sse"
-    }
-  }
-}
-```
-
-### Configure Targets
-
-Edit `tengu.toml` before running any scan — only listed targets will be accepted:
+Configure allowed targets in `tengu.toml`:
 
 ```toml
 [targets]
 allowed_hosts = ["192.168.1.0/24", "example.com"]
 ```
 
----
+For Claude Desktop, VM/SSE remote setup, and advanced configurations, see [docs/deployment-guide.md](docs/deployment-guide.md).
 
-## Docker Image Tiers
-
-> **Prompts (34) and Resources (19) are identical across all tiers** — only binary tools differ.
-
-### Tier Comparison
-
-| | `minimal` (~480MB) | `core` (~7GB) | `full` (~8GB) |
-|---|:---:|:---:|:---:|
-| **MCP Tools** | 17 | 47 | 57 |
-| Utility & validation | ✓ | ✓ | ✓ |
-| HTTP analysis (headers, CORS) | ✓ | ✓ | ✓ |
-| SSL/TLS (sslyze) | ✓ | ✓ | ✓ |
-| DNS enumeration (dnspython) | ✓ | ✓ | ✓ |
-| WHOIS (python-whois) | ✓ | ✓ | ✓ |
-| CVE lookup (NVD API) | ✓ | ✓ | ✓ |
-| GraphQL security checks | ✓ | ✓ | ✓ |
-| Hash identification | ✓ | ✓ | ✓ |
-| Finding correlation & risk scoring | ✓ | ✓ | ✓ |
-| Report generation | ✓ | ✓ | ✓ |
-| Shodan (API key required) | ✓ | ✓ | ✓ |
-| Metasploit (via RPC profile) | ✓ | ✓ | ✓ |
-| Anonymity & proxy checks | ✓ | ✓ | ✓ |
-| **Recon** (nmap, masscan, amass) | — | ✓ | ✓ |
-| **Recon Go** (subfinder, gowitness, subjack) | — | ✓ | ✓ |
-| **Web scanning** (nuclei, nikto, ffuf, gobuster) | — | ✓ | ✓ |
-| **Web scanning** (wpscan, testssl.sh) | — | ✓ | ✓ |
-| **OSINT** (theHarvester, whatweb) | — | ✓ | ✓ |
-| **Injection** (sqlmap, dalfox) | — | ✓ | ✓ |
-| **ExploitDB** (searchsploit) | — | ✓ | ✓ |
-| **Brute force** (hydra, john, hashcat, cewl) | — | ✓ | ✓ |
-| **Secrets** (gitleaks, trufflehog) | — | ✓ | ✓ |
-| **Container** (trivy) | — | ✓ | ✓ |
-| **Recon** (dnsrecon, httrack) | — | ✓ | ✓ |
-| **Active Directory** (enum4linux-ng, nxc, impacket) | — | — | ✓ |
-| **Wireless** (aircrack-ng) | — | — | ✓ |
-| **Stealth/OPSEC** (tor, torsocks, proxychains4) | — | — | ✓ |
-| **API** (arjun) | — | — | ✓ |
-
-### `minimal` — 17 MCP Tools
-
-Pure Python tools. No external binaries required.
-
-| Tool | MCP function | Requires |
-|------|-------------|---------|
-| Target validation | `validate_target` | — |
-| Tool inventory | `check_tools` | — |
-| HTTP headers analysis | `analyze_headers` | httpx |
-| CORS misconfiguration | `test_cors` | httpx |
-| SSL/TLS analysis | `ssl_tls_check` | sslyze |
-| DNS enumeration | `dns_enumerate` | dnspython |
-| WHOIS lookup | `whois_lookup` | python-whois |
-| Hash identification | `hash_identify` | — |
-| CVE lookup | `cve_lookup`, `cve_search` | NVD API |
-| GraphQL checks | `graphql_security_check` | httpx |
-| Finding correlation | `correlate_findings` | — |
-| Risk scoring | `score_risk` | — |
-| Report generation | `generate_report` | — |
-| Shodan | `shodan_lookup` | API key |
-| Anonymity check | `check_anonymity` | — |
-| Proxy validation | `proxy_check` | — |
-| Metasploit (4 tools) | `msf_search/module_info/run/sessions` | profile: exploit |
-
-### `core` — 47 MCP Tools (default)
-
-Adds all essential pentest binaries via apt + Go toolchain.
-
-**Reconnaissance (+10)**
-
-| Tool | Binary | MCP function |
-|------|--------|-------------|
-| Port scanner | nmap | `nmap_scan` |
-| Fast port scanner | masscan | `masscan_scan` |
-| Subdomain enum | subfinder | `subfinder_enum` |
-| Subdomain enum | amass | `amass_enum` |
-| DNS recon | dnsrecon | `dnsrecon_scan` |
-| Subdomain takeover | subjack | `subjack_check` |
-| Web screenshots | gowitness | `gowitness_screenshot` |
-| Site mirroring | httrack | `httrack_mirror` |
-
-**Web Scanning (+9)**
-
-| Tool | Binary | MCP function |
-|------|--------|-------------|
-| Vuln templates | nuclei | `nuclei_scan` |
-| Web server scanner | nikto | `nikto_scan` |
-| Directory fuzzer | ffuf | `ffuf_fuzz` |
-| Directory brute | gobuster | `gobuster_scan` |
-| WordPress scanner | wpscan | `wpscan_scan` |
-| TLS deep scan | testssl.sh | `testssl_check` |
-
-**OSINT (+2)**
-
-| Tool | Binary | MCP function |
-|------|--------|-------------|
-| Email/domain recon | theHarvester | `theharvester_scan` |
-| Tech fingerprint | whatweb | `whatweb_scan` |
-
-**Injection (+2)**
-
-| Tool | Binary | MCP function |
-|------|--------|-------------|
-| SQL injection | sqlmap | `sqlmap_scan` |
-| XSS scanner | dalfox | `xss_scan` |
-
-**Exploitation (+1)**
-
-| Tool | Binary | MCP function |
-|------|--------|-------------|
-| Exploit search | searchsploit | `searchsploit_query` |
-
-**Brute Force (+4)**
-
-| Tool | Binary | MCP function |
-|------|--------|-------------|
-| Credential attack | hydra | `hydra_attack` |
-| Hash cracker | john + hashcat | `hash_crack` |
-| Wordlist generator | cewl | `cewl_generate` |
-
-**Secrets (+2)**
-
-| Tool | Binary | MCP function |
-|------|--------|-------------|
-| Git secret scan | gitleaks | `gitleaks_scan` |
-| Secret scanner | trufflehog | `trufflehog_scan` |
-
-**Container (+1)**
-
-| Tool | Binary | MCP function |
-|------|--------|-------------|
-| Container vuln scan | trivy | `trivy_scan` |
-
-### `full` — 57 MCP Tools
-
-Adds Active Directory, wireless, stealth, and API testing on top of `core`.
-
-**Active Directory (+3)**
-
-| Tool | Binary | MCP function |
-|------|--------|-------------|
-| SMB/AD enum | enum4linux-ng | `enum4linux_scan` |
-| Network exec | nxc (NetExec) | `nxc_enum` |
-| Kerberoasting | impacket (GetUserSPNs.py) | `impacket_kerberoast` |
-
-**Wireless (+1)**
-
-| Tool | Binary | MCP function |
-|------|--------|-------------|
-| WiFi scanning | aircrack-ng / airodump-ng | `aircrack_scan` |
-
-**Stealth / OPSEC (+3)**
-
-| Tool | Binary | MCP function |
-|------|--------|-------------|
-| Tor circuit check | tor | `tor_check` |
-| Tor identity rotate | tor | `tor_new_identity` |
-| Full identity rotate | tor + torsocks | `rotate_identity` |
-
-Also includes: `proxychains4`, `torsocks`, `socat` — used transparently by the stealth layer.
-
-**API (+1)**
-
-| Tool | Binary | MCP function |
-|------|--------|-------------|
-| Hidden param discovery | arjun | `arjun_discover` |
-
----
-
-### Prompts — 34 (all tiers)
-
-Pre-built workflow templates that guide Claude through complete engagements.
-
-| Category | Prompts |
-|----------|---------|
-| **Pentest workflows** | `full_pentest`, `quick_recon`, `web_app_assessment` |
-| **Vulnerability assessment** | `assess_injection`, `assess_access_control`, `assess_crypto`, `assess_misconfig` |
-| **OSINT** | `osint_investigation` |
-| **Reports** | `executive_report`, `technical_report`, `full_pentest_report`, `finding_detail`, `risk_matrix`, `remediation_plan`, `retest_report` |
-| **Stealth/OPSEC** | `stealth_assessment`, `opsec_checklist` |
-| **Specialized** | `ad_assessment`, `api_security_assessment`, `container_assessment`, `cloud_assessment`, `wireless_assessment`, `bug_bounty_workflow`, `compliance_assessment` |
-| **Quick actions** | `explore_url`, `map_network`, `hunt_subdomains`, `find_vulns`, `find_secrets`, `go_stealth`, `crack_wifi`, `pwn_target` |
-
----
-
-### Resources — 19 (all tiers)
-
-Static reference data loaded by Claude during engagements.
-
-| URI | Content |
-|-----|---------|
-| `owasp://top10/2025` | OWASP Top 10:2025 full list |
-| `owasp://top10/2025/{A01..A10}` | Per-category details + testing checklist |
-| `owasp://api-security/top10` | OWASP API Security Top 10 (2023) |
-| `owasp://api-security/top10/{API1..API10}` | Per-category details |
-| `ptes://phases` | PTES 7-phase methodology overview |
-| `ptes://phase/{1..7}` | Phase details (objectives, tools, deliverables) |
-| `checklist://web-application` | Web app pentest checklist (OWASP Testing Guide) |
-| `checklist://api` | API pentest checklist |
-| `checklist://network` | Network infrastructure checklist |
-| `mitre://attack/tactics` | MITRE ATT&CK Enterprise tactics + techniques |
-| `mitre://attack/technique/{T1xxx}` | Technique detail by ID |
-| `creds://defaults/{product}` | Default credentials database |
-| `tools://catalog` | Live tool availability status |
-| `tools://{tool}/usage` | Usage guide for nmap, nuclei, sqlmap, metasploit, trivy, amass |
+</details>
 
 ---
 
 ## Tool Catalog
+
+> `minimal` (17 tools, ~480MB) · `core` (47 tools, ~7GB, default) · `full` (57 tools, ~8GB)
+> Build with: `TENGU_TIER=<tier> docker compose build`. All tiers include all 34 prompts and 19 resources.
 
 | Category | Tools | Count |
 |----------|-------|-------|
@@ -539,47 +281,42 @@ Static reference data loaded by Claude during engagements.
 
 ---
 
-## Pre-built Workflows (32 Prompts)
+## Workflows & Prompts (34)
 
-Tengu includes guided workflows that automatically chain multiple tools:
+Pre-built workflow templates that guide Claude through complete engagements.
 
-| Workflow | Description |
-|----------|-------------|
-| `full_pentest` | Complete engagement: recon → scanning → exploitation → reporting |
-| `quick_recon` | Fast passive reconnaissance and asset discovery |
-| `web_app_assessment` | OWASP Top 10 focused web application testing |
-| `api_security_assessment` | REST and GraphQL API security review |
-| `active_directory_audit` | AD enumeration, Kerberoasting, lateral movement paths |
-| `cloud_security_review` | AWS/Azure/GCP misconfiguration audit |
-| `container_assessment` | Docker image, IaC, and registry security review |
-| `osint_investigation` | Passive OSINT from public sources |
-| `stealth_assessment` | Anonymized testing via Tor + jitter |
-| `bug_bounty_workflow` | Optimized workflow for bug bounty programs |
-| `compliance_assessment` | Compliance-focused security review |
-| `wireless_assessment` | Wireless network security testing |
-| `find_secrets` | Detect leaked credentials in repos and code |
-| `hunt_subdomains` | Comprehensive subdomain discovery |
-| … and 12 more | Reporting, remediation, individual finding workflows |
+| Category | Prompts |
+|----------|---------|
+| **Pentest workflows** | `full_pentest`, `quick_recon`, `web_app_assessment` |
+| **Vulnerability assessment** | `assess_injection`, `assess_access_control`, `assess_crypto`, `assess_misconfig` |
+| **OSINT** | `osint_investigation` |
+| **Reports** | `executive_report`, `technical_report`, `full_pentest_report`, `finding_detail`, `risk_matrix`, `remediation_plan`, `retest_report` |
+| **Stealth/OPSEC** | `stealth_assessment`, `opsec_checklist` |
+| **Specialized** | `ad_assessment`, `api_security_assessment`, `container_assessment`, `cloud_assessment`, `wireless_assessment`, `bug_bounty_workflow`, `compliance_assessment` |
+| **Quick actions** | `explore_url`, `map_network`, `hunt_subdomains`, `find_vulns`, `find_secrets`, `go_stealth`, `crack_wifi`, `pwn_target` |
 
 ---
 
-## Knowledge Resources (19)
+## Built-in Resources (19)
 
-Built-in reference data available to Claude during testing:
+Static reference data loaded by Claude during engagements.
 
-| Resource | Description |
-|----------|-------------|
-| OWASP Top 10 (2021) | Full category descriptions and testing checklists |
-| OWASP API Top 10 | API-specific vulnerability reference |
-| MITRE ATT&CK | Adversary tactics, techniques, and procedures |
-| PTES Methodology | Penetration Testing Execution Standard phases |
-| Web App Checklist | Comprehensive web application test checklist |
-| API Checklist | REST/GraphQL security checklist |
-| Network Checklist | Network penetration testing checklist |
-| CWE Top 25 | Most dangerous software weaknesses |
-| Default Credentials | Common default credentials database |
-| Payloads | Common payloads for injection testing |
-| Stealth Techniques | OPSEC and evasion reference |
+| URI | Content |
+|-----|---------|
+| `owasp://top10/2025` | OWASP Top 10:2025 full list |
+| `owasp://top10/2025/{A01..A10}` | Per-category details + testing checklist |
+| `owasp://api-security/top10` | OWASP API Security Top 10 (2023) |
+| `owasp://api-security/top10/{API1..API10}` | Per-category details |
+| `ptes://phases` | PTES 7-phase methodology overview |
+| `ptes://phase/{1..7}` | Phase details (objectives, tools, deliverables) |
+| `checklist://web-application` | Web app pentest checklist (OWASP Testing Guide) |
+| `checklist://api` | API pentest checklist |
+| `checklist://network` | Network infrastructure checklist |
+| `mitre://attack/tactics` | MITRE ATT&CK Enterprise tactics + techniques |
+| `mitre://attack/technique/{T1xxx}` | Technique detail by ID |
+| `creds://defaults/{product}` | Default credentials database |
+| `tools://catalog` | Live tool availability status |
+| `tools://{tool}/usage` | Usage guide for nmap, nuclei, sqlmap, metasploit, trivy, amass |
 
 ---
 
@@ -623,11 +360,7 @@ Tengu is built as a **force multiplier for human pentesters**, not an autonomous
 
 ## Practice Lab
 
-Set up isolated vulnerable targets for safe, legal testing. The recommended topology is:
-
-- **Host machine** (Mac/Windows/Linux) — runs Docker with the vulnerable apps
-- **Kali Linux VM** — runs Tengu MCP server, has all pentesting tools installed
-- **Claude Code** — runs on the host, connects to Tengu via SSE over the LAN
+Set up isolated vulnerable targets for safe, legal testing.
 
 ```
 ┌─────────────────────┐         LAN          ┌──────────────────────┐
@@ -642,195 +375,32 @@ Set up isolated vulnerable targets for safe, legal testing. The recommended topo
          │ Claude Code (MCP client)
 ```
 
----
-
-### Step 1 — Get Kali Linux
-
-Download the **Kali Linux VM** image for your hypervisor:
-
-- **VirtualBox / VMware:** https://www.kali.org/get-kali/#kali-virtual-machines
-- **UTM (Apple Silicon):** https://www.kali.org/get-kali/#kali-arm
-
-Default credentials: `kali` / `kali`. Change the password on first login:
+**Start with Docker Compose** (simplest — runs Tengu + lab targets on one machine):
 
 ```bash
-passwd
+docker compose --profile lab up -d
 ```
 
-Update the system and install `git` and `uv`:
+**Or run lab targets individually on your host:**
 
 ```bash
-sudo apt update && sudo apt full-upgrade -y
-sudo apt install -y git curl
-
-# Install uv (Python package manager)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-source ~/.local/bin/env
+docker run -d -p 3000:3000 bkimminich/juice-shop      # OWASP Juice Shop
+docker run -d -p 80:80 vulnerables/web-dvwa            # DVWA
+docker run -d -p 5013:5013 dolevf/dvga                 # DVGA (GraphQL)
+docker run -d -p 2121:21 -p 2222:22 tleemcjr/metasploitable2
 ```
 
----
-
-### Step 2 — Install Tengu on Kali
-
-```bash
-git clone https://github.com/rfunix/tengu.git ~/tengu
-cd ~/tengu
-
-# Install Python dependencies
-uv sync
-
-# Install all external pentesting tools (Kali/Debian)
-make install-tools
-
-# Verify tools are available
-make doctor
-```
-
----
-
-### Step 3 — Configure Targets
-
-Edit `~/tengu/tengu.toml` to allow the IP range where your Docker containers will run.
-
-**If Docker runs on your host machine** (typical setup — find the host IP first):
-
-```bash
-# macOS
-ipconfig getifaddr en0      # e.g. 192.168.86.30
-
-# Linux / WSL
-ip -4 addr show | grep inet
-```
-
-Then set the subnet in `tengu.toml`:
-
-```toml
-[targets]
-allowed_hosts = ["192.168.86.0/24"]
-```
-
-**If Docker runs on the same Kali machine as Tengu:**
-
-```toml
-[targets]
-allowed_hosts = ["127.0.0.1", "localhost"]
-```
-
-> Since Tengu 0.2.1, hosts explicitly listed in `allowed_hosts` are removed from the
-> built-in blocklist, so loopback targets are permitted when intentionally whitelisted.
-
----
-
-### Step 4 — Start Tengu on Kali (SSE transport)
-
-Use `tmux` so the server keeps running after you close the SSH session:
-
-```bash
-# Create a persistent session
-tmux new -s tengu
-
-# Start the MCP server (SSE, accessible from the network)
-cd ~/tengu
-make run-sse
-# Equivalent: uv run tengu --transport sse --host 0.0.0.0
-# Server listens on: 0.0.0.0:8000
-```
-
-To reconnect to the session later: `tmux attach -t tengu`
-
-To restart the server without leaving tmux:
-```bash
-# From the host via SSH
-tmux send-keys -t tengu C-c ""
-tmux send-keys -t tengu "cd ~/tengu && make run-sse" Enter
-```
-
----
-
-### Step 5 — Start the Vulnerable Containers
-
-Run these on your **host machine** (where Docker is installed):
-
-```bash
-# OWASP Juice Shop — OWASP Top 10 web vulnerabilities
-docker run -d -p 3000:3000 bkimminich/juice-shop
-
-# DVWA — classic web vulnerabilities (SQLi, XSS, CSRF, File Upload...)
-docker run -d -p 80:80 vulnerables/web-dvwa
-
-# DVGA — deliberately vulnerable GraphQL API
-docker run -d -p 5013:5013 dolevf/dvga
-
-# Metasploitable 2 — vulnerable network services
-docker run -d -p 2121:21 -p 2222:22 -p 8180:8080 tleemcjr/metasploitable2
-
-# Verify containers are running
-docker ps
-```
-
----
-
-### Step 6 — Connect Claude Code to Tengu
-
-Add the Tengu server to Claude Code on your **host machine**.
-
-**Via CLI:**
-
-```bash
-claude mcp add --scope user tengu-kali --transport sse http://<kali-ip>:8000/sse
-```
-
-**Or manually** in `~/.claude/settings.json`:
-
-```json
-{
-  "mcpServers": {
-    "tengu": {
-      "url": "http://<kali-ip>:8000/sse"
-    }
-  }
-}
-```
-
-Replace `<kali-ip>` with the Kali VM's IP (find it with `ip a` on Kali).
-
-Verify the connection inside Claude Code:
-
-```
-/mcp
-```
-
----
-
-### Step 7 — Run the Pentest
-
-Open Claude Code and ask it to attack the containers. Tengu orchestrates all tools automatically:
+Then ask Claude:
 
 ```
 Do a full pentest on http://192.168.86.30:3000
 ```
 
-Claude will chain: `validate_target` → `whatweb` → `nmap` → `analyze_headers` →
-`nikto` → `nuclei` → `sqlmap` → `dalfox` → `graphql_security_check` →
-`correlate_findings` → `generate_report`
+Claude chains tools automatically: `validate_target` → `whatweb` → `nmap` → `nikto` →
+`nuclei` → `sqlmap` → `correlate_findings` → `generate_report`
 
-**Real findings from a Juice Shop black-box assessment:**
-
-| Severity | Finding | Endpoint |
-|----------|---------|----------|
-| Critical (9.8) | SQL Injection — boolean + time-blind, SQLite | `/rest/products/search?q=` |
-| High (7.4) | Reflected XSS | `/rest/products/search?q=` |
-| High (6.5) | Security headers absent — Grade F (25/100) | `/` |
-| Medium (5.3) | CORS wildcard `Access-Control-Allow-Origin: *` | `/` |
-| Medium (5.3) | `/ftp/` directory publicly accessible | `/ftp/` |
-| Medium (6.1) | jQuery 2.2.4 — CVE-2019-11358, CVE-2020-11022 | `/` |
-| Low (3.1) | `X-Recruiting` header — information disclosure | `/` |
-
-Generate the final report in Markdown or HTML:
-
-```
-Generate a full HTML pentest report for the Juice Shop assessment
-```
+For step-by-step Kali VM setup, SSE transport configuration, and remote client connection,
+see [docs/deployment-guide.md](docs/deployment-guide.md).
 
 ---
 
@@ -855,6 +425,8 @@ shodan_api_key = ""  # Required for shodan_lookup
 [tools.defaults]
 scan_timeout = 300   # seconds
 ```
+
+See [docs/configuration-reference.md](docs/configuration-reference.md) for the full reference.
 
 ---
 
