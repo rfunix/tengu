@@ -285,6 +285,33 @@ class TestShouldContinue:
         state = _make_state(iteration_count=49, max_iterations=50)
         assert should_continue(state) == "strategist"
 
+    def test_reports_when_all_phases_completed(self):
+        completed = dict.fromkeys(range(2, 8), True)
+        state = _make_state(phase_completed=completed, iteration_count=10, max_iterations=50)
+        assert should_continue(state) == "reporter"
+
+    def test_continues_when_one_phase_missing(self):
+        # Phase 7 not yet done
+        completed = dict.fromkeys(range(2, 7), True)
+        state = _make_state(phase_completed=completed, iteration_count=10, max_iterations=50)
+        assert should_continue(state) == "strategist"
+
+    def test_continues_when_phase_completed_empty(self):
+        state = _make_state(phase_completed={}, iteration_count=0, max_iterations=50)
+        assert should_continue(state) == "strategist"
+
+    def test_continues_when_some_phases_false(self):
+        completed = dict.fromkeys(range(2, 8), True)
+        completed[5] = False  # Phase 5 explicitly not done
+        state = _make_state(phase_completed=completed, iteration_count=10, max_iterations=50)
+        assert should_continue(state) == "strategist"
+
+    def test_all_phases_check_takes_precedence_over_iteration_count(self):
+        # All phases done AND at iteration limit — should still return reporter (correctly)
+        completed = dict.fromkeys(range(2, 8), True)
+        state = _make_state(phase_completed=completed, iteration_count=50, max_iterations=50)
+        assert should_continue(state) == "reporter"
+
 
 # ── TenguMCPClient.list_tools ─────────────────────────────────────────────────
 
@@ -478,3 +505,40 @@ class TestBuildGraph:
         graph = build_graph()
         compiled = graph.compile(checkpointer=MemorySaver())
         assert compiled is not None
+
+
+# ── recursion_limit in run_agent config ───────────────────────────────────────
+
+
+class TestRecursionLimit:
+    @pytest.mark.asyncio
+    async def test_recursion_limit_proportional_to_max_iterations(self):
+        """run_agent must set recursion_limit = max_iterations * 5 + 20 in the LangGraph config."""
+        import contextlib
+        from unittest.mock import patch
+
+        import autonomous_tengu
+
+        captured_configs: list[dict] = []
+
+        async def fake_ainvoke(state: dict, config: dict) -> dict:
+            captured_configs.append(config)
+            return {"is_complete": True, "error": None}
+
+        mock_compiled = MagicMock()
+        mock_compiled.ainvoke = fake_ainvoke
+
+        with patch.object(autonomous_tengu, "build_graph") as mock_build:
+            mock_build.return_value.compile.return_value = mock_compiled
+
+            with contextlib.suppress(Exception):
+                await autonomous_tengu.run_agent(
+                    target="192.168.1.1",
+                    scope=["192.168.1.1"],
+                    engagement_type="blackbox",
+                    max_iterations=30,
+                )
+
+        assert len(captured_configs) >= 1
+        cfg = captured_configs[0]
+        assert cfg.get("recursion_limit") == 30 * 5 + 20  # 170

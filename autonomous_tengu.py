@@ -329,8 +329,8 @@ engagement following the PTES (Penetration Testing Execution Standard) methodolo
 3. Do NOT repeat tool calls with identical parameters from recent history
 4. When Phase {phase_num} objectives are fully satisfied, select a tool for Phase {phase_num + 1} \
 (the analyst will advance the phase counter automatically)
-5. When ALL phases are complete AND a report has been generated, output text containing \
-"PENTEST_COMPLETE" with no tool call
+5. When ALL phases are complete, output text containing "PENTEST_COMPLETE" with no tool call. \
+The system will generate the final report automatically.
 6. Rate limit awareness: max 10 tool calls/min, 3 concurrent — pace your decisions
 
 ## Safety Notes
@@ -711,12 +711,15 @@ Respond with ONLY the JSON object. No explanation, no markdown fences."""
         updates["findings"] = data["findings"]
 
     # Advance PTES phase if current objectives are satisfied
-    if data.get("should_advance_phase") and state["current_phase"] < 7:
-        new_phase = state["current_phase"] + 1
-        completed = {**state.get("phase_completed", {}), state["current_phase"]: True}
-        print(f"[analyst] Phase {state['current_phase']} complete → Phase {new_phase}")
-        updates["current_phase"] = new_phase
+    if data.get("should_advance_phase"):
+        cp = state["current_phase"]
+        completed = {**state.get("phase_completed", {}), cp: True}
         updates["phase_completed"] = completed
+        if cp < 7:
+            updates["current_phase"] = cp + 1
+            print(f"[analyst] Phase {cp} complete → Phase {cp + 1}")
+        else:
+            print("[analyst] Phase 7 (Reporting) complete — all phases covered")
 
     return updates
 
@@ -814,6 +817,13 @@ def should_continue(state: PentestState) -> str:
         return "reporter"
     if state.get("is_complete"):
         return "reporter"
+
+    # All PTES phases covered — go to reporter without waiting for LLM signal
+    completed = state.get("phase_completed", {})
+    if all(completed.get(p) for p in range(2, 8)):
+        print("\n[agent] All PTES phases (2–7) completed — triggering final report")
+        return "reporter"
+
     if state.get("iteration_count", 0) >= state.get("max_iterations", 50):
         print(
             f"\n[agent] Maximum iterations ({state['max_iterations']}) reached "
@@ -887,7 +897,8 @@ async def run_agent(
 
     graph = build_graph().compile(checkpointer=MemorySaver())
     config: dict[str, Any] = {
-        "configurable": {"thread_id": f"pentest-{target}-{int(time.time())}"}
+        "configurable": {"thread_id": f"pentest-{target}-{int(time.time())}"},
+        "recursion_limit": max_iterations * 5 + 20,
     }
 
     result: Any = await graph.ainvoke(initial_state, config)
