@@ -3,7 +3,7 @@
 .PHONY: run run-sse run-dev inspect clean doctor
 .PHONY: docker-build docker-up docker-down docker-logs docker-shell
 .PHONY: docker-lab docker-full docker-pentest docker-agent docker-clean
-.PHONY: docker-rebuild docker-rebuild-tengu
+.PHONY: docker-rebuild docker-rebuild-tengu docker-reset
 
 # ============================================================
 # CONFIGURATION
@@ -138,3 +138,8 @@ docker-rebuild: ## Full no-cache rebuild (use after Dockerfile or dep changes)
 
 docker-rebuild-tengu: ## Rebuild only the tengu service (fast, after src/ changes)
 	docker compose build --no-cache tengu
+
+docker-reset: ## Destroy all containers/volumes/images and rebuild from scratch (TENGU_TIER=core|full|minimal)
+	docker compose down -v --rmi local
+	docker compose build --no-cache --build-arg TENGU_TIER=$(TENGU_TIER)
+	docker compose up -d

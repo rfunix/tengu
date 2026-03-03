@@ -93,7 +93,7 @@ RUN if [ "$TENGU_TIER" = "core" ]; then \
 # prowler: pip-only, installed below
 RUN if [ "$TENGU_TIER" = "full" ]; then \
         apt-get update && apt-get install -y --no-install-recommends \
-            python3 curl ca-certificates python3-pip \
+            python3 python3-pip curl ca-certificates \
             nmap masscan nikto sqlmap gobuster wpscan whatweb \
             hydra john hashcat \
             seclists testssl.sh dnsrecon theharvester cewl exploitdb httrack \
@@ -105,8 +105,7 @@ RUN if [ "$TENGU_TIER" = "full" ]; then \
             aircrack-ng \
             tor torsocks proxychains4 socat \
             arjun \
-        && pip3 install --break-system-packages bloodhound-python prowler 2>/dev/null || \
-           pip3 install bloodhound-python prowler \
+        && python3 -m pip install --break-system-packages bloodhound-python prowler \
         && rm -rf /var/lib/apt/lists/* /root/.cache/pip; \
     fi
 
