@@ -271,6 +271,31 @@ def _is_destructive(tool_name: str, tool_args: dict[str, Any]) -> bool:
     return False
 
 
+_RETRYABLE_STATUS_CODES = {429, 529}
+_API_MAX_RETRIES = 5
+_API_RETRY_BASE_DELAY = 5.0  # seconds
+
+
+async def _call_api_with_retry(
+    client: anthropic.Anthropic,
+    **kwargs: Any,
+) -> anthropic.types.Message:
+    """Call the Anthropic API, retrying on overloaded (529) or rate-limit (429) errors.
+
+    Uses exponential backoff: 5s, 10s, 20s, 40s, 80s.
+    """
+    for attempt in range(_API_MAX_RETRIES):
+        try:
+            return client.messages.create(**kwargs)
+        except anthropic.APIStatusError as exc:
+            if exc.status_code not in _RETRYABLE_STATUS_CODES or attempt == _API_MAX_RETRIES - 1:
+                raise
+            delay = _API_RETRY_BASE_DELAY * (2**attempt)
+            print(f"[api] HTTP {exc.status_code} — retrying in {delay:.0f}s (attempt {attempt + 1}/{_API_MAX_RETRIES})")
+            await asyncio.sleep(delay)
+    raise RuntimeError("unreachable")  # pragma: no cover
+
+
 def build_strategist_prompt(state: PentestState) -> str:
     """Build the system prompt for the strategist (LLM brain) node."""
     phase_data = _get_phase_data(state)
@@ -521,7 +546,8 @@ async def strategist(state: PentestState) -> dict[str, Any]:
     )
 
     try:
-        response = anthropic_client.messages.create(
+        response = await _call_api_with_retry(
+            anthropic_client,
             model=state.get("model", DEFAULT_MODEL),
             max_tokens=state.get("max_tokens", DEFAULT_MAX_TOKENS),
             system=system_prompt,
@@ -690,7 +716,8 @@ objectives are fully satisfied
 Respond with ONLY the JSON object. No explanation, no markdown fences."""
 
     try:
-        response = anthropic_client.messages.create(
+        response = await _call_api_with_retry(
+            anthropic_client,
             model=state.get("model", DEFAULT_MODEL),
             max_tokens=state.get("max_tokens", DEFAULT_MAX_TOKENS),
             messages=[{"role": "user", "content": analysis_prompt}],
