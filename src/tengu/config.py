@@ -71,6 +71,7 @@ class ToolDefaultsConfig(BaseModel):
     nuclei_severity: list[str] = ["medium", "high", "critical"]
     scan_timeout: int = 600
     wordlist_path: str = "/usr/share/seclists/Discovery/Web-Content/common.txt"
+    password_wordlist_path: str = "/usr/share/seclists/Passwords/Common-Credentials/xato-net-10-million-passwords-1000000.txt"
 
 
 class ToolsConfig(BaseModel):

@@ -36,6 +36,7 @@ nmap_timing = "T3"
 nuclei_severity = ["medium", "high", "critical"]
 scan_timeout = 600  # seconds
 wordlist_path = "/usr/share/seclists/Discovery/Web-Content/common.txt"
+password_wordlist_path = "/usr/share/seclists/Passwords/Common-Credentials/xato-net-10-million-passwords-1000000.txt"
 
 [rate_limiting]
 max_scans_per_minute = 10

@@ -36,8 +36,10 @@ _PORT_SPEC_PATTERN = re.compile(
     r"(,(\d{1,5}(-\d{1,5})?))*$"  # optional additional ports/ranges
 )
 
-# Hash pattern — hex characters only
-_HASH_PATTERN = re.compile(r"^[a-fA-F0-9$./]+$")
+# Hash pattern — hex characters plus structured john-format hash chars
+# Supports: plain hex, $keepass$*...*..., $2b$..., $apr1$..., etc.
+# Blocked: shell metacharacters (;|`<>\\'"& and whitespace)
+_HASH_PATTERN = re.compile(r"^[a-zA-Z0-9$*:./+\-_=@#!%^]+$")
 
 # CVE ID pattern
 _CVE_PATTERN = re.compile(r"^CVE-\d{4}-\d{4,}$", re.IGNORECASE)
@@ -193,14 +195,19 @@ def sanitize_wordlist_path(value: str) -> str:
 
 
 def sanitize_hash(value: str) -> str:
-    """Validate a hash value."""
+    """Validate a hash value.
+
+    Accepts plain hex hashes (MD5, SHA-1, SHA-256, etc.) and structured
+    john-format hashes ($keepass$*...*..., $2b$..., $apr1$..., etc.).
+    Rejects shell metacharacters to prevent injection.
+    """
     value = value.strip()
 
     if not value:
         raise InvalidInputError("hash", value, "hash value cannot be empty")
 
-    if len(value) > 512:
-        raise InvalidInputError("hash", value, "hash value too long")
+    if len(value) > 2048:
+        raise InvalidInputError("hash", value, "hash value too long (max 2048 chars)")
 
     if not _HASH_PATTERN.match(value):
         raise InvalidInputError("hash", value, "contains invalid characters for a hash")

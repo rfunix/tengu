@@ -25,6 +25,8 @@ async def xss_scan(
     parameter: str = "",
     cookie: str = "",
     header: str = "",
+    method: str = "GET",
+    data: str = "",
     timeout: int | None = None,
 ) -> dict:
     """Test for Cross-Site Scripting (XSS) vulnerabilities using Dalfox.
@@ -39,6 +41,10 @@ async def xss_scan(
         cookie: Session cookie for authenticated testing
                 (e.g. "session=abc123; csrf_token=xyz").
         header: Additional HTTP header (e.g. "Authorization: Bearer token").
+        method: HTTP method to use: GET or POST. Default: GET.
+        data: POST body data for testing POST endpoints
+              (e.g. "q=FUZZ&other=value" — use FUZZ as the injection placeholder,
+               or leave as plain value and dalfox will find injection points).
         timeout: Override scan timeout in seconds.
 
     Returns:
@@ -46,7 +52,7 @@ async def xss_scan(
     """
     cfg = get_config()
     audit = get_audit_logger()
-    params: dict[str, object] = {"url": url, "parameter": parameter}
+    params: dict[str, object] = {"url": url, "parameter": parameter, "method": method}
 
     url = sanitize_url(url)
 
@@ -91,6 +97,13 @@ async def xss_scan(
         safe_header = re.sub(r"[\r\n]", "", header)
         if safe_header:
             args.extend(["-H", safe_header])
+
+    if method.upper() == "POST" or data:
+        import re
+
+        safe_data = re.sub(r"[\r\n;&|`$<>()\{\}\\\"']", "", data) if data else ""
+        if safe_data:
+            args.extend(["--data", safe_data])
 
     await ctx.report_progress(0, 100, f"Starting XSS scan on {url}...")
 

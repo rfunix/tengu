@@ -130,7 +130,7 @@ async def hash_crack(
     cfg = get_config()
 
     hash_value = sanitize_hash(hash_value)
-    effective_wordlist = wordlist or cfg.tools.defaults.wordlist_path
+    effective_wordlist = wordlist or cfg.tools.defaults.password_wordlist_path
     effective_wordlist = sanitize_wordlist_path(effective_wordlist)
     effective_timeout = timeout or cfg.tools.defaults.scan_timeout
 
@@ -193,46 +193,77 @@ async def _crack_with_john(
 
     john_path = resolve_tool_path("john")
 
-    # Write hash to temp file
+    # Write hash to temp file and use a temp pot file (--pot=/dev/null loses results)
     with tempfile.NamedTemporaryFile(mode="w", suffix=".hash", delete=False) as f:
         f.write(hash_value + "\n")
         hash_file = f.name
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".pot", delete=False) as pf:
+        pot_file = pf.name
 
     try:
         args = [
             john_path,
             hash_file,
             "--wordlist=" + wordlist,
-            "--pot=/dev/null",  # Don't store in pot file
+            f"--pot={pot_file}",
         ]
 
+        safe_format = ""
         if hash_type:
-            safe_format = re.sub(r"[^a-zA-Z0-9\-]", "", hash_type)
-            if safe_format:
-                args.append(f"--format={safe_format}")
+            # Map common names to john format identifiers
+            _fmt_map = {
+                "md5": "raw-md5",
+                "sha1": "raw-sha1",
+                "sha-1": "raw-sha1",
+                "sha256": "raw-sha256",
+                "sha-256": "raw-sha256",
+                "sha512": "raw-sha512",
+                "sha-512": "raw-sha512",
+                "bcrypt": "bcrypt",
+                "ntlm": "nt",
+            }
+            raw = re.sub(r"[^a-zA-Z0-9\-]", "", hash_type).lower()
+            safe_format = _fmt_map.get(raw, raw)
+            args.append(f"--format={safe_format}")
 
         stdout, stderr, returncode = await run_command(args, timeout=timeout)
 
-        # Check if cracked
-        if "password hash" in stdout.lower() or "loaded 0" not in stdout:
-            # Run --show to get the cracked password
-            show_args = [john_path, "--show", hash_file]
-            show_stdout, _, _ = await run_command(show_args, timeout=10)
+        # Read pot file directly — more reliable than --show across john versions
+        # john pot format: $dynamic_N$hash:plaintext  OR  hash:plaintext
+        pot_content = Path(pot_file).read_text(errors="replace") if Path(pot_file).exists() else ""
+        for pot_line in pot_content.splitlines():
+            pot_line = pot_line.strip()
+            if not pot_line:
+                continue
+            # Strip dynamic prefix: $dynamic_N$hash:plain
+            clean = re.sub(r"^\$[^$]+\$", "", pot_line)
+            if ":" in clean:
+                parts = clean.split(":", 1)
+                if len(parts) == 2 and parts[1]:
+                    return {
+                        "tool": "john",
+                        "hash": hash_value,
+                        "cracked": True,
+                        "plaintext": parts[1],
+                    }
 
-            for line in show_stdout.splitlines():
-                if ":" in line and not line.startswith("#"):
-                    parts = line.split(":", 1)
-                    if len(parts) == 2 and parts[1].strip():
-                        return {
-                            "tool": "john",
-                            "hash": hash_value,
-                            "cracked": True,
-                            "plaintext": parts[1].strip(),
-                        }
+        # Fallback: also parse stdout for inline cracked output
+        for line in (stdout + "\n" + stderr).splitlines():
+            m = re.search(r"(\S+)\s*\(([^)]+)\)", line)
+            if m and hash_value.lower() in m.group(0).lower():
+                return {
+                    "tool": "john",
+                    "hash": hash_value,
+                    "cracked": True,
+                    "plaintext": m.group(1),
+                }
 
     finally:
         with contextlib.suppress(OSError):
             Path(hash_file).unlink()
+        with contextlib.suppress(OSError):
+            Path(pot_file).unlink()
 
     return {"tool": "john", "hash": hash_value, "cracked": False}
 
@@ -270,6 +301,8 @@ async def _crack_with_hashcat(
         "0",  # Straight/dictionary attack
         "--quiet",
         "--potfile-disable",
+        "--force",   # Required in Docker/VM environments without GPU
+        "-O",        # Optimized kernels (faster on CPU)
         hash_value,
         wordlist,
     ]
@@ -277,7 +310,7 @@ async def _crack_with_hashcat(
     stdout, stderr, returncode = await run_command(args, timeout=timeout)
 
     # Parse hashcat output — cracked hash appears as "hash:plaintext"
-    for line in stdout.splitlines():
+    for line in (stdout + stderr).splitlines():
         if ":" in line and hash_value.lower() in line.lower():
             parts = line.split(":", 1)
             if len(parts) == 2:

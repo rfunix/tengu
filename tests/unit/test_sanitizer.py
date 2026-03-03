@@ -145,7 +145,7 @@ class TestSanitizeHash:
 
     def test_too_long(self):
         with pytest.raises(InvalidInputError):
-            sanitize_hash("a" * 600)
+            sanitize_hash("a" * 2049)
 
 
 class TestSanitizeCVEId:

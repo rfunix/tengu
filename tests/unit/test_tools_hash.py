@@ -128,7 +128,7 @@ def mock_ctx():
 
 def _mock_config():
     cfg = MagicMock()
-    cfg.tools.defaults.wordlist_path = "/usr/share/wordlists/rockyou.txt"
+    cfg.tools.defaults.password_wordlist_path = "/usr/share/wordlists/rockyou.txt"
     cfg.tools.defaults.scan_timeout = 300
     return cfg
 
@@ -284,7 +284,7 @@ class TestHashCrack:
         from tengu.tools.bruteforce.hash_tools import hash_crack
 
         cfg = _mock_config()
-        cfg.tools.defaults.wordlist_path = "/default/rockyou.txt"
+        cfg.tools.defaults.password_wordlist_path = "/default/rockyou.txt"
         captured_args: dict = {}
 
         async def fake_john(hash_value, hash_type, wordlist, timeout):
@@ -319,11 +319,11 @@ class TestHashCrack:
 
 class TestCrackWithJohn:
     async def test_crack_with_john_parses_output(self):
-        """John output 'hash:password' → extracts password."""
+        """John cracks hash → pot file contains result → extracts password."""
         from tengu.tools.bruteforce.hash_tools import _crack_with_john
 
-        john_stdout_crack = ""  # No output from crack run
-        john_stdout_show = "d41d8cd98f00b204e9800998ecf8427e:password123\n1 password hash cracked\n"
+        # Simulate john writing the cracked result to the pot file
+        pot_content = "d41d8cd98f00b204e9800998ecf8427e:password123\n"
 
         with (
             patch(
@@ -331,13 +331,10 @@ class TestCrackWithJohn:
             ),
             patch(
                 "tengu.tools.bruteforce.hash_tools.run_command",
-                AsyncMock(
-                    side_effect=[
-                        (john_stdout_crack, "", 0),  # crack run
-                        (john_stdout_show, "", 0),  # --show run
-                    ]
-                ),
+                AsyncMock(return_value=("", "", 0)),
             ),
+            patch("pathlib.Path.read_text", return_value=pot_content),
+            patch("pathlib.Path.exists", return_value=True),
         ):
             result = await _crack_with_john(
                 "d41d8cd98f00b204e9800998ecf8427e", "md5", "/wordlist.txt", 60
