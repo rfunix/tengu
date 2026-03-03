@@ -97,4 +97,5 @@ exec uv run python /app/autonomous_tengu.py \
     --max-iterations "${MAX_ITER}" \
     --model "${MODEL}" \
     --max-tokens "${MAX_TOKENS}" \
-    --timeout "${TIMEOUT}"
+    --timeout "${TIMEOUT}" \
+    --yes

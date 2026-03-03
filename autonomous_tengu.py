@@ -1009,6 +1009,12 @@ async def main() -> None:
         metavar="MINUTES",
         help="Total execution timeout in minutes; 0 = unlimited (default: 60)",
     )
+    parser.add_argument(
+        "--yes",
+        "-y",
+        action="store_true",
+        help="Skip the interactive confirmation prompt (required for non-interactive/Docker runs)",
+    )
     args = parser.parse_args()
 
     # Validate required environment variable
@@ -1027,15 +1033,16 @@ async def main() -> None:
         args.timeout,
     )
 
-    try:
-        answer = input("Confirm pentest start? (y/n): ").strip().lower()
-    except (EOFError, KeyboardInterrupt):
-        print("\nAborted.")
-        sys.exit(0)
+    if not args.yes:
+        try:
+            answer = input("Confirm pentest start? (y/n): ").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print("\nAborted.")
+            sys.exit(0)
 
-    if answer not in ("y", "yes"):
-        print("Aborted.")
-        sys.exit(0)
+        if answer not in ("y", "yes"):
+            print("Aborted.")
+            sys.exit(0)
 
     print()
     client = get_mcp_client()
