@@ -2,7 +2,7 @@
 .PHONY: test test-unit test-security test-integration test-all coverage
 .PHONY: run run-sse run-dev inspect clean doctor
 .PHONY: docker-build docker-up docker-down docker-logs docker-shell
-.PHONY: docker-lab docker-full docker-pentest docker-agent docker-agent-haiku docker-agent-sonnet docker-clean
+.PHONY: docker-lab docker-full docker-pentest docker-agent docker-agent-haiku docker-agent-sonnet docker-agent-logs docker-clean
 .PHONY: docker-rebuild docker-rebuild-tengu docker-reset
 
 # ============================================================
@@ -135,6 +135,9 @@ docker-agent-haiku: ## Run autonomous agent with claude-haiku-4-5 (cheaper, fast
 docker-agent-sonnet: ## Run autonomous agent with claude-sonnet-4-6 (default, balanced)
 	TENGU_AGENT_MODEL=claude-sonnet-4-6 TENGU_AGENT_MAX_TOKENS=4096 \
 		docker compose --profile agent run --rm tengu-agent
+
+docker-agent-logs: ## Tail logs from the agent and tengu server (useful when agent runs in background)
+	docker compose logs -f tengu tengu-agent
 
 docker-clean: ## Remove Docker images and volumes
 	docker compose down -v --rmi local
