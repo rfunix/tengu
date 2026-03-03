@@ -47,6 +47,12 @@ services:
       - MSF_RPC_PASSWORD=${MSF_RPC_PASSWORD:-tengu}
     command: bash -c "/usr/src/metasploit-framework/msfrpcd -P $$MSF_RPC_PASSWORD -S -f -a 0.0.0.0"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/55553"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
     networks:
       tengu-net:
         aliases:
@@ -62,6 +68,12 @@ services:
       -config api.addrs.addr.name=.*
       -config api.addrs.addr.regex=true
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
     networks:
       tengu-net:
         aliases:
@@ -98,6 +110,9 @@ services:
     image: tengu:${TENGU_TIER:-core}
     profiles:
       - agent
+    depends_on:
+      tengu:
+        condition: service_healthy
     entrypoint: ["/entrypoint-agent.sh"]
     volumes:
       - tengu-output:/app/output

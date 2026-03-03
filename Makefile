@@ -137,7 +137,7 @@ docker-rebuild: ## Full no-cache rebuild (use after Dockerfile or dep changes)
 	docker compose build --no-cache --build-arg TENGU_TIER=$(TENGU_TIER)
 
 docker-rebuild-tengu: ## Rebuild only the tengu service (fast, after src/ changes)
-	docker compose build --no-cache tengu
+	docker compose build --no-cache --build-arg TENGU_TIER=$(TENGU_TIER) tengu
 
 docker-reset: ## Destroy all containers/volumes/images and rebuild from scratch (TENGU_TIER=core|full|minimal)
 	docker compose down -v --rmi local

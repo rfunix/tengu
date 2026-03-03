@@ -16,7 +16,9 @@ build
 logs/
 .env
 *.env
-docs/demo.gif
-docs/tengu-demo-opt.gif
-docs/tengu-demo.mp4
+docs/
+tests/
+*.cast
+*.md
+!README.md
 .claude

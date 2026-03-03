@@ -30,19 +30,19 @@ ENV PATH="${GOPATH}/bin:/usr/local/go/bin:${PATH}"
 
 RUN mkdir -p /root/go/bin && \
     if [ "$TENGU_TIER" = "core" ] || [ "$TENGU_TIER" = "full" ]; then \
-        go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest && \
-        go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest && \
-        go install github.com/ffuf/ffuf/v2@latest && \
-        go install github.com/hahwul/dalfox/v2@latest && \
-        go install github.com/sensepost/gowitness@latest && \
-        go install github.com/haccer/subjack@latest && \
-        go install github.com/projectdiscovery/katana/cmd/katana@latest && \
-        go install github.com/projectdiscovery/httpx/cmd/httpx@latest && \
-        go install github.com/projectdiscovery/dnsx/cmd/dnsx@latest && \
-        go install github.com/lc/crlfuzz@latest; \
-    fi && \
-    if [ "$TENGU_TIER" = "full" ]; then \
-        go install github.com/evilsocket/sovereign@latest 2>/dev/null || true; \
+        for pkg in \
+            "github.com/projectdiscovery/nuclei/v3/cmd/nuclei@v3.3.7" \
+            "github.com/projectdiscovery/subfinder/v2/cmd/subfinder@v2.6.7" \
+            "github.com/ffuf/ffuf/v2@v2.1.0" \
+            "github.com/hahwul/dalfox/v2@v2.9.2" \
+            "github.com/sensepost/gowitness@latest" \
+            "github.com/projectdiscovery/katana/cmd/katana@v1.1.0" \
+            "github.com/projectdiscovery/httpx/cmd/httpx@v1.6.9" \
+            "github.com/projectdiscovery/dnsx/cmd/dnsx@v1.2.1" \
+            "github.com/lc/crlfuzz@v1.4.1"; \
+        do \
+            go install "$pkg" || echo "WARNING: failed to install $pkg, skipping"; \
+        done; \
     fi
 
 # Cache Python dependencies separately from source code
@@ -150,8 +150,8 @@ WORKDIR /app
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=15s --start-period=30s --retries=3 \
-    CMD /bin/sh -c "curl -s --max-time 5 -o /dev/null -w '%{http_code}' http://localhost:8000/sse | grep -q 200"
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -sf http://localhost:8000/health || exit 1
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["--transport", "sse", "--host", "0.0.0.0", "--port", "8000"]

@@ -11,6 +11,8 @@ import sys
 
 import structlog
 from fastmcp import FastMCP
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 # ── Tool imports ────────────────────────────────────────────────────────────
 from tengu.executor.registry import check_all
@@ -199,6 +201,15 @@ mcp = FastMCP(
         "Stealth mode: enable [stealth] in tengu.toml to route traffic through Tor/proxychains."
     ),
 )
+
+
+# ── HEALTH CHECK ───────────────────────────────────────────────────────────────
+
+
+@mcp.custom_route("/health", methods=["GET"], include_in_schema=False)
+async def health_check(request: Request) -> JSONResponse:
+    """Lightweight health check endpoint for Docker and load balancers."""
+    return JSONResponse({"status": "ok"})
 
 
 # ── TOOLS ──────────────────────────────────────────────────────────────────────
