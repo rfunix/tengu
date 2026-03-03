@@ -35,7 +35,14 @@ RUN mkdir -p /root/go/bin && \
         go install github.com/ffuf/ffuf/v2@latest && \
         go install github.com/hahwul/dalfox/v2@latest && \
         go install github.com/sensepost/gowitness@latest && \
-        go install github.com/haccer/subjack@latest; \
+        go install github.com/haccer/subjack@latest && \
+        go install github.com/projectdiscovery/katana/cmd/katana@latest && \
+        go install github.com/projectdiscovery/httpx/cmd/httpx@latest && \
+        go install github.com/projectdiscovery/dnsx/cmd/dnsx@latest && \
+        go install github.com/lc/crlfuzz@latest; \
+    fi && \
+    if [ "$TENGU_TIER" = "full" ]; then \
+        go install github.com/evilsocket/sovereign@latest 2>/dev/null || true; \
     fi
 
 # Cache Python dependencies separately from source code
@@ -74,6 +81,7 @@ RUN if [ "$TENGU_TIER" = "core" ]; then \
             seclists testssl.sh dnsrecon theharvester cewl exploitdb httrack \
             gitleaks trivy chromium \
             amass \
+            wafw00f feroxbuster snmp dnstwist rustscan \
         && rm -rf /var/lib/apt/lists/*; \
     fi
 
@@ -86,10 +94,12 @@ RUN if [ "$TENGU_TIER" = "full" ]; then \
             seclists testssl.sh dnsrecon theharvester cewl exploitdb httrack \
             gitleaks trivy chromium \
             amass \
+            wafw00f feroxbuster snmp dnstwist rustscan \
             enum4linux-ng netexec impacket-scripts \
+            commix smbmap responder bloodhound \
             aircrack-ng \
             tor torsocks proxychains4 socat \
-            arjun \
+            arjun prowler \
         && rm -rf /var/lib/apt/lists/*; \
     fi
 
