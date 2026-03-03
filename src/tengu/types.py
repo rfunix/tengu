@@ -139,6 +139,7 @@ class Finding(BaseModel):
         if isinstance(v, str) and v.lower() == "informational":
             return "info"
         return v
+
     cvss_score: float = 0.0
     cvss_vector: str = ""
     cwe_id: int | None = None
