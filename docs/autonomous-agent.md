@@ -156,6 +156,83 @@ Calls three Tengu tools in sequence:
 
 ---
 
+## Sequence Diagram
+
+The diagram below shows the temporal interaction between participants across the
+three stages of a full engagement run.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant User
+    participant Main
+    participant Graph
+    participant Claude
+    participant Tengu
+
+    %% ── Stage 1: Initialisation ──────────────────────────────────────────────
+    Note over User,Tengu: Stage 1 — Initialisation
+
+    User->>Main: autonomous_tengu.py <target> [flags]
+    Main->>User: Display target, scope, model, confirm? [y/N]
+    User->>Main: y
+    Main->>Graph: run_agent(target, config)
+    Graph->>Tengu: Spawn MCP server (stdio transport)
+    Tengu-->>Graph: MCP session ready
+
+    loop Load PTES phases 1–7
+        Graph->>Tengu: ptes://phase/{N}
+        Tengu-->>Graph: phase objectives + recommended tools
+    end
+
+    Graph->>Tengu: check_tools()
+    Tengu-->>Graph: installed tools list
+    Graph->>Tengu: validate_target(target)
+    Tengu-->>Graph: target confirmed in allowlist
+
+    %% ── Stage 2: Main reasoning loop ─────────────────────────────────────────
+    Note over User,Tengu: Stage 2 — Main Reasoning Loop
+
+    loop Until PENTEST_COMPLETE or max_iterations reached
+        Graph->>Claude: system prompt (phase objectives, history, discoveries)<br/>+ tool definitions
+        Claude-->>Graph: tool_use { tool_name, arguments }
+
+        alt Normal tool (non-destructive)
+            Graph->>Tengu: call tool_name(arguments)
+            Tengu-->>Graph: tool result (JSON)
+            Graph->>Claude: raw tool result
+            Claude-->>Graph: extracted findings, phase complete?
+            Note right of Graph: analyst updates state;<br/>phase advances if complete
+        else Destructive tool (msf_run_module, hydra_attack, etc.)
+            Graph->>User: ⚠ Approval required<br/>tool: tool_name<br/>args: arguments
+            User->>Graph: approve / reject
+
+            alt Approved
+                Graph->>Tengu: call tool_name(arguments)
+                Tengu-->>Graph: tool result (JSON)
+                Graph->>Claude: raw tool result
+                Claude-->>Graph: extracted findings
+            else Rejected
+                Note right of Graph: tool marked as skipped;<br/>strategist picks next action
+            end
+        end
+    end
+
+    %% ── Stage 3: Reporting ───────────────────────────────────────────────────
+    Note over User,Tengu: Stage 3 — Reporting
+
+    Graph->>Tengu: correlate_findings(all_findings)
+    Tengu-->>Graph: attack chains + compound risks
+    Graph->>Tengu: score_risk(findings)
+    Tengu-->>Graph: overall CVSS risk score
+    Graph->>Tengu: generate_report(engagement_data)
+    Tengu-->>Graph: report saved to output/
+    Graph-->>Main: engagement complete
+    Main-->>User: Report path + summary
+```
+
+---
+
 ## Shared State
 
 All nodes read from and write to a single `PentestState` TypedDict. LangGraph
