@@ -50,8 +50,13 @@ async def hash_identify(
     Uses pattern matching to determine the likely hash type(s) based on
     length, character set, and structural patterns.
 
+    IMPORTANT: The hash parameter is named 'hash_value', not 'hash'.
+    Always call this tool as: hash_identify(hash_value="...", ...)
+
     Args:
         hash_value: The hash string to identify.
+                    MUST be named 'hash_value' (not 'hash').
+                    Example: "0192023a7bbd73250516f069df18b500"
 
     Returns:
         List of possible hash types with confidence scores and hashcat mode numbers.
@@ -110,8 +115,13 @@ async def hash_crack(
     Uses John the Ripper or Hashcat to perform a wordlist-based attack
     against the provided hash value.
 
+    IMPORTANT: The hash parameter is named 'hash_value', not 'hash'.
+    Always call this tool as: hash_crack(hash_value="...", ...)
+
     Args:
         hash_value: The hash to crack.
+                    MUST be named 'hash_value' (not 'hash').
+                    Example: "0192023a7bbd73250516f069df18b500"
         hash_type: Hash format hint for the cracker (e.g. "md5", "sha1", "bcrypt").
                    Leave empty for auto-detection.
         wordlist: Path to wordlist file. Defaults to configured default.

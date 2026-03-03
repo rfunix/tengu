@@ -51,8 +51,13 @@ async def sqlmap_scan(
     This tool requires explicit authorization — SQL injection testing
     can cause database errors and potential data exposure.
 
+    IMPORTANT: The target URL parameter is named 'url', not 'target'.
+    Always call this tool as: sqlmap_scan(url="http://...", ...)
+
     Args:
-        url: Target URL to test (e.g. "https://example.com/search?q=test").
+        url: Full target URL including query string to test.
+             MUST be named 'url' (not 'target').
+             Example: "http://example.com/search?q=test"
         method: HTTP method: GET or POST.
         data: POST data string (e.g. "username=admin&password=test").
         parameter: Specific parameter to test (e.g. "q" or "username").
