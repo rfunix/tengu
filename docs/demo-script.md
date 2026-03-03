@@ -11,13 +11,13 @@
 
 ```bash
 # Start the environment
-TENGU_TIER=full docker compose --profile lab up -d
+make docker-lab
 
 # Confirm everything is up
 docker compose ps
 
-# Verify Juice Shop is reachable
-curl -s http://juice-shop:3000/ | grep -o "OWASP Juice Shop"
+# Verify Juice Shop is reachable (juice-shop is internal to the Docker network)
+docker exec $(docker compose ps -q tengu) curl -s http://juice-shop:3000/ | grep -o "OWASP Juice Shop"
 ```
 
 **`tengu.toml` — add the target to the allowlist:**
