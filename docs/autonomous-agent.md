@@ -79,7 +79,7 @@ Runs **once** at the start of the engagement.
 
 The **LLM brain** of the agent.
 
-Calls Claude (claude-sonnet-4-6) via the Anthropic API, passing:
+Calls Claude (model configurable via `TENGU_AGENT_MODEL`, default `claude-sonnet-4-6`) via the Anthropic API, passing:
 - A system prompt with the current PTES phase objectives, recent tool call
   history, and a snapshot of all discoveries so far (open ports, services,
   vulnerabilities, etc.)
@@ -212,6 +212,12 @@ uv run python autonomous_tengu.py juice-shop \
 
 # Limit iterations (default: 50)
 uv run python autonomous_tengu.py 10.0.0.1 --max-iterations 30
+
+# Cost-optimised run (cheaper model, lower token cap, 15-minute hard stop)
+uv run python autonomous_tengu.py 10.0.0.1 \
+    --model claude-haiku-4-5 \
+    --max-tokens 1024 \
+    --timeout 15
 ```
 
 Requirements:
@@ -219,6 +225,34 @@ Requirements:
 - `ANTHROPIC_API_KEY` set in environment or `.env` file
 - Tengu server runnable via `uv run tengu` (the agent spawns it automatically)
 - Target present in `tengu.toml` `[targets].allowed_hosts`
+
+---
+
+## Cost Control
+
+Three parameters let you tune the cost/capability trade-off:
+
+| CLI flag | Env var | Default | Effect |
+|---|---|---|---|
+| `--model` | `TENGU_AGENT_MODEL` | `claude-sonnet-4-6` | Claude model used by strategist and analyst |
+| `--max-tokens` | `TENGU_AGENT_MAX_TOKENS` | `2048` | Max tokens per API call |
+| `--timeout` | `TENGU_AGENT_TIMEOUT` | `60` | Total runtime limit in minutes (`0` = unlimited) |
+
+Via Docker / Make:
+
+```bash
+# Cheap and fast
+make docker-agent-haiku   # claude-haiku-4-5, max_tokens=1024
+
+# Default (balanced)
+make docker-agent-sonnet  # claude-sonnet-4-6, max_tokens=4096
+```
+
+Or override ad-hoc:
+
+```bash
+TENGU_AGENT_MODEL=claude-haiku-4-5 TENGU_AGENT_TIMEOUT=30 make docker-agent
+```
 
 ---
 

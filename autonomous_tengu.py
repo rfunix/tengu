@@ -42,7 +42,9 @@ from typing_extensions import TypedDict
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 
-MODEL = "claude-sonnet-4-6"
+DEFAULT_MODEL = "claude-sonnet-4-6"
+DEFAULT_MAX_TOKENS = 2048
+DEFAULT_TIMEOUT_MINUTES = 60
 MAX_HISTORY_IN_PROMPT = 5
 MAX_OUTPUT_CHARS = 8000
 
@@ -104,6 +106,10 @@ class PentestState(TypedDict):
     next_tool_args: dict[str, Any]
     requires_human_approval: bool
     human_decision: str | None
+
+    # Model configuration
+    model: str
+    max_tokens: int
 
     # Termination state
     is_complete: bool
@@ -340,8 +346,16 @@ The following tools WILL pause for human approval:
 """
 
 
-def _print_banner(target: str, engagement_type: str, max_iterations: int) -> None:
+def _print_banner(
+    target: str,
+    engagement_type: str,
+    max_iterations: int,
+    model: str,
+    max_tokens: int,
+    timeout_minutes: int,
+) -> None:
     """Print the agent startup banner."""
+    timeout_label = f"{timeout_minutes}m" if timeout_minutes > 0 else "unlimited"
     print()
     print("╔══════════════════════════════════════════════════════════╗")
     print("║            TENGU — Autonomous Pentest Agent              ║")
@@ -349,6 +363,9 @@ def _print_banner(target: str, engagement_type: str, max_iterations: int) -> Non
     print(f"║  Target:      {target:<43} ║")
     print(f"║  Type:        {engagement_type:<43} ║")
     print(f"║  Max Iters:   {str(max_iterations):<43} ║")
+    print(f"║  Model:       {model:<43} ║")
+    print(f"║  Max Tokens:  {str(max_tokens):<43} ║")
+    print(f"║  Timeout:     {timeout_label:<43} ║")
     print("║  Methodology: PTES (7 phases)                            ║")
     print("╚══════════════════════════════════════════════════════════╝")
     print()
@@ -505,8 +522,8 @@ async def strategist(state: PentestState) -> dict[str, Any]:
 
     try:
         response = anthropic_client.messages.create(
-            model=MODEL,
-            max_tokens=2048,
+            model=state.get("model", DEFAULT_MODEL),
+            max_tokens=state.get("max_tokens", DEFAULT_MAX_TOKENS),
             system=system_prompt,
             tools=tools,
             messages=[{"role": "user", "content": user_message}],
@@ -674,8 +691,8 @@ Respond with ONLY the JSON object. No explanation, no markdown fences."""
 
     try:
         response = anthropic_client.messages.create(
-            model=MODEL,
-            max_tokens=2048,
+            model=state.get("model", DEFAULT_MODEL),
+            max_tokens=state.get("max_tokens", DEFAULT_MAX_TOKENS),
             messages=[{"role": "user", "content": analysis_prompt}],
         )
         text = response.content[0].text if response.content else ""
@@ -865,6 +882,9 @@ async def run_agent(
     scope: list[str],
     engagement_type: str,
     max_iterations: int,
+    model: str = DEFAULT_MODEL,
+    max_tokens: int = DEFAULT_MAX_TOKENS,
+    timeout_minutes: int = DEFAULT_TIMEOUT_MINUTES,
 ) -> None:
     """Compile and run the autonomous pentest graph, handling human-in-the-loop interrupts."""
     initial_state: PentestState = {
@@ -890,6 +910,8 @@ async def run_agent(
         "error": None,
         "max_iterations": max_iterations,
         "iteration_count": 0,
+        "model": model,
+        "max_tokens": max_tokens,
     }
 
     # Ensure output directory exists
@@ -969,6 +991,24 @@ async def main() -> None:
         default=50,
         help="Maximum number of tool calls before forcing a report (default: 50)",
     )
+    parser.add_argument(
+        "--model",
+        default=DEFAULT_MODEL,
+        help=f"Claude model to use for strategist and analyst (default: {DEFAULT_MODEL})",
+    )
+    parser.add_argument(
+        "--max-tokens",
+        type=int,
+        default=DEFAULT_MAX_TOKENS,
+        help=f"Max tokens per API call (default: {DEFAULT_MAX_TOKENS})",
+    )
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=DEFAULT_TIMEOUT_MINUTES,
+        metavar="MINUTES",
+        help="Total execution timeout in minutes; 0 = unlimited (default: 60)",
+    )
     args = parser.parse_args()
 
     # Validate required environment variable
@@ -978,7 +1018,14 @@ async def main() -> None:
         sys.exit(1)
 
     scope = args.scope or [args.target]
-    _print_banner(args.target, args.engagement_type, args.max_iterations)
+    _print_banner(
+        args.target,
+        args.engagement_type,
+        args.max_iterations,
+        args.model,
+        args.max_tokens,
+        args.timeout,
+    )
 
     try:
         answer = input("Confirm pentest start? (y/n): ").strip().lower()
@@ -993,7 +1040,22 @@ async def main() -> None:
     print()
     client = get_mcp_client()
     try:
-        await run_agent(args.target, scope, args.engagement_type, args.max_iterations)
+        coro = run_agent(
+            args.target,
+            scope,
+            args.engagement_type,
+            args.max_iterations,
+            model=args.model,
+            max_tokens=args.max_tokens,
+            timeout_minutes=args.timeout,
+        )
+        if args.timeout > 0:
+            try:
+                await asyncio.wait_for(coro, timeout=args.timeout * 60)
+            except TimeoutError:
+                print(f"\n[timeout] Agent exceeded {args.timeout}m limit. Stopping.")
+        else:
+            await coro
     finally:
         with contextlib.suppress(Exception):  # anyio cancel-scope errors on shutdown are non-fatal
             await client.disconnect()

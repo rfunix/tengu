@@ -2,11 +2,14 @@
 # Tengu Docker Entrypoint — Autonomous Agent Mode
 #
 # Environment variables:
-#   ANTHROPIC_API_KEY     (required) Anthropic API key for Claude
-#   TENGU_AGENT_TARGET    (required) Target IP, hostname, or URL
-#   TENGU_AGENT_SCOPE     (optional) Comma-separated scope. Defaults to TENGU_AGENT_TARGET
-#   TENGU_AGENT_TYPE      (optional) blackbox | greybox | whitebox. Default: blackbox
-#   TENGU_AGENT_MAX_ITER  (optional) Max tool iterations. Default: 50
+#   ANTHROPIC_API_KEY       (required) Anthropic API key for Claude
+#   TENGU_AGENT_TARGET      (required) Target IP, hostname, or URL
+#   TENGU_AGENT_SCOPE       (optional) Comma-separated scope. Defaults to TENGU_AGENT_TARGET
+#   TENGU_AGENT_TYPE        (optional) blackbox | greybox | whitebox. Default: blackbox
+#   TENGU_AGENT_MAX_ITER    (optional) Max tool iterations. Default: 50
+#   TENGU_AGENT_MODEL       (optional) Claude model ID. Default: claude-sonnet-4-6
+#   TENGU_AGENT_MAX_TOKENS  (optional) Max tokens per API call. Default: 2048
+#   TENGU_AGENT_TIMEOUT     (optional) Total timeout in minutes; 0=unlimited. Default: 60
 set -euo pipefail
 
 # ── Colors ─────────────────────────────────────────────────────────────────────
@@ -61,6 +64,9 @@ TARGET="${TENGU_AGENT_TARGET}"
 SCOPE="${TENGU_AGENT_SCOPE:-${TARGET}}"
 TYPE="${TENGU_AGENT_TYPE:-blackbox}"
 MAX_ITER="${TENGU_AGENT_MAX_ITER:-50}"
+MODEL="${TENGU_AGENT_MODEL:-claude-sonnet-4-6}"
+MAX_TOKENS="${TENGU_AGENT_MAX_TOKENS:-2048}"
+TIMEOUT="${TENGU_AGENT_TIMEOUT:-60}"
 
 # Convert comma-separated scope to --scope args
 SCOPE_ARGS=()
@@ -78,6 +84,9 @@ echo -e "  Target:      ${TARGET}"
 echo -e "  Scope:       ${SCOPE}"
 echo -e "  Type:        ${TYPE}"
 echo -e "  Max Iters:   ${MAX_ITER}"
+echo -e "  Model:       ${MODEL}"
+echo -e "  Max Tokens:  ${MAX_TOKENS}"
+echo -e "  Timeout:     ${TIMEOUT}m"
 echo ""
 
 # ── Launch autonomous agent ──────────────────────────────────────────────────────
@@ -85,4 +94,7 @@ exec uv run python /app/autonomous_tengu.py \
     "${TARGET}" \
     --scope "${SCOPE_ARGS[@]}" \
     --type "${TYPE}" \
-    --max-iterations "${MAX_ITER}"
+    --max-iterations "${MAX_ITER}" \
+    --model "${MODEL}" \
+    --max-tokens "${MAX_TOKENS}" \
+    --timeout "${TIMEOUT}"

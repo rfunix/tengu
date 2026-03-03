@@ -180,7 +180,9 @@ cp .env.example .env
 
 ```bash
 make docker-lab
-make docker-agent
+make docker-agent          # default model (sonnet)
+make docker-agent-haiku    # cheaper — claude-haiku-4-5, max_tokens=1024
+make docker-agent-sonnet   # balanced — claude-sonnet-4-6, max_tokens=4096
 ```
 
 **Real-world pentests (Tengu + MSF + ZAP, no lab containers):**
@@ -195,7 +197,18 @@ make docker-agent
 ```bash
 uv sync --extra agent
 python autonomous_tengu.py 192.168.1.100 --scope 192.168.1.0/24 --type blackbox
+
+# Cost-optimised run
+python autonomous_tengu.py 192.168.1.100 --model claude-haiku-4-5 --max-tokens 1024 --timeout 30
 ```
+
+**Cost control** — three env vars / CLI flags:
+
+| Flag | Env var | Default |
+|---|---|---|
+| `--model` | `TENGU_AGENT_MODEL` | `claude-sonnet-4-6` |
+| `--max-tokens` | `TENGU_AGENT_MAX_TOKENS` | `2048` |
+| `--timeout` | `TENGU_AGENT_TIMEOUT` | `60` (minutes, `0`=unlimited) |
 
 ### How It Works
 

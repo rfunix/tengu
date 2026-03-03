@@ -2,7 +2,7 @@
 .PHONY: test test-unit test-security test-integration test-all coverage
 .PHONY: run run-sse run-dev inspect clean doctor
 .PHONY: docker-build docker-up docker-down docker-logs docker-shell
-.PHONY: docker-lab docker-full docker-pentest docker-agent docker-clean
+.PHONY: docker-lab docker-full docker-pentest docker-agent docker-agent-haiku docker-agent-sonnet docker-clean
 .PHONY: docker-rebuild docker-rebuild-tengu docker-reset
 
 # ============================================================
@@ -127,6 +127,14 @@ docker-pentest: ## Start Tengu + MSF + ZAP for real-world pentests (no lab targe
 
 docker-agent: ## Run autonomous agent (requires .env with ANTHROPIC_API_KEY and TENGU_AGENT_TARGET)
 	docker compose --profile agent run --rm tengu-agent
+
+docker-agent-haiku: ## Run autonomous agent with claude-haiku-4-5 (cheaper, faster)
+	TENGU_AGENT_MODEL=claude-haiku-4-5 TENGU_AGENT_MAX_TOKENS=1024 \
+		docker compose --profile agent run --rm tengu-agent
+
+docker-agent-sonnet: ## Run autonomous agent with claude-sonnet-4-6 (default, balanced)
+	TENGU_AGENT_MODEL=claude-sonnet-4-6 TENGU_AGENT_MAX_TOKENS=4096 \
+		docker compose --profile agent run --rm tengu-agent
 
 docker-clean: ## Remove Docker images and volumes
 	docker compose down -v --rmi local
