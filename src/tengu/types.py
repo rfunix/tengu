@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 # ============================================================
 # SCAN MODELS
@@ -132,6 +132,13 @@ class Finding(BaseModel):
     id: str  # TENGU-2026-001
     title: str
     severity: Literal["critical", "high", "medium", "low", "info"]
+
+    @field_validator("severity", mode="before")
+    @classmethod
+    def normalise_severity(cls, v: object) -> object:
+        if isinstance(v, str) and v.lower() == "informational":
+            return "info"
+        return v
     cvss_score: float = 0.0
     cvss_vector: str = ""
     cwe_id: int | None = None
