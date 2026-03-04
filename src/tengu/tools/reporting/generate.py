@@ -97,8 +97,10 @@ def _build_risk_matrix(findings: list[Finding]) -> RiskMatrix:
     )
 
     if findings:
-        weighted = sum(_SEVERITY_WEIGHTS.get(f.severity, 0) for f in findings)
-        matrix.risk_score = round(min(weighted / len(findings), 10.0), 1)
+        scoring = [f for f in findings if f.severity not in ("info", "informational")]
+        scoring_or_all = scoring if scoring else findings
+        weighted = sum(_SEVERITY_WEIGHTS.get(f.severity, 0) for f in scoring_or_all)
+        matrix.risk_score = round(min(weighted / len(scoring_or_all), 10.0), 1)
 
     return matrix
 
@@ -162,10 +164,12 @@ async def generate_report(
 
     risk_matrix = _build_risk_matrix(parsed_findings)
 
-    # Calculate overall risk score
+    # Calculate overall risk score — exclude informational findings to avoid dilution
     if parsed_findings:
-        weighted = sum(_SEVERITY_WEIGHTS.get(f.severity, 0) for f in parsed_findings)
-        overall_score = round(min(weighted / len(parsed_findings), 10.0), 1)
+        scoring = [f for f in parsed_findings if f.severity not in ("info", "informational")]
+        scoring_or_all = scoring if scoring else parsed_findings
+        weighted = sum(_SEVERITY_WEIGHTS.get(f.severity, 0) for f in scoring_or_all)
+        overall_score = round(min(weighted / len(scoring_or_all), 10.0), 1)
     else:
         overall_score = 0.0
 

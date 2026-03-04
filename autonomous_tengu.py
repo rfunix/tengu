@@ -61,6 +61,118 @@ DESTRUCTIVE_TOOLS: frozenset[str] = frozenset(
 # Tools that are conditionally destructive (require approval above certain thresholds)
 CONDITIONAL_DESTRUCTIVE: frozenset[str] = frozenset({"sqlmap_scan"})
 
+# Tools that do not produce security findings (utility-only or post-analysis aggregators).
+# The analyst skips these — their output contains synthetic/aggregated data, not raw scan results.
+_NON_SECURITY_TOOLS: frozenset[str] = frozenset({
+    "validate_target",
+    "check_tools",
+    "correlate_findings",
+    "score_risk",
+    "generate_report",
+    "cve_lookup",
+    "cve_search",
+})
+
+# Map PTES JSON tool names to actual MCP tool function names
+_PTES_TOOL_NAME_MAP: dict[str, str] = {
+    "nmap": "nmap_scan",
+    "subfinder": "subfinder_enum",
+    "amass": "amass_enum",
+    "shodan": "shodan_lookup",
+    "theHarvester": "theharvester_scan",
+    "nuclei": "nuclei_scan",
+    "nikto": "nikto_scan",
+    "sqlmap": "sqlmap_scan",
+    "sslyze": "ssl_tls_check",
+    "dalfox": "xss_scan",
+    "metasploit": "msf_search",
+    "hydra": "hydra_attack",
+    "searchsploit": "searchsploit_query",
+    "bloodhound": "bloodhound_collect",
+    "john": "hash_crack",
+    "hashcat": "hash_crack",
+    "mimikatz": "impacket_secretsdump",
+    "recon-ng": "theharvester_scan",  # closest Tengu equivalent
+}
+
+# Map check_tools binary names → MCP tool function names.
+# check_tools returns binary names (e.g. "nmap") but MCP tools have different
+# names (e.g. "nmap_scan"). Without this mapping the initializer intersection
+# produces an empty set and the strategist only sees pure-Python tools.
+_BINARY_TO_MCP_TOOL: dict[str, str] = {
+    "nmap": "nmap_scan",
+    "masscan": "masscan_scan",
+    "subfinder": "subfinder_enum",
+    "amass": "amass_enum",
+    "dnsrecon": "dnsrecon_scan",
+    "subjack": "subjack_check",
+    "gowitness": "gowitness_screenshot",
+    "katana": "katana_crawl",
+    "httpx": "httpx_probe",
+    "snmpwalk": "snmpwalk_scan",
+    "rustscan": "rustscan_scan",
+    "nuclei": "nuclei_scan",
+    "nikto": "nikto_scan",
+    "ffuf": "ffuf_fuzz",
+    "sslyze": "ssl_tls_check",
+    "gobuster": "gobuster_scan",
+    "wpscan": "wpscan_scan",
+    "testssl.sh": "testssl_check",
+    "wafw00f": "wafw00f_scan",
+    "feroxbuster": "feroxbuster_scan",
+    "sqlmap": "sqlmap_scan",
+    "dalfox": "xss_scan",
+    "commix": "commix_scan",
+    "crlfuzz": "crlfuzz_scan",
+    "msfconsole": "msf_search",
+    "searchsploit": "searchsploit_query",
+    "hydra": "hydra_attack",
+    "john": "hash_crack",
+    "hashcat": "hash_crack",
+    "cewl": "cewl_generate",
+    "theharvester": "theharvester_scan",
+    "whatweb": "whatweb_scan",
+    "dnstwist": "dnstwist_scan",
+    "trufflehog": "trufflehog_scan",
+    "gitleaks": "gitleaks_scan",
+    "trivy": "trivy_scan",
+    "arjun": "arjun_discover",
+    "enum4linux": "enum4linux_scan",
+    "nxc": "nxc_enum",
+    "bloodhound": "bloodhound_collect",
+    "responder": "responder_capture",
+    "smbmap": "smbmap_scan",
+    "aircrack-ng": "aircrack_scan",
+    "checkov": "checkov_scan",
+    "httrack": "httrack_mirror",
+    "theHarvester": "theharvester_scan",
+    "msfvenom": "msf_search",
+    "zap.sh": "zap_spider",
+    "zaproxy": "zap_spider",
+    "scout": "scoutsuite_scan",
+    "prowler": "prowler_scan",
+    "enum4linux-ng": "enum4linux_scan",
+    "GetUserSPNs.py": "impacket_kerberoast",
+    "impacket-secretsdump": "impacket_secretsdump",
+    "impacket-psexec": "impacket_psexec",
+    "impacket-wmiexec": "impacket_wmiexec",
+    "impacket-smbclient": "impacket_smbclient",
+    "bloodhound-python": "bloodhound_collect",
+    "setoolkit": "set_credential_harvester",
+}
+
+_MAX_DUPLICATE_SKIPS = 3
+
+_PURE_PYTHON_TOOLS: frozenset[str] = frozenset({
+    "check_tools", "validate_target", "correlate_findings", "score_risk",
+    "cve_lookup", "cve_search", "generate_report", "analyze_headers",
+    "test_cors", "dns_enumerate", "whois_lookup", "hash_identify",
+    "graphql_security_check",
+    "tor_check", "tor_new_identity", "check_anonymity",
+    "proxy_check", "rotate_identity",
+    "shodan_lookup",
+})
+
 
 # ── TypedDicts ─────────────────────────────────────────────────────────────────
 
@@ -96,6 +208,10 @@ class PentestState(TypedDict):
     technologies: Annotated[list[str], operator.add]
     vulnerabilities: Annotated[list[dict[str, Any]], operator.add]
     findings: Annotated[list[dict[str, Any]], operator.add]
+
+    # Analyst intel feed — updated after each analysis cycle
+    analyst_briefing: str  # Compact summary of latest findings, fed into strategist prompt
+    briefing_history: Annotated[list[str], operator.add]  # All briefings for stagnation detection
 
     # Tool tracking and execution history
     available_tools: list[str]
@@ -271,27 +387,213 @@ def _is_destructive(tool_name: str, tool_args: dict[str, Any]) -> bool:
     return False
 
 
+_NEGATIVE_FINDING_PATTERNS = (
+    # Negative scan results
+    "no vulnerabilities detected",
+    "no vulnerabilities found",
+    "no exploits found",
+    "not vulnerable",
+    "no injectable",
+    "no issues found",
+    # Tool errors / scan failures
+    "scan timeout",
+    "scan failed",
+    "tool execution failed",
+    "unsupported source",
+    # Scan limitations — operational notes, not security findings
+    "not authorized",
+    "401 unauthorized",
+    "not fully tested",
+    "not properly tested",
+    "parameter encoding issue",
+    "parameter detection failure",
+    "not present within",
+    "authentication bypass - 401",
+    # Negative injection results
+    "no sql injection detected",
+    "no injection detected",
+    "injection not detected",
+    "does not seem to be injectable",
+    "injection not confirmed",
+)
+
+
+def _is_negative_finding(finding: dict[str, Any]) -> bool:
+    """Return True for findings that represent negative scan results (nothing found)."""
+    title = (finding.get("title") or "").lower()
+    return any(pattern in title for pattern in _NEGATIVE_FINDING_PATTERNS)
+
+
+def _asset_specificity(finding: dict[str, Any]) -> int:
+    """Score how specific the affected_asset is. Higher = more specific."""
+    asset = (finding.get("affected_asset") or "").lower().strip()
+    if not asset or asset == "unknown":
+        return 0
+    if asset.startswith("http"):
+        return 2
+    return 1
+
+
+def _deduplicate_findings(
+    existing: list[dict[str, Any]],
+    new: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Return only findings from `new` not already in `existing`.
+
+    Primary dedup key: (title_lower, severity_lower, affected_asset_lower).
+    Secondary dedup key: (cwe_id, severity_lower) — prevents the same
+    vulnerability reported by different tools (e.g. nuclei + dalfox both
+    finding CWE-79) from appearing multiple times. When CWE collision occurs,
+    the finding with the more specific asset (URL > hostname > "unknown") wins.
+    """
+    # Stage 1: primary dedup against existing (exact key match)
+    seen: set[tuple[str, str, str]] = set()
+    for f in existing:
+        seen.add((
+            (f.get("title") or "").lower().strip(),
+            (f.get("severity") or "").lower().strip(),
+            (f.get("affected_asset") or "").lower().strip(),
+        ))
+
+    candidates: list[dict[str, Any]] = []
+    for f in new:
+        key = (
+            (f.get("title") or "").lower().strip(),
+            (f.get("severity") or "").lower().strip(),
+            (f.get("affected_asset") or "").lower().strip(),
+        )
+        if key not in seen:
+            seen.add(key)
+            candidates.append(f)
+
+    # Stage 2: CWE-based dedup
+    # Build best asset score per (cwe_id, severity) already in existing
+    existing_cwe: dict[tuple[int, str], int] = {}
+    for f in existing:
+        cwe = f.get("cwe_id")
+        if cwe is None:
+            continue
+        try:
+            cwe_key = (int(cwe), (f.get("severity") or "").lower().strip())
+            score = _asset_specificity(f)
+            if score > existing_cwe.get(cwe_key, -1):
+                existing_cwe[cwe_key] = score
+        except (ValueError, TypeError):
+            pass
+
+    # Group candidates by (cwe_id, severity), keeping most specific per group
+    cwe_best: dict[tuple[int, str], dict[str, Any]] = {}
+    no_cwe: list[dict[str, Any]] = []
+    for f in candidates:
+        cwe = f.get("cwe_id")
+        if cwe is None:
+            no_cwe.append(f)
+            continue
+        try:
+            cwe_key = (int(cwe), (f.get("severity") or "").lower().strip())
+        except (ValueError, TypeError):
+            no_cwe.append(f)
+            continue
+        current_best = cwe_best.get(cwe_key)
+        if current_best is None or _asset_specificity(f) > _asset_specificity(current_best):
+            cwe_best[cwe_key] = f
+
+    # Accept CWE-keyed candidates only if they are more specific than existing
+    cwe_winners: list[dict[str, Any]] = [
+        f
+        for cwe_key, f in cwe_best.items()
+        if _asset_specificity(f) > existing_cwe.get(cwe_key, -1)
+    ]
+
+    return no_cwe + cwe_winners
+
+
+def _build_call_key(tool: str, args: dict[str, Any]) -> str:
+    """Build a stable string key for a (tool, args) pair to detect duplicate calls."""
+    significant = {k: str(v)[:100] for k, v in sorted(args.items())}
+    return f"{tool}:{json.dumps(significant, sort_keys=True)}"
+
+
+def _detect_stagnation(
+    history: list[ToolCall],
+    briefing_history: list[str] | None = None,
+    window: int = 8,
+) -> str | None:
+    """Detect if the agent is stuck in an unproductive loop.
+
+    Checks the last `window` tool calls for three patterns:
+    1. All calls to the same tool (no diversity).
+    2. High error rate (>= half of calls failed).
+    3. No new findings in recent calls (all briefings empty).
+
+    Returns a human-readable stagnation message, or None if no stagnation detected.
+    """
+    if len(history) < window:
+        return None
+    recent = history[-window:]
+    tool_set = {c["tool"] for c in recent}
+    if len(tool_set) == 1:
+        return f"Last {window} calls all to {tool_set.pop()} — try different tools"
+    error_count = sum(1 for c in recent if c.get("error"))
+    if error_count >= window // 2:
+        return f"{error_count}/{window} recent calls failed — change approach"
+    if briefing_history is not None and len(briefing_history) >= window:
+        recent_briefings = briefing_history[-window:]
+        empty = sum(1 for b in recent_briefings if not b)
+        if empty >= window - 1:
+            return f"No new findings in last {window} calls — consider advancing phase"
+    return None
+
+
 _RETRYABLE_STATUS_CODES = {429, 529}
-_API_MAX_RETRIES = 5
+_API_MAX_RETRIES = 8
 _API_RETRY_BASE_DELAY = 5.0  # seconds
+_API_RETRY_MAX_DELAY = 60.0  # cap per attempt (seconds)
+_token_usage: dict[str, int] = {"input": 0, "output": 0}
+_agent_start_time: float = 0.0
+
+
+def _is_transient_api_error(exc: Exception) -> bool:
+    """Return True if the exception is a transient error worth retrying.
+
+    Covers Cloudflare bot challenges (HTML response body), connection errors,
+    and standard rate-limit / overload status codes.
+    """
+    if isinstance(exc, anthropic.APIStatusError):
+        if exc.status_code in _RETRYABLE_STATUS_CODES:
+            return True
+        # Cloudflare challenges come back as 403/503 with an HTML body
+        body = str(exc)
+        return "<!DOCTYPE html>" in body or "just a moment" in body.lower()
+    # Network-level failures (timeout, DNS, connection reset) are always retryable
+    return isinstance(exc, (anthropic.APIConnectionError, anthropic.APITimeoutError))
 
 
 async def _call_api_with_retry(
     client: anthropic.Anthropic,
     **kwargs: Any,
 ) -> anthropic.types.Message:
-    """Call the Anthropic API, retrying on overloaded (529) or rate-limit (429) errors.
+    """Call the Anthropic API, retrying on transient errors with exponential backoff.
 
-    Uses exponential backoff: 5s, 10s, 20s, 40s, 80s.
+    Retries on: rate-limit (429), overload (529), connection errors, timeouts,
+    and Cloudflare bot challenges (HTML response body instead of JSON).
+    Backoff: 5s, 10s, 20s, 40s, 80s.
     """
     for attempt in range(_API_MAX_RETRIES):
         try:
-            return client.messages.create(**kwargs)
-        except anthropic.APIStatusError as exc:
-            if exc.status_code not in _RETRYABLE_STATUS_CODES or attempt == _API_MAX_RETRIES - 1:
+            response = client.messages.create(**kwargs)
+            _token_usage["input"] += response.usage.input_tokens
+            _token_usage["output"] += response.usage.output_tokens
+            return response
+        except Exception as exc:
+            if not _is_transient_api_error(exc) or attempt == _API_MAX_RETRIES - 1:
                 raise
-            delay = _API_RETRY_BASE_DELAY * (2**attempt)
-            print(f"[api] HTTP {exc.status_code} — retrying in {delay:.0f}s (attempt {attempt + 1}/{_API_MAX_RETRIES})")
+            delay = min(_API_RETRY_BASE_DELAY * (2**attempt), _API_RETRY_MAX_DELAY)
+            status = getattr(exc, "status_code", "conn")
+            print(
+                f"[api] Transient error (HTTP {status}) — "
+                f"retrying in {delay:.0f}s (attempt {attempt + 1}/{_API_MAX_RETRIES})"
+            )
             await asyncio.sleep(delay)
     raise RuntimeError("unreachable")  # pragma: no cover
 
@@ -304,9 +606,13 @@ def build_strategist_prompt(state: PentestState) -> str:
 
     objectives = phase_data.get("objectives", [])
     activities = phase_data.get("activities", [])
-    recommended_tools = phase_data.get("tools", [])
+    recommended_tools_raw = phase_data.get("tools", [])
+    recommended_tools = [_PTES_TOOL_NAME_MAP.get(t, t) for t in recommended_tools_raw]
 
-    recent_history = state["command_history"][-MAX_HISTORY_IN_PROMPT:]
+    all_history = state["command_history"]
+    recent_history = all_history[-MAX_HISTORY_IN_PROMPT:]
+    older_calls = all_history[:-MAX_HISTORY_IN_PROMPT]
+
     history_lines = []
     for call in recent_history:
         args_preview = json.dumps(call["args"], default=str)[:120]
@@ -314,11 +620,18 @@ def build_strategist_prompt(state: PentestState) -> str:
         history_lines.append(f"  - {call['tool']}({args_preview}) → {status}")
     history_str = "\n".join(history_lines) or "  (none yet)"
 
+    older_summary = ""
+    if older_calls:
+        older_summary = (
+            "\n\n**All prior tools used (complete history):** "
+            + ", ".join(c["tool"] for c in older_calls)
+        )
+
     vulns = state.get("vulnerabilities", [])
     crit = sum(1 for v in vulns if v.get("severity", "").lower() == "critical")
     high_v = sum(1 for v in vulns if v.get("severity", "").lower() == "high")
 
-    return f"""You are an autonomous penetration tester executing a {state["engagement_type"]} \
+    prompt = f"""You are an autonomous penetration tester executing a {state["engagement_type"]} \
 engagement following the PTES (Penetration Testing Execution Standard) methodology.
 
 ## Current Phase: {phase_num}/7 — {phase_name}
@@ -351,7 +664,7 @@ engagement following the PTES (Penetration Testing Execution Standard) methodolo
 - Total findings: {len(state.get("findings", []))}
 
 ## Recent Tool Calls (last {MAX_HISTORY_IN_PROMPT})
-{history_str}
+{history_str}{older_summary}
 
 ## Decision Instructions
 
@@ -369,6 +682,17 @@ The following tools WILL pause for human approval:
 - Always: msf_run_module, msf_session_cmd, hydra_attack, impacket_kerberoast
 - Conditionally: sqlmap_scan with level>=3 or risk>=2
 """
+
+    briefing = state.get("analyst_briefing", "")
+    if briefing:
+        prompt += f"\n## Latest Intel\n{briefing}\n"
+
+    stagnation = _detect_stagnation(state["command_history"], state.get("briefing_history"))
+    if stagnation:
+        print(f"[strategist] STAGNATION: {stagnation}")
+        prompt += f"\n## \u26a0 STAGNATION DETECTED\n{stagnation}\n"
+
+    return prompt
 
 
 def _print_banner(
@@ -398,7 +722,9 @@ def _print_banner(
 
 def _print_summary(state: PentestState, risk_score: float, report_path: str) -> None:
     """Print the final engagement summary."""
-    vulns = state.get("vulnerabilities", []) + state.get("findings", [])
+    vulns = _deduplicate_findings(
+        [], state.get("vulnerabilities", []) + state.get("findings", [])
+    )
     crit = sum(1 for v in vulns if v.get("severity", "").lower() == "critical")
     high_v = sum(1 for v in vulns if v.get("severity", "").lower() == "high")
     med = sum(1 for v in vulns if v.get("severity", "").lower() == "medium")
@@ -409,11 +735,40 @@ def _print_summary(state: PentestState, risk_score: float, report_path: str) -> 
     print("║                    PENTEST COMPLETE                      ║")
     print("╠══════════════════════════════════════════════════════════╣")
     print(f"║  Iterations:  {str(state.get('iteration_count', 0)):<43} ║")
+
+    # Phases completed
+    completed_phases = sorted(k for k, v in state.get("phase_completed", {}).items() if v)
+    phases_str = ", ".join(str(p) for p in completed_phases) if completed_phases else "none"
+    print(f"║  Phases:      {phases_str:<43} ║")
+
+    # Termination reason
+    if state.get("error"):
+        term = f"error: {state['error'][:35]}"
+    elif all(state.get("phase_completed", {}).get(p) for p in range(2, 8)):
+        term = "all phases completed"
+    elif state.get("iteration_count", 0) >= state.get("max_iterations", 50):
+        term = "max iterations reached"
+    else:
+        term = "agent decided complete"
+    print(f"║  Terminated:  {term:<43} ║")
+
+    # Total duration
+    if _agent_start_time > 0:
+        elapsed = time.monotonic() - _agent_start_time
+        mins, secs = divmod(int(elapsed), 60)
+        print(f"║  Duration:    {f'{mins}m {secs}s':<43} ║")
+
     print(f"║  Open Ports:  {str(len(state.get('open_ports', []))):<43} ║")
     findings_str = f"{len(vulns)} ({crit} critical, {high_v} high, {med} medium, {low} low)"
     print(f"║  Findings:    {findings_str:<43} ║")
     if risk_score > 0:
         print(f"║  Risk Score:  {str(risk_score) + '/10':<43} ║")
+    total_tokens = _token_usage["input"] + _token_usage["output"]
+    if total_tokens > 0:
+        tokens_str = (
+            f"{total_tokens:,} ({_token_usage['input']:,} in, {_token_usage['output']:,} out)"
+        )
+        print(f"║  Tokens:      {tokens_str:<43} ║")
     print(f"║  Report:      {report_path:<43} ║")
     print("╚══════════════════════════════════════════════════════════╝")
     print()
@@ -458,26 +813,28 @@ async def initializer(state: PentestState) -> dict[str, Any]:
         tools = await client.list_tools()
         all_tool_names = {t["name"] for t in tools}
 
-        # check_tools returns which external binaries are actually installed
+        # check_tools returns binary names (e.g. "nmap") but MCP tools use different
+        # names (e.g. "nmap_scan"). Translate using _BINARY_TO_MCP_TOOL so the
+        # intersection with all_tool_names (MCP names) produces the correct result.
         check_result = await client.call_tool("check_tools", {})
-        installed = {
-            t["name"]
-            for t in check_result.get("tools", [])
-            if t.get("available")
-        }
+        installed: set[str] = set()
+        for t in check_result.get("tools", []):
+            if t.get("available"):
+                binary = t["name"]
+                mcp_name = _BINARY_TO_MCP_TOOL.get(binary, binary)
+                installed.add(mcp_name)
         # Pure-Python tools (correlate, score_risk, etc.) have no binary — always available
-        pure_python = {
-            "check_tools", "validate_target", "correlate_findings", "score_risk",
-            "cve_lookup", "cve_search", "generate_report", "analyze_headers",
-            "test_cors", "dns_enumerate", "whois_lookup", "hash_identify",
-            "graphql_security_check",
-        }
+        pure_python = set(_PURE_PYTHON_TOOLS)
         available_tool_names = sorted(
             all_tool_names & (installed | pure_python)
         )
         missing = sorted(all_tool_names - set(available_tool_names))
         print(f"[initializer] {len(available_tool_names)} tools available, "
               f"{len(missing)} not installed (skipped)")
+        if available_tool_names:
+            print(f"[initializer] Available: {', '.join(available_tool_names[:15])}")
+        if missing:
+            print(f"[initializer] Missing:   {', '.join(sorted(missing)[:5])}")
     except Exception as exc:
         print(f"[initializer] Warning: tool discovery failed: {exc}")
 
@@ -526,13 +883,17 @@ async def strategist(state: PentestState) -> dict[str, Any]:
     phase_num = state["current_phase"]
     phase_name = phase_data.get("name", f"Phase {phase_num}")
 
+    iteration = state.get("iteration_count", 0)
+    max_iter = state.get("max_iterations", 50)
     print(f"\n── PHASE {phase_num}/7: {phase_name} {'─' * (50 - len(phase_name))}")
-    print("[strategist] Analyzing state and deciding next action...")
+    print(f"[strategist] Iteration {iteration}/{max_iter} — Analyzing state...")
 
     try:
         all_tools = await client.list_tools()
         # Filter to only tools confirmed available in the initializer
         available = set(state.get("available_tools", []))
+        if not available:
+            print("[strategist] WARNING: available_tools is empty — using all tools as fallback")
         tools = [t for t in all_tools if not available or t["name"] in available]
     except Exception as exc:
         return {"error": f"Failed to list tools: {exc}", "is_complete": True}
@@ -545,42 +906,94 @@ async def strategist(state: PentestState) -> dict[str, Any]:
         f"Decide the next action. Call exactly one tool, or output PENTEST_COMPLETE."
     )
 
-    try:
-        response = await _call_api_with_retry(
-            anthropic_client,
-            model=state.get("model", DEFAULT_MODEL),
-            max_tokens=state.get("max_tokens", DEFAULT_MAX_TOKENS),
-            system=system_prompt,
-            tools=tools,
-            messages=[{"role": "user", "content": user_message}],
-        )
-    except Exception as exc:
-        return {"error": f"Anthropic API error in strategist: {exc}", "is_complete": True}
+    messages: list[dict[str, Any]] = [{"role": "user", "content": user_message}]
+    consecutive_skips = 0
+    history_keys = {_build_call_key(c["tool"], c["args"]) for c in state.get("command_history", [])}
 
-    for block in response.content:
-        if block.type == "tool_use":
-            tool_name = block.name
-            tool_args = block.input if isinstance(block.input, dict) else {}
-            requires_approval = _is_destructive(tool_name, tool_args)
+    while True:
+        try:
+            response = await _call_api_with_retry(
+                anthropic_client,
+                model=state.get("model", DEFAULT_MODEL),
+                max_tokens=state.get("max_tokens", DEFAULT_MAX_TOKENS),
+                system=system_prompt,
+                tools=tools,
+                messages=messages,
+            )
+        except Exception as exc:
+            return {"error": f"Anthropic API error in strategist: {exc}", "is_complete": True}
 
-            print(f"[strategist] Decision: {tool_name}({json.dumps(tool_args, default=str)[:100]})")
-            if requires_approval:
-                print(f"[strategist] ⚠ {tool_name} requires human approval")
+        is_duplicate = False
+        for block in response.content:
+            if block.type == "text" and "PENTEST_COMPLETE" not in block.text:
+                reasoning = block.text.strip()[:200]
+                if reasoning:
+                    print(f"[strategist] LLM reasoning: {reasoning}")
+            if block.type == "tool_use":
+                tool_name = block.name
+                tool_args = block.input if isinstance(block.input, dict) else {}
+                call_key = _build_call_key(tool_name, tool_args)
 
-            return {
-                "next_tool": tool_name,
-                "next_tool_args": tool_args,
-                "requires_human_approval": requires_approval,
-                "human_decision": None,
-            }
+                if call_key in history_keys:
+                    consecutive_skips += 1
+                    print(
+                        f"[strategist] Duplicate call detected: {tool_name} "
+                        f"(skip {consecutive_skips}/{_MAX_DUPLICATE_SKIPS})"
+                    )
+                    if consecutive_skips >= _MAX_DUPLICATE_SKIPS:
+                        print(
+                            f"[strategist] {_MAX_DUPLICATE_SKIPS} consecutive duplicate calls "
+                            "— forcing completion"
+                        )
+                        return {"is_complete": True}
+                    # The API requires every tool_use block to be followed by a tool_result.
+                    messages.append({"role": "assistant", "content": response.content})
+                    messages.append({
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "tool_result",
+                                "tool_use_id": block.id,
+                                "content": (
+                                    "SKIPPED: This tool call is a duplicate — identical "
+                                    "arguments were already used in a previous iteration."
+                                ),
+                            },
+                            {
+                                "type": "text",
+                                "text": (
+                                    f"That exact call ({tool_name} with those arguments) was "
+                                    "already executed. Choose a DIFFERENT tool or use DIFFERENT "
+                                    "arguments to advance the pentest."
+                                ),
+                            },
+                        ],
+                    })
+                    is_duplicate = True
+                    break
 
-        if block.type == "text" and "PENTEST_COMPLETE" in block.text:
-            print("[strategist] All phases complete — triggering final report")
-            return {"is_complete": True}
+                requires_approval = _is_destructive(tool_name, tool_args)
+                print(f"[strategist] Decision: {tool_name}({json.dumps(tool_args, default=str)[:100]})")
+                if requires_approval:
+                    print(f"[strategist] ⚠ {tool_name} requires human approval")
 
-    # No tool selected and no completion signal — trigger report
-    print("[strategist] No tool decision made — triggering report")
-    return {"is_complete": True}
+                return {
+                    "next_tool": tool_name,
+                    "next_tool_args": tool_args,
+                    "requires_human_approval": requires_approval,
+                    "human_decision": None,
+                }
+
+            if block.type == "text" and "PENTEST_COMPLETE" in block.text:
+                print("[strategist] All phases complete — triggering final report")
+                return {"is_complete": True}
+
+        if is_duplicate:
+            continue
+
+        # No tool selected and no completion signal — trigger report
+        print("[strategist] No tool decision made — triggering report")
+        return {"is_complete": True}
 
 
 async def human_gate(state: PentestState) -> Command[Any]:
@@ -617,6 +1030,14 @@ async def human_gate(state: PentestState) -> Command[Any]:
         return Command(goto="executor")
 
     print(f"\n[human_gate] Rejected — skipping {tool_name}")
+    rejected_call: ToolCall = {
+        "tool": tool_name,
+        "args": tool_args,
+        "result": "rejected_by_human",
+        "timestamp": time.monotonic(),
+        "error": "Human approval denied — tool skipped",
+        "duration_seconds": 0.0,
+    }
     return Command(
         goto="strategist",
         update={
@@ -624,6 +1045,8 @@ async def human_gate(state: PentestState) -> Command[Any]:
             "human_decision": "rejected",
             "next_tool": "",
             "next_tool_args": {},
+            "command_history": [rejected_call],
+            "iteration_count": state["iteration_count"] + 1,
         },
     )
 
@@ -652,6 +1075,8 @@ async def executor(state: PentestState) -> dict[str, Any]:
         result = {"error": error}
 
     duration = time.monotonic() - start
+    status_msg = f"error: {error}" if error else "ok"
+    print(f"[executor] {tool_name} completed in {duration:.1f}s [{status_msg}]")
     call: ToolCall = {
         "tool": tool_name,
         "args": tool_args,
@@ -683,37 +1108,68 @@ async def analyst(state: PentestState) -> dict[str, Any]:
     tool_name = last_call["tool"]
     raw_result = last_call["result"]
 
+    # Skip calls that were rejected by human_gate — no output to analyze
+    if raw_result == "rejected_by_human":
+        print(f"[analyst] Skipping rejected call: {tool_name}")
+        return {}
+
+    # Fix 2: Skip utility tools — they produce no security findings
+    if tool_name in _NON_SECURITY_TOOLS:
+        print(f"[analyst] Skipping analysis for utility tool: {tool_name}")
+        return {}
+
     result_str = json.dumps(raw_result, default=str)[:MAX_OUTPUT_CHARS]
     print(f"[analyst] Analyzing {tool_name} output ({len(result_str)} chars)...")
 
     anthropic_client = anthropic.Anthropic()
-    analysis_prompt = f"""You are analyzing the output of a penetration testing tool to extract \
-structured intelligence for an ongoing engagement.
+    analysis_prompt = f"""Analyze the output of a penetration testing tool and extract structured data.
 
-**Tool executed:** {tool_name}
+**Tool:** {tool_name}
 **Target:** {state["target"]}
-**Current PTES Phase:** {state["current_phase"]}
+**Phase:** {state["current_phase"]}
 
-**Tool Output:**
+**Output:**
 {result_str}
 
-Extract data from the output and return a JSON object with ONLY the keys that have actual data.
-Omit keys where the tool found nothing relevant.
-
+Return a JSON object with ONLY keys that have actual data:
 {{
-  "open_ports": [],      // list of {{"port": int, "protocol": str, "service": str, "version": str}}
-  "services": [],        // list of {{"service": str, "port": int, "banner": str}}
-  "subdomains": [],      // list of subdomain strings
-  "technologies": [],    // list of "Technology/version" strings
-  "vulnerabilities": [], // list of {{"title": str, "severity": str, "description": str, \
-"cve_ids": [], "owasp_category": str}}
-  "findings": [],        // list of {{"title": str, "severity": str, "description": str, \
-"affected_asset": str, "evidence": str, "tool": "{tool_name}"}}
-  "should_advance_phase": false  // true ONLY if current phase {state["current_phase"]} \
-objectives are fully satisfied
+  "open_ports": [{{"port": int, "protocol": str, "service": str, "version": str}}],
+  "services": [{{"service": str, "port": int, "banner": str}}],
+  "subdomains": [str],
+  "technologies": [str],
+  "vulnerabilities": [{{
+    "title": str, "severity": "critical"|"high"|"medium"|"low"|"info",
+    "description": str, "cve_ids": [str], "owasp_category": str,
+    "cvss_score": float, "cwe_id": int|null, "impact": str, "remediation_short": str
+  }}],
+  "findings": [{{
+    "title": str, "severity": "critical"|"high"|"medium"|"low"|"info",
+    "description": str, "affected_asset": str, "evidence": str,
+    "tool": "{tool_name}", "cvss_score": float, "cwe_id": int|null,
+    "impact": str, "steps_to_reproduce": [str],
+    "remediation_short": str, "remediation_long": str, "owasp_category": str
+  }}],
+  "should_advance_phase": bool,
+  "strategic_notes": str
 }}
 
-Respond with ONLY the JSON object. No explanation, no markdown fences."""
+OWASP category — set on every finding where applicable (never leave blank for these):
+- Injection (SQLi, XSS, command injection, SSTI) → "A03:2021 - Injection"
+- Missing/weak TLS, cleartext transmission → "A02:2021 - Cryptographic Failures"
+- CORS wildcard, missing headers, verbose errors, exposed admin → "A05:2021 - Security Misconfiguration"
+- Auth bypass, weak session, JWT issues → "A07:2021 - Identification and Authentication Failures"
+- Known CVE in library or component → "A06:2021 - Vulnerable and Outdated Components"
+- IDOR, path traversal, privilege escalation → "A01:2021 - Broken Access Control"
+- SSRF → "A10:2021 - Server-Side Request Forgery"
+
+CVSS severity scale: critical=9.0-10.0, high=7.0-8.9, medium=4.0-6.9, low=0.1-3.9, info=0.0.
+Severity rules:
+- Open port or accessible service alone = INFO (0.0), never CRITICAL or HIGH.
+- Elevate to HIGH/CRITICAL only when exploitation is confirmed (e.g., sqlmap confirmed injectable, XSS payload executed, auth bypassed).
+- Consolidate findings with the same root cause, endpoint, and tool into a single finding — do not create duplicates.
+- Exclude scan limitations (401 auth errors, parameter encoding failures, tool not-found errors) — these are not security findings.
+
+Respond with ONLY the JSON."""
 
     try:
         response = await _call_api_with_retry(
@@ -745,14 +1201,51 @@ Respond with ONLY the JSON object. No explanation, no markdown fences."""
         updates["technologies"] = data["technologies"]
 
     if data.get("vulnerabilities"):
-        count = len(data["vulnerabilities"])
-        print(f"[analyst] Extracted {count} vulnerability/vulnerabilities")
-        updates["vulnerabilities"] = data["vulnerabilities"]
+        new_vulns = _deduplicate_findings(state.get("vulnerabilities", []), data["vulnerabilities"])
+        skipped = len(data["vulnerabilities"]) - len(new_vulns)
+        if new_vulns:
+            print(f"[analyst] Extracted {len(new_vulns)} vulnerability/vulnerabilities ({skipped} duplicates skipped)")
+            updates["vulnerabilities"] = new_vulns
+        else:
+            print(f"[analyst] All {len(data['vulnerabilities'])} vulnerabilities were duplicates — skipped")
 
     if data.get("findings"):
-        count = len(data["findings"])
-        print(f"[analyst] Extracted {count} finding(s)")
-        updates["findings"] = data["findings"]
+        new_findings = _deduplicate_findings(state.get("findings", []), data["findings"])
+        skipped = len(data["findings"]) - len(new_findings)
+        if new_findings:
+            print(f"[analyst] Extracted {len(new_findings)} finding(s) ({skipped} duplicates skipped)")
+            updates["findings"] = new_findings
+        else:
+            print(f"[analyst] All {len(data['findings'])} findings were duplicates — skipped")
+
+    # Generate analyst briefing for the strategist's next decision
+    briefing_parts: list[str] = []
+    if data.get("open_ports"):
+        ports_str = ", ".join(
+            f"{p['port']}/{p.get('service', '?')}" for p in data["open_ports"][:5]
+        )
+        briefing_parts.append(f"Ports: {ports_str}")
+    if data.get("vulnerabilities"):
+        for v in data["vulnerabilities"][:3]:
+            briefing_parts.append(f"VULN [{v.get('severity', '?')}]: {v.get('title', '?')}")
+    if data.get("findings"):
+        for f_item in data["findings"][:3]:
+            briefing_parts.append(
+                f"FINDING [{f_item.get('severity', '?')}]: {f_item.get('title', '?')}"
+            )
+    if data.get("technologies"):
+        briefing_parts.append(f"Tech: {', '.join(str(t) for t in data['technologies'][:5])}")
+    if data.get("strategic_notes"):
+        briefing_parts.append(f"Note: {data['strategic_notes']}")
+    briefing = f"[{tool_name}] " + "; ".join(briefing_parts) if briefing_parts else ""
+    updates["analyst_briefing"] = briefing
+    updates["briefing_history"] = [briefing]  # Annotated[list, operator.add] — appends
+    if briefing:
+        print(f"[analyst] Briefing: {briefing[:200]}")
+    total_v = len(state.get("vulnerabilities", [])) + len(updates.get("vulnerabilities", []))
+    total_f = len(state.get("findings", [])) + len(updates.get("findings", []))
+    print(f"[analyst] Totals: {total_v} vulns, {total_f} findings, "
+          f"{len(state.get('open_ports', []))} ports")
 
     # Advance PTES phase if current objectives are satisfied
     if data.get("should_advance_phase"):
@@ -764,6 +1257,19 @@ Respond with ONLY the JSON object. No explanation, no markdown fences."""
             print(f"[analyst] Phase {cp} complete → Phase {cp + 1}")
         else:
             print("[analyst] Phase 7 (Reporting) complete — all phases covered")
+
+    # Force phase advancement when stagnating for too long
+    if not updates.get("current_phase") and state["current_phase"] < 7:
+        cp = state["current_phase"]
+        stagnation_msg = _detect_stagnation(
+            state["command_history"], state.get("briefing_history")
+        )
+        if stagnation_msg and state.get("iteration_count", 0) > 10:
+            completed = {**state.get("phase_completed", {}), cp: True}
+            updates["phase_completed"] = completed
+            updates["current_phase"] = cp + 1
+            print(f"[analyst] FORCED phase advance: {cp} -> {cp + 1} "
+                  f"(stagnation at iteration {state.get('iteration_count', 0)})")
 
     return updates
 
@@ -778,7 +1284,15 @@ async def reporter(state: PentestState) -> dict[str, Any]:
     print("[reporter] Generating final pentest report...")
 
     client = get_mcp_client()
-    all_findings = state.get("vulnerabilities", []) + state.get("findings", [])
+    all_findings = _deduplicate_findings(
+        [], state.get("vulnerabilities", []) + state.get("findings", [])
+    )
+    # Strip negative findings ("no vulnerabilities found", etc.) from the report
+    before = len(all_findings)
+    all_findings = [f for f in all_findings if not _is_negative_finding(f)]
+    dropped = before - len(all_findings)
+    if dropped:
+        print(f"[reporter] Filtered {dropped} negative finding(s) from report")
     risk_score = 0.0
     report_path = (
         f"output/pentest-{state['target'].replace('/', '_')}"
@@ -815,6 +1329,24 @@ async def reporter(state: PentestState) -> dict[str, Any]:
         tools_used = list({call["tool"] for call in state.get("command_history", [])})
         date_range = datetime.now().strftime("%Y-%m-%d")
 
+        crit_count = sum(1 for f in all_findings if f.get("severity", "").lower() == "critical")
+        high_count = sum(1 for f in all_findings if f.get("severity", "").lower() == "high")
+        med_count = sum(1 for f in all_findings if f.get("severity", "").lower() == "medium")
+        if crit_count or high_count:
+            posture = "requires immediate remediation"
+        elif med_count:
+            posture = "presents moderate risk requiring attention"
+        else:
+            posture = "presents low overall risk"
+        conclusion = (
+            f"The {state['engagement_type']} penetration test of {state['target']} identified "
+            f"{len(all_findings)} finding(s) across {state['current_phase'] - 1} PTES phases "
+            f"using {len(tools_used)} tools. "
+            f"The overall security posture {posture}. "
+            f"Immediate remediation is recommended for all Critical and High severity findings "
+            f"as detailed in the Remediation Roadmap."
+        )
+
         await client.call_tool(
             "generate_report",
             {
@@ -829,6 +1361,7 @@ async def reporter(state: PentestState) -> dict[str, Any]:
                     f"{len(all_findings)} findings identified across {state['iteration_count']} "
                     f"tool executions over {state['current_phase'] - 1} PTES phases."
                 ),
+                "conclusion": conclusion,
                 "report_type": "full",
                 "output_format": "markdown",
                 "output_path": report_path,
@@ -912,6 +1445,7 @@ async def run_agent(
     model: str = DEFAULT_MODEL,
     max_tokens: int = DEFAULT_MAX_TOKENS,
     timeout_minutes: int = DEFAULT_TIMEOUT_MINUTES,
+    auto_approve_destructive: bool = False,
 ) -> None:
     """Compile and run the autonomous pentest graph, handling human-in-the-loop interrupts."""
     initial_state: PentestState = {
@@ -927,6 +1461,8 @@ async def run_agent(
         "technologies": [],
         "vulnerabilities": [],
         "findings": [],
+        "analyst_briefing": "",
+        "briefing_history": [],
         "available_tools": [],
         "command_history": [],
         "next_tool": "",
@@ -950,6 +1486,8 @@ async def run_agent(
         "recursion_limit": max_iterations * 5 + 20,
     }
 
+    global _agent_start_time
+    _agent_start_time = time.monotonic()
     result: Any = await graph.ainvoke(initial_state, config)
 
     # Handle human-in-the-loop interrupts in a loop
@@ -971,13 +1509,24 @@ async def run_agent(
         print(f"  Warning: {interrupt_data.get('message', 'This action may be irreversible.')}")
         print("═" * 64)
 
-        try:
-            answer = input("Approve? (y/n): ").strip().lower()
-        except (EOFError, KeyboardInterrupt):
-            answer = "n"
-            print("n")
+        if auto_approve_destructive:
+            print("[human_gate] Auto-approved via --auto-approve-destructive flag")
+            approved = True
+        elif not sys.stdin.isatty():
+            print(
+                "[human_gate] Non-interactive stdin — skipping destructive tool. "
+                "Use --auto-approve-destructive to auto-approve in background runs."
+            )
+            approved = False
+        else:
+            try:
+                answer = input("Approve? (y/n): ").strip().lower()
+            except (EOFError, KeyboardInterrupt):
+                print("\n[human_gate] Input interrupted — rejecting.")
+                approved = False
+            else:
+                approved = answer in ("y", "yes")
 
-        approved = answer in ("y", "yes")
         result = await graph.ainvoke(Command(resume=approved), config)
 
     if isinstance(result, dict) and result.get("error"):
@@ -1042,6 +1591,12 @@ async def main() -> None:
         action="store_true",
         help="Skip the interactive confirmation prompt (required for non-interactive/Docker runs)",
     )
+    parser.add_argument(
+        "--auto-approve-destructive",
+        action="store_true",
+        help="Auto-approve destructive tools (sqlmap, msf, hydra) without prompting. "
+        "Use only in trusted automated environments.",
+    )
     args = parser.parse_args()
 
     # Validate required environment variable
@@ -1082,6 +1637,7 @@ async def main() -> None:
             model=args.model,
             max_tokens=args.max_tokens,
             timeout_minutes=args.timeout,
+            auto_approve_destructive=args.auto_approve_destructive,
         )
         if args.timeout > 0:
             try:

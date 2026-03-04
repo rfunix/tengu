@@ -6,7 +6,7 @@ audit_log_path = "./logs/tengu-audit.log"
 [targets]
 # Allowed hosts/CIDRs for scanning — REQUIRED before running any scan
 # Examples: "example.com", "*.example.com", "192.168.1.0/24", "10.0.0.0/8"
-allowed_hosts = []
+allowed_hosts = ["juice-shop", "juice-shop.local", "172.20.0.0/24"]
 
 # Always blocked, even if listed in allowed_hosts
 blocked_hosts = []

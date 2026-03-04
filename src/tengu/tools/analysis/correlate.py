@@ -96,6 +96,10 @@ async def correlate_findings(
     owasp_present = set()
     for f in parsed:
         owasp = f.get("owasp_category", "")
+        # Normalize: LLM may return a list instead of a string
+        if isinstance(owasp, list):
+            owasp = owasp[0] if owasp else ""
+        owasp = str(owasp)
         # Extract category ID (e.g. "A03" from "A03:2025 - Injection")
         if owasp and owasp[:3].startswith("A") and owasp[1:3].isdigit():
             owasp_present.add(owasp[:3])
@@ -171,9 +175,13 @@ def _calculate_risk_score(
     if not findings:
         return 0.0
 
-    # Base score from CVSS average
+    # Base score from CVSS average — exclude informational findings to avoid dilution
+    info_sevs = {"info", "informational"}
+    scored = [f for f in findings if f.get("severity", "info").lower() not in info_sevs]
+    scored_or_all = scored if scored else findings
     cvss_scores = [
-        f.get("cvss_score", _SEVERITY_WEIGHTS.get(f.get("severity", "info"), 0)) for f in findings
+        f.get("cvss_score", _SEVERITY_WEIGHTS.get(f.get("severity", "info"), 0))
+        for f in scored_or_all
     ]
     base_score = sum(cvss_scores) / len(cvss_scores) if cvss_scores else 0.0
 
@@ -262,19 +270,23 @@ async def score_risk(
         severity_counts[sev] = severity_counts.get(sev, 0) + 1
 
         cvss = f.get("cvss_score")
-        if cvss:
+        if cvss is not None:
             cvss_total += float(cvss)
             cvss_count += 1
 
     avg_cvss = cvss_total / cvss_count if cvss_count > 0 else 0.0
 
-    # Weight by severity distribution
+    # Exclude informational findings from the risk score — they dilute severity
+    info_sevs = {"info", "informational"}
+    scoring_counts = {s: c for s, c in severity_counts.items() if s not in info_sevs}
+    scoring_total = sum(scoring_counts.values())
+
     weighted_score = sum(
-        count * _SEVERITY_WEIGHTS.get(sev, 0) for sev, count in severity_counts.items()
+        count * _SEVERITY_WEIGHTS.get(sev, 0) for sev, count in scoring_counts.items()
     )
 
-    # Normalize to 0-10
-    normalized = min(weighted_score / len(findings), 10.0) if findings else 0.0
+    # Normalize against non-info findings; fall back to 0 if all are informational
+    normalized = min(weighted_score / scoring_total, 10.0) if scoring_total > 0 else 0.0
 
     # Apply context multiplier
     context_multiplier = 1.0

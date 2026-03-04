@@ -67,6 +67,7 @@ MAX_ITER="${TENGU_AGENT_MAX_ITER:-50}"
 MODEL="${TENGU_AGENT_MODEL:-claude-sonnet-4-6}"
 MAX_TOKENS="${TENGU_AGENT_MAX_TOKENS:-2048}"
 TIMEOUT="${TENGU_AGENT_TIMEOUT:-60}"
+AUTO_APPROVE="${TENGU_AGENT_AUTO_APPROVE:-false}"
 
 # Convert comma-separated scope to --scope args
 SCOPE_ARGS=()
@@ -87,9 +88,15 @@ echo -e "  Max Iters:   ${MAX_ITER}"
 echo -e "  Model:       ${MODEL}"
 echo -e "  Max Tokens:  ${MAX_TOKENS}"
 echo -e "  Timeout:     ${TIMEOUT}m"
+echo -e "  Auto-Approve: ${AUTO_APPROVE}"
 echo ""
 
 # ── Launch autonomous agent ──────────────────────────────────────────────────────
+AUTO_APPROVE_FLAG=()
+if [[ "${AUTO_APPROVE}" == "true" || "${AUTO_APPROVE}" == "1" ]]; then
+    AUTO_APPROVE_FLAG=("--auto-approve-destructive")
+fi
+
 exec uv run python /app/autonomous_tengu.py \
     "${TARGET}" \
     --scope "${SCOPE_ARGS[@]}" \
@@ -98,4 +105,5 @@ exec uv run python /app/autonomous_tengu.py \
     --model "${MODEL}" \
     --max-tokens "${MAX_TOKENS}" \
     --timeout "${TIMEOUT}" \
-    --yes
+    --yes \
+    "${AUTO_APPROVE_FLAG[@]}"

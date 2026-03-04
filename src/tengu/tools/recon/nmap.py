@@ -72,7 +72,11 @@ async def nmap_scan(
     ports = sanitize_port_spec(ports)
 
     if timing not in _TIMING_FLAGS:
-        timing = "T3"
+        timing = (
+            cfg.tools.defaults.nmap_timing
+            if cfg.tools.defaults.nmap_timing in _TIMING_FLAGS
+            else "T3"
+        )
 
     # Target allowlist check
     allowlist = make_allowlist_from_config()
@@ -88,7 +92,10 @@ async def nmap_scan(
     # Build argument list (never shell=True)
     args: list[str] = [tool_path]
     args.extend(_SCAN_TYPE_FLAGS.get(scan_type, ["-sT"]))
-    args.extend([f"-{timing}", "-p", ports])
+    args.append(f"-{timing}")
+    # -sn (ping) and -F (fast) are incompatible with explicit -p port selection
+    if scan_type not in ("ping", "fast"):
+        args.extend(["-p", ports])
     args.extend(["-oX", "-"])  # XML output to stdout
 
     if os_detection:

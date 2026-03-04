@@ -48,6 +48,16 @@ def _host_matches_pattern(host: str, pattern: str) -> bool:
     if "/" in pattern:
         try:
             network = ipaddress.ip_network(pattern, strict=False)
+            # Target is itself a CIDR — check if it is a subnet of the allowed network
+            if "/" in host:
+                try:
+                    target_net = ipaddress.ip_network(host, strict=False)
+                    if type(target_net) is type(network):
+                        return target_net.subnet_of(network)  # type: ignore[arg-type]
+                except ValueError:
+                    pass
+                return False
+            # Target is a plain IP — check if it falls within the allowed network
             try:
                 addr = ipaddress.ip_address(host)
                 return addr in network

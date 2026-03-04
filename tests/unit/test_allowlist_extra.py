@@ -92,18 +92,22 @@ class TestHostMatchesPattern:
 
 
 class TestTargetAllowlistExtra:
-    def test_cidr_target_against_cidr_allowlist(self):
-        # _extract_host("192.168.1.0/24") returns "192.168.1.0/24" (line 31)
-        # then _host_matches_pattern("192.168.1.0/24", "192.168.0.0/16")
-        # tries ip_address("192.168.1.0/24") → ValueError → returns False
+    def test_cidr_target_subnet_of_cidr_allowlist(self):
+        # 192.168.1.0/24 is a subnet of 192.168.0.0/16 — should be allowed
         al = TargetAllowlist(
             allowed_hosts=["192.168.0.0/16"],
             blocked_hosts=[],
         )
-        # CIDR as target against CIDR pattern — currently returns False because
-        # the extracted "host" is the CIDR string itself, which fails ip_address()
+        al.check("192.168.1.0/24")  # must not raise
+
+    def test_cidr_target_not_subnet_of_cidr_allowlist(self):
+        # 10.0.0.0/24 is NOT within 192.168.0.0/16 — must be rejected
+        al = TargetAllowlist(
+            allowed_hosts=["192.168.0.0/16"],
+            blocked_hosts=[],
+        )
         with pytest.raises(TargetNotAllowedError):
-            al.check("192.168.1.0/24")
+            al.check("10.0.0.0/24")
 
     def test_url_with_port_extracts_host(self):
         al = TargetAllowlist(allowed_hosts=["api.example.com"], blocked_hosts=[])

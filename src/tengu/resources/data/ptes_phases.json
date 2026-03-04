@@ -77,7 +77,7 @@
         "Prioritized attack scenarios",
         "Risk assessment matrix"
       ],
-      "tools": []
+      "tools": ["correlate_findings", "score_risk", "cve_lookup", "cve_search"]
     },
     {
       "number": 4,
@@ -172,7 +172,7 @@
         "Risk matrix",
         "Raw tool outputs as appendices"
       ],
-      "tools": []
+      "tools": ["correlate_findings", "score_risk", "generate_report"]
     }
   ]
 }

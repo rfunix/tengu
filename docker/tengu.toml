@@ -11,6 +11,7 @@ allowed_hosts = [
     "10.0.0.0/8",       # VPN / cloud lab
     "juice-shop",       # Lab target (docker compose --profile lab)
     "dvwa",             # Lab target (docker compose --profile lab)
+    "tengu-juice-shop-1"
 ]
 
 # Always blocked, even if listed in allowed_hosts
@@ -34,9 +35,9 @@ metasploit_rpc = "http://tengu-msf:55553"
 setoolkit = ""
 
 [tools.defaults]
-nmap_timing = "T3"
+nmap_timing = "T4"
 nuclei_severity = ["medium", "high", "critical"]
-scan_timeout = 600  # seconds
+scan_timeout = 900  # seconds
 wordlist_path = "/usr/share/seclists/Discovery/Web-Content/common.txt"
 password_wordlist_path = "/usr/share/seclists/Passwords/Common-Credentials/xato-net-10-million-passwords-1000000.txt"
 

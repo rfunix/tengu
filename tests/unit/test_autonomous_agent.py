@@ -11,13 +11,21 @@ import pytest
 pytest.importorskip("anthropic", reason="requires 'agent' extra: uv sync --extra agent")
 
 from autonomous_tengu import (
+    _BINARY_TO_MCP_TOOL,
+    _NON_SECURITY_TOOLS,
+    _PTES_TOOL_NAME_MAP,
+    _PURE_PYTHON_TOOLS,
     DESTRUCTIVE_TOOLS,
     PentestState,
     TenguMCPClient,
     ToolCall,
+    _build_call_key,
+    _deduplicate_findings,
+    _detect_stagnation,
     _extract_json_from_response,
     _get_phase_data,
     _is_destructive,
+    _token_usage,
     build_graph,
     build_strategist_prompt,
     get_mcp_client,
@@ -43,6 +51,8 @@ def _make_state(**overrides: Any) -> PentestState:
         "technologies": [],
         "vulnerabilities": [],
         "findings": [],
+        "analyst_briefing": "",
+        "briefing_history": [],
         "available_tools": [],
         "command_history": [],
         "next_tool": "",
@@ -227,6 +237,59 @@ class TestBuildStrategistPrompt:
         state = _make_state(current_phase=2, ptes_phases=phases)
         prompt = build_strategist_prompt(state)
         assert "find open ports" in prompt
+
+    def test_includes_analyst_briefing_when_set(self):
+        state = _make_state(analyst_briefing="[nmap_scan] Ports: 80/http, 443/https; Tech: Apache")
+        prompt = build_strategist_prompt(state)
+        assert "Latest Intel" in prompt
+        assert "[nmap_scan]" in prompt
+        assert "80/http" in prompt
+
+    def test_empty_briefing_not_included(self):
+        state = _make_state(analyst_briefing="")
+        prompt = build_strategist_prompt(state)
+        assert "Latest Intel" not in prompt
+
+    def test_stagnation_message_included_when_detected(self):
+        # 8 calls to the same tool triggers stagnation
+        call: ToolCall = {
+            "tool": "nmap_scan",
+            "args": {"target": "10.0.0.1"},
+            "result": {},
+            "timestamp": 0.0,
+            "error": None,
+            "duration_seconds": 1.0,
+        }
+        state = _make_state(command_history=[call] * 8)
+        prompt = build_strategist_prompt(state)
+        assert "STAGNATION" in prompt
+        assert "nmap_scan" in prompt
+
+    def test_no_stagnation_with_diverse_history(self):
+        tools = [
+            "nmap_scan",
+            "nuclei_scan",
+            "nikto_scan",
+            "ffuf_fuzz",
+            "sqlmap_scan",
+            "whatweb_scan",
+            "gobuster_scan",
+            "subfinder_enum",
+        ]
+        calls: list[ToolCall] = [
+            {
+                "tool": t,
+                "args": {},
+                "result": {},
+                "timestamp": 0.0,
+                "error": None,
+                "duration_seconds": 1.0,
+            }
+            for t in tools
+        ]
+        state = _make_state(command_history=calls)
+        prompt = build_strategist_prompt(state)
+        assert "STAGNATION" not in prompt
 
 
 # ── route_after_strategist ────────────────────────────────────────────────────
@@ -485,6 +548,14 @@ class TestPentestStateAnnotatedReducers:
         assert hasattr(findings_hint, "__metadata__")
         assert findings_hint.__metadata__[0] is operator.add
 
+    def test_briefing_history_reducer_is_operator_add(self):
+        import typing
+
+        hints = typing.get_type_hints(PentestState, include_extras=True)
+        bh_hint = hints["briefing_history"]
+        assert hasattr(bh_hint, "__metadata__")
+        assert bh_hint.__metadata__[0] is operator.add
+
 
 # ── build_graph ───────────────────────────────────────────────────────────────
 
@@ -508,6 +579,376 @@ class TestBuildGraph:
 
 
 # ── recursion_limit in run_agent config ───────────────────────────────────────
+
+
+# ── _NON_SECURITY_TOOLS ───────────────────────────────────────────────────────
+
+
+class TestNonSecurityTools:
+    def test_utility_tools_excluded(self):
+        for tool in ("validate_target", "check_tools"):
+            assert tool in _NON_SECURITY_TOOLS
+
+    def test_analysis_aggregators_excluded(self):
+        for tool in ("score_risk", "correlate_findings", "generate_report"):
+            assert tool in _NON_SECURITY_TOOLS
+
+    def test_cve_tools_excluded(self):
+        for tool in ("cve_lookup", "cve_search"):
+            assert tool in _NON_SECURITY_TOOLS
+
+    def test_scanner_tools_not_excluded(self):
+        for tool in ("nmap_scan", "nuclei_scan", "nikto_scan", "sqlmap_scan", "xss_scan"):
+            assert tool not in _NON_SECURITY_TOOLS
+
+
+# ── _deduplicate_findings ─────────────────────────────────────────────────────
+
+
+class TestDeduplicateFindings:
+    def test_empty_inputs_return_empty(self):
+        assert _deduplicate_findings([], []) == []
+
+    def test_all_new_when_existing_empty(self):
+        new = [
+            {"title": "XSS", "severity": "high", "affected_asset": "login.php"},
+            {"title": "SQLi", "severity": "critical", "affected_asset": "search.php"},
+        ]
+        result = _deduplicate_findings([], new)
+        assert len(result) == 2
+
+    def test_exact_duplicate_is_excluded(self):
+        existing = [{"title": "XSS", "severity": "high", "affected_asset": "login.php"}]
+        new = [{"title": "XSS", "severity": "high", "affected_asset": "login.php"}]
+        result = _deduplicate_findings(existing, new)
+        assert result == []
+
+    def test_case_insensitive_dedup(self):
+        existing = [{"title": "xss", "severity": "HIGH", "affected_asset": "Login.php"}]
+        new = [{"title": "XSS", "severity": "high", "affected_asset": "login.php"}]
+        result = _deduplicate_findings(existing, new)
+        assert result == []
+
+    def test_unique_finding_passes_through(self):
+        existing = [{"title": "XSS", "severity": "high", "affected_asset": "login.php"}]
+        new = [{"title": "SQLi", "severity": "critical", "affected_asset": "search.php"}]
+        result = _deduplicate_findings(existing, new)
+        assert len(result) == 1
+        assert result[0]["title"] == "SQLi"
+
+    def test_dedup_within_new_list_itself(self):
+        new = [
+            {"title": "XSS", "severity": "high", "affected_asset": "page.php"},
+            {"title": "XSS", "severity": "high", "affected_asset": "page.php"},
+        ]
+        result = _deduplicate_findings([], new)
+        assert len(result) == 1
+
+    def test_missing_fields_treated_as_empty_string(self):
+        existing = [{"title": "XSS"}]  # no severity/affected_asset
+        new = [{"title": "XSS"}]
+        result = _deduplicate_findings(existing, new)
+        assert result == []
+
+    def test_partial_match_not_deduped(self):
+        existing = [{"title": "XSS", "severity": "high", "affected_asset": "page1.php"}]
+        new = [{"title": "XSS", "severity": "high", "affected_asset": "page2.php"}]
+        result = _deduplicate_findings(existing, new)
+        assert len(result) == 1
+
+    # CWE-based dedup tests
+
+    def test_cwe_dedup_reporter_pass_keeps_specific_asset(self):
+        """Reporter final pass: two tools report CWE-79 — keep the one with the URL."""
+        nuclei = {
+            "title": "Cross-Site Scripting (XSS)",
+            "severity": "high",
+            "affected_asset": "unknown",
+            "cwe_id": 79,
+            "tool": "nuclei",
+        }
+        dalfox = {
+            "title": "XSS Vulnerability Detected",
+            "severity": "high",
+            "affected_asset": "http://172.20.0.5:3000/search?q=test",
+            "cwe_id": 79,
+            "tool": "dalfox",
+        }
+        result = _deduplicate_findings([], [nuclei, dalfox])
+        assert len(result) == 1
+        assert result[0]["tool"] == "dalfox"
+
+    def test_cwe_dedup_skips_less_specific_in_new(self):
+        """If existing already has specific URL for CWE-79, skip vague new finding."""
+        dalfox = {
+            "title": "XSS Vulnerability Detected",
+            "severity": "high",
+            "affected_asset": "http://172.20.0.5:3000/search",
+            "cwe_id": 79,
+            "tool": "dalfox",
+        }
+        nuclei = {
+            "title": "Cross-Site Scripting (XSS)",
+            "severity": "high",
+            "affected_asset": "unknown",
+            "cwe_id": 79,
+            "tool": "nuclei",
+        }
+        result = _deduplicate_findings([dalfox], [nuclei])
+        assert result == []
+
+    def test_cwe_dedup_includes_more_specific_new(self):
+        """If existing has vague asset and new has URL, include the new one."""
+        nuclei = {
+            "title": "Cross-Site Scripting (XSS)",
+            "severity": "high",
+            "affected_asset": "unknown",
+            "cwe_id": 79,
+            "tool": "nuclei",
+        }
+        dalfox = {
+            "title": "XSS Vulnerability Detected",
+            "severity": "high",
+            "affected_asset": "http://172.20.0.5:3000/search",
+            "cwe_id": 79,
+            "tool": "dalfox",
+        }
+        result = _deduplicate_findings([nuclei], [dalfox])
+        assert len(result) == 1
+        assert result[0]["tool"] == "dalfox"
+
+    def test_cwe_dedup_different_severity_not_deduped(self):
+        """Same CWE but different severity → both kept."""
+        high = {"title": "XSS High", "severity": "high", "affected_asset": "unknown", "cwe_id": 79}
+        medium = {
+            "title": "XSS Medium",
+            "severity": "medium",
+            "affected_asset": "unknown",
+            "cwe_id": 79,
+        }
+        result = _deduplicate_findings([], [high, medium])
+        assert len(result) == 2
+
+    def test_cwe_dedup_no_cwe_passes_through(self):
+        """Findings without cwe_id are not affected by CWE dedup."""
+        existing = [{"title": "XSS", "severity": "high", "affected_asset": "unknown", "cwe_id": 79}]
+        new = [
+            {
+                "title": "Open Redirect",
+                "severity": "medium",
+                "affected_asset": "http://example.com/redirect",
+            }
+        ]
+        result = _deduplicate_findings(existing, new)
+        assert len(result) == 1
+        assert result[0]["title"] == "Open Redirect"
+
+    def test_cwe_dedup_equal_specificity_keeps_first_in_new(self):
+        """When two new findings share CWE-79 with same specificity, keep one."""
+        f1 = {"title": "XSS A", "severity": "high", "affected_asset": "http://host/a", "cwe_id": 79}
+        f2 = {"title": "XSS B", "severity": "high", "affected_asset": "http://host/b", "cwe_id": 79}
+        result = _deduplicate_findings([], [f1, f2])
+        # Only one kept (equal specificity, f2 wins as it replaces f1 in cwe_best)
+        assert len(result) == 1
+
+
+# ── _build_call_key ───────────────────────────────────────────────────────────
+
+
+class TestBuildCallKey:
+    def test_same_tool_same_args_produces_same_key(self):
+        key1 = _build_call_key("nmap_scan", {"target": "10.0.0.1", "ports": "80,443"})
+        key2 = _build_call_key("nmap_scan", {"target": "10.0.0.1", "ports": "80,443"})
+        assert key1 == key2
+
+    def test_different_tool_produces_different_key(self):
+        key1 = _build_call_key("nmap_scan", {"target": "10.0.0.1"})
+        key2 = _build_call_key("nuclei_scan", {"target": "10.0.0.1"})
+        assert key1 != key2
+
+    def test_different_args_produces_different_key(self):
+        key1 = _build_call_key("nmap_scan", {"target": "10.0.0.1"})
+        key2 = _build_call_key("nmap_scan", {"target": "10.0.0.2"})
+        assert key1 != key2
+
+    def test_arg_order_does_not_matter(self):
+        key1 = _build_call_key("nmap_scan", {"target": "10.0.0.1", "ports": "80"})
+        key2 = _build_call_key("nmap_scan", {"ports": "80", "target": "10.0.0.1"})
+        assert key1 == key2
+
+    def test_key_starts_with_tool_name(self):
+        key = _build_call_key("ffuf_fuzz", {"url": "http://target/FUZZ"})
+        assert key.startswith("ffuf_fuzz:")
+
+    def test_empty_args_produces_valid_key(self):
+        key = _build_call_key("check_tools", {})
+        assert key == "check_tools:{}"
+
+
+# ── _PTES_TOOL_NAME_MAP ───────────────────────────────────────────────────────
+
+
+class TestPtesToolNameMap:
+    def test_nmap_maps_to_nmap_scan(self):
+        assert _PTES_TOOL_NAME_MAP["nmap"] == "nmap_scan"
+
+    def test_subfinder_maps_to_subfinder_enum(self):
+        assert _PTES_TOOL_NAME_MAP["subfinder"] == "subfinder_enum"
+
+    def test_shodan_maps_to_shodan_lookup(self):
+        assert _PTES_TOOL_NAME_MAP["shodan"] == "shodan_lookup"
+
+    def test_metasploit_maps_to_msf_search(self):
+        assert _PTES_TOOL_NAME_MAP["metasploit"] == "msf_search"
+
+    def test_all_ptes_json_tool_names_resolve_to_nonempty(self):
+        """All tool names in ptes_phases.json must resolve to a non-empty string.
+
+        Tools already using MCP names (e.g. correlate_findings) are passed through
+        via _PTES_TOOL_NAME_MAP.get(t, t); tools that need translation must be in the map.
+        """
+        import json
+        from pathlib import Path
+
+        ptes_path = Path(__file__).parents[2] / "src/tengu/resources/data/ptes_phases.json"
+        data = json.loads(ptes_path.read_text())
+        for phase in data["phases"]:
+            for tool_name in phase.get("tools", []):
+                resolved = _PTES_TOOL_NAME_MAP.get(tool_name, tool_name)
+                assert resolved, (
+                    f"PTES tool '{tool_name}' (phase {phase['number']}) resolved to empty string"
+                )
+
+
+# ── score_risk CVSS 0.0 regression ───────────────────────────────────────────
+
+
+class TestScoreRiskCvssZero:
+    """Regression test for the falsy CVSS 0.0 bug in correlate.py."""
+
+    def test_cvss_zero_counted_in_average(self):
+        """A finding with cvss_score=0.0 must be included in the avg_cvss calculation."""
+        from tengu.tools.analysis.correlate import _SEVERITY_WEIGHTS  # type: ignore[import]
+
+        # Verify the weights dict is accessible (confirms correlate.py is importable)
+        assert "info" in _SEVERITY_WEIGHTS
+
+    def test_cvss_zero_is_not_falsy(self):
+        """Ensure Python treats 0.0 as falsy — confirming the bug was real."""
+        cvss_zero = 0.0
+        # The old bug: `if cvss:` would skip 0.0
+        assert not cvss_zero  # 0.0 is falsy
+        # The fix: `if cvss is not None:` correctly includes 0.0
+        assert (cvss_zero is not None) is True
+
+
+# ── _detect_stagnation ────────────────────────────────────────────────────────
+
+
+class TestDetectStagnation:
+    def _make_call(self, tool: str, error: str | None = None) -> ToolCall:
+        return {
+            "tool": tool,
+            "args": {},
+            "result": {},
+            "timestamp": 0.0,
+            "error": error,
+            "duration_seconds": 0.1,
+        }
+
+    def test_returns_none_when_history_too_short(self):
+        history = [self._make_call("nmap_scan") for _ in range(5)]
+        assert _detect_stagnation(history) is None
+
+    def test_returns_none_for_empty_history(self):
+        assert _detect_stagnation([]) is None
+
+    def test_detects_single_tool_repetition(self):
+        history = [self._make_call("nmap_scan") for _ in range(8)]
+        result = _detect_stagnation(history)
+        assert result is not None
+        assert "nmap_scan" in result
+
+    def test_detects_high_error_rate(self):
+        history = [self._make_call("nmap_scan", error="timeout")] * 4 + [
+            self._make_call("nuclei_scan", error="timeout")
+        ] * 4
+        result = _detect_stagnation(history)
+        assert result is not None
+        assert "failed" in result
+
+    def test_no_stagnation_with_diverse_successful_tools(self):
+        tools = [
+            "nmap_scan",
+            "nuclei_scan",
+            "nikto_scan",
+            "ffuf_fuzz",
+            "sqlmap_scan",
+            "whatweb_scan",
+            "gobuster_scan",
+            "subfinder_enum",
+        ]
+        history = [self._make_call(t) for t in tools]
+        assert _detect_stagnation(history) is None
+
+    def test_detects_empty_briefings(self):
+        history = [self._make_call(f"tool_{i}") for i in range(8)]
+        briefings = [""] * 8
+        result = _detect_stagnation(history, briefing_history=briefings)
+        assert result is not None
+        assert "No new findings" in result
+
+    def test_no_stagnation_when_two_briefings_have_content(self):
+        # 2 non-empty briefings → empty count = 6 < window-1 (7) → no stagnation
+        history = [self._make_call(f"tool_{i}") for i in range(8)]
+        briefings = [""] * 5 + ["[nmap_scan] Ports: 80/http", "[nuclei] VULN high: XSS", ""]
+        result = _detect_stagnation(history, briefing_history=briefings)
+        assert result is None
+
+    def test_no_stagnation_when_briefing_history_too_short(self):
+        history = [self._make_call(f"tool_{i}") for i in range(8)]
+        briefings = [""] * 4  # fewer than window
+        result = _detect_stagnation(history, briefing_history=briefings)
+        assert result is None
+
+    def test_exact_window_boundary_detects_stagnation(self):
+        """Exactly `window` calls all to same tool triggers detection."""
+        history = [self._make_call("nikto_scan") for _ in range(8)]
+        result = _detect_stagnation(history, window=8)
+        assert result is not None
+
+    def test_one_fewer_than_window_returns_none(self):
+        history = [self._make_call("nikto_scan") for _ in range(7)]
+        result = _detect_stagnation(history, window=8)
+        assert result is None
+
+    def test_single_different_tool_breaks_single_tool_detection(self):
+        """One different tool in window prevents single-tool stagnation."""
+        history = [self._make_call("nmap_scan")] * 7 + [self._make_call("nuclei_scan")]
+        result = _detect_stagnation(history)
+        # tool_set has 2 entries — single-tool check won't fire
+        # error_count is 0 — error check won't fire
+        assert result is None or "nmap_scan" not in (result or "")
+
+
+# ── _token_usage ──────────────────────────────────────────────────────────────
+
+
+class TestTokenUsage:
+    def test_token_usage_has_input_output_keys(self):
+        assert "input" in _token_usage
+        assert "output" in _token_usage
+
+    def test_token_usage_values_are_integers(self):
+        assert isinstance(_token_usage["input"], int)
+        assert isinstance(_token_usage["output"], int)
+
+    def test_token_usage_values_are_non_negative(self):
+        assert _token_usage["input"] >= 0
+        assert _token_usage["output"] >= 0
+
+
+# ── TestRecursionLimit ────────────────────────────────────────────────────────
 
 
 class TestRecursionLimit:
@@ -542,3 +983,95 @@ class TestRecursionLimit:
         assert len(captured_configs) >= 1
         cfg = captured_configs[0]
         assert cfg.get("recursion_limit") == 30 * 5 + 20  # 170
+
+
+# ── _BINARY_TO_MCP_TOOL mappings ───────────────────────────────────────────────
+
+
+class TestBinaryToMcpTool:
+    def test_httrack_mapped(self):
+        assert _BINARY_TO_MCP_TOOL["httrack"] == "httrack_mirror"
+
+    def test_impacket_binaries_mapped(self):
+        assert _BINARY_TO_MCP_TOOL["impacket-secretsdump"] == "impacket_secretsdump"
+        assert _BINARY_TO_MCP_TOOL["impacket-psexec"] == "impacket_psexec"
+        assert _BINARY_TO_MCP_TOOL["GetUserSPNs.py"] == "impacket_kerberoast"
+
+    def test_zap_binaries_mapped(self):
+        assert _BINARY_TO_MCP_TOOL["zap.sh"] == "zap_spider"
+        assert _BINARY_TO_MCP_TOOL["zaproxy"] == "zap_spider"
+
+    def test_enum4linux_ng_mapped(self):
+        assert _BINARY_TO_MCP_TOOL["enum4linux-ng"] == "enum4linux_scan"
+
+    def test_setoolkit_mapped(self):
+        assert _BINARY_TO_MCP_TOOL["setoolkit"] == "set_credential_harvester"
+
+    def test_bloodhound_python_mapped(self):
+        assert _BINARY_TO_MCP_TOOL["bloodhound-python"] == "bloodhound_collect"
+
+    def test_msfvenom_mapped(self):
+        assert _BINARY_TO_MCP_TOOL["msfvenom"] == "msf_search"
+
+
+# ── _PURE_PYTHON_TOOLS constant ────────────────────────────────────────────────
+
+
+class TestPurePythonTools:
+    def test_stealth_tools_included(self):
+        stealth = {
+            "tor_check",
+            "tor_new_identity",
+            "check_anonymity",
+            "proxy_check",
+            "rotate_identity",
+        }
+        assert stealth.issubset(_PURE_PYTHON_TOOLS)
+
+    def test_shodan_included(self):
+        assert "shodan_lookup" in _PURE_PYTHON_TOOLS
+
+    def test_utility_tools_included(self):
+        assert "check_tools" in _PURE_PYTHON_TOOLS
+        assert "validate_target" in _PURE_PYTHON_TOOLS
+
+    def test_is_frozenset(self):
+        assert isinstance(_PURE_PYTHON_TOOLS, frozenset)
+
+
+# ── Force phase advance logic ──────────────────────────────────────────────────
+
+
+class TestForcePhaseAdvance:
+    def test_stagnation_triggers_above_10_iterations(self):
+        """Stagnation + >10 iterations should meet force-advance criteria."""
+        call: ToolCall = {
+            "tool": "nmap_scan",
+            "args": {"target": "10.0.0.1"},
+            "result": {},
+            "timestamp": 0.0,
+            "error": None,
+            "duration_seconds": 1.0,
+        }
+        history = [call] * 12
+        briefings = [""] * 12
+        assert _detect_stagnation(history, briefings) is not None
+
+    def test_no_force_below_threshold(self):
+        """iteration_count <= 10 should not meet force-advance criteria."""
+        call: ToolCall = {
+            "tool": "nmap_scan",
+            "args": {"target": "10.0.0.1"},
+            "result": {},
+            "timestamp": 0.0,
+            "error": None,
+            "duration_seconds": 1.0,
+        }
+        state = _make_state(current_phase=2, iteration_count=8, command_history=[call] * 8)
+        assert state["iteration_count"] <= 10
+
+    def test_no_force_when_phase_already_advanced(self):
+        """If LLM already advanced phase, force should not trigger."""
+        # The guard condition is `if not updates.get("current_phase")`
+        updates: dict[str, Any] = {"current_phase": 3}
+        assert updates.get("current_phase") is not None

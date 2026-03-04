@@ -3,6 +3,7 @@
 .PHONY: run run-sse run-dev inspect clean doctor
 .PHONY: docker-build docker-up docker-down docker-logs docker-shell
 .PHONY: docker-lab docker-full docker-pentest docker-agent docker-agent-haiku docker-agent-sonnet docker-agent-logs docker-clean
+.PHONY: docker-agent-bg docker-agent-haiku-bg docker-agent-sonnet-bg docker-agent-stop
 .PHONY: docker-rebuild docker-rebuild-tengu docker-reset
 
 # ============================================================
@@ -136,8 +137,28 @@ docker-agent-sonnet: ## Run autonomous agent with claude-sonnet-4-6 (default, ba
 	TENGU_AGENT_MODEL=claude-sonnet-4-6 TENGU_AGENT_MAX_TOKENS=4096 \
 		docker compose --profile agent run --rm tengu-agent
 
-docker-agent-logs: ## Tail logs from the agent and tengu server (useful when agent runs in background)
-	docker compose logs -f tengu tengu-agent
+docker-agent-bg: ## Run autonomous agent in background (TARGET=juice-shop make docker-agent-bg)
+	TENGU_AGENT_TARGET=${TARGET} \
+		docker compose --profile agent run --rm -d tengu-agent
+
+docker-agent-haiku-bg: ## Run agent with haiku in background (TARGET=juice-shop make docker-agent-haiku-bg)
+	TENGU_AGENT_MODEL=claude-haiku-4-5 TENGU_AGENT_MAX_TOKENS=1024 \
+	TENGU_AGENT_TARGET=${TARGET} \
+		docker compose --profile agent run --rm -d tengu-agent
+
+docker-agent-sonnet-bg: ## Run agent with sonnet in background (TARGET=juice-shop make docker-agent-sonnet-bg)
+	TENGU_AGENT_MODEL=claude-sonnet-4-6 TENGU_AGENT_MAX_TOKENS=4096 \
+	TENGU_AGENT_TARGET=${TARGET} \
+		docker compose --profile agent run --rm -d tengu-agent
+
+docker-agent-stop: ## Stop all running agent containers (leaves tengu server and lab intact)
+	docker ps --filter "name=tengu-agent" -q | xargs -r docker stop
+
+docker-agent-logs: ## Tail logs from the most recent running agent container
+	@AGENT_ID=$$(docker ps --filter "name=tengu-agent" --latest -q); \
+	if [ -z "$$AGENT_ID" ]; then echo "[error] No agent container running. Start one with: make docker-agent-haiku-bg TARGET=<host>"; exit 1; fi; \
+	echo "[logs] Following agent container: $$(docker ps --filter id=$$AGENT_ID --format '{{.Names}}')"; \
+	docker logs -f $$AGENT_ID
 
 docker-reports: ## List reports generated inside Docker (stored in tengu-output volume)
 	docker run --rm -v tengu-output:/app/output alpine ls -lh /app/output/

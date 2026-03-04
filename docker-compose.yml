@@ -132,6 +132,7 @@ services:
       - TENGU_ALLOWED_HOSTS=${TENGU_ALLOWED_HOSTS:-}
       - TENGU_LOG_LEVEL=${TENGU_LOG_LEVEL:-INFO}
       - TENGU_CONFIG_PATH=/app/tengu.toml
+      - TENGU_AGENT_AUTO_APPROVE=${TENGU_AGENT_AUTO_APPROVE:-false}
     cap_add:
       - NET_RAW
       - NET_ADMIN

@@ -198,7 +198,7 @@ This engagement followed the **{{ report.methodology }}** (Penetration Testing E
 
 *Address Low severity findings and implement security improvements.*
 
-{% for finding in report.findings | selectattr('severity', 'in', ['low', 'info']) %}
+{% for finding in report.findings | selectattr('severity', 'equalto', 'low') %}
 - **{{ finding.id }}** — {{ finding.title }}
 {% endfor %}
 
