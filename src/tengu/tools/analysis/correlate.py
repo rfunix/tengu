@@ -177,9 +177,7 @@ def _calculate_risk_score(
 
     # Base score from CVSS average — exclude informational findings to avoid dilution
     info_sevs = {"info", "informational"}
-    scored = [
-        f for f in findings if f.get("severity", "info").lower() not in info_sevs
-    ]
+    scored = [f for f in findings if f.get("severity", "info").lower() not in info_sevs]
     scored_or_all = scored if scored else findings
     cvss_scores = [
         f.get("cvss_score", _SEVERITY_WEIGHTS.get(f.get("severity", "info"), 0))

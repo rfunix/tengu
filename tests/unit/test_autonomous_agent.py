@@ -239,9 +239,7 @@ class TestBuildStrategistPrompt:
         assert "find open ports" in prompt
 
     def test_includes_analyst_briefing_when_set(self):
-        state = _make_state(
-            analyst_briefing="[nmap_scan] Ports: 80/http, 443/https; Tech: Apache"
-        )
+        state = _make_state(analyst_briefing="[nmap_scan] Ports: 80/http, 443/https; Tech: Apache")
         prompt = build_strategist_prompt(state)
         assert "Latest Intel" in prompt
         assert "[nmap_scan]" in prompt
@@ -268,11 +266,25 @@ class TestBuildStrategistPrompt:
         assert "nmap_scan" in prompt
 
     def test_no_stagnation_with_diverse_history(self):
-        tools = ["nmap_scan", "nuclei_scan", "nikto_scan", "ffuf_fuzz",
-                 "sqlmap_scan", "whatweb_scan", "gobuster_scan", "subfinder_enum"]
+        tools = [
+            "nmap_scan",
+            "nuclei_scan",
+            "nikto_scan",
+            "ffuf_fuzz",
+            "sqlmap_scan",
+            "whatweb_scan",
+            "gobuster_scan",
+            "subfinder_enum",
+        ]
         calls: list[ToolCall] = [
-            {"tool": t, "args": {}, "result": {}, "timestamp": 0.0,
-             "error": None, "duration_seconds": 1.0}
+            {
+                "tool": t,
+                "args": {},
+                "result": {},
+                "timestamp": 0.0,
+                "error": None,
+                "duration_seconds": 1.0,
+            }
             for t in tools
         ]
         state = _make_state(command_history=calls)
@@ -648,32 +660,59 @@ class TestDeduplicateFindings:
 
     def test_cwe_dedup_reporter_pass_keeps_specific_asset(self):
         """Reporter final pass: two tools report CWE-79 — keep the one with the URL."""
-        nuclei = {"title": "Cross-Site Scripting (XSS)", "severity": "high",
-                  "affected_asset": "unknown", "cwe_id": 79, "tool": "nuclei"}
-        dalfox = {"title": "XSS Vulnerability Detected", "severity": "high",
-                  "affected_asset": "http://172.20.0.5:3000/search?q=test",
-                  "cwe_id": 79, "tool": "dalfox"}
+        nuclei = {
+            "title": "Cross-Site Scripting (XSS)",
+            "severity": "high",
+            "affected_asset": "unknown",
+            "cwe_id": 79,
+            "tool": "nuclei",
+        }
+        dalfox = {
+            "title": "XSS Vulnerability Detected",
+            "severity": "high",
+            "affected_asset": "http://172.20.0.5:3000/search?q=test",
+            "cwe_id": 79,
+            "tool": "dalfox",
+        }
         result = _deduplicate_findings([], [nuclei, dalfox])
         assert len(result) == 1
         assert result[0]["tool"] == "dalfox"
 
     def test_cwe_dedup_skips_less_specific_in_new(self):
         """If existing already has specific URL for CWE-79, skip vague new finding."""
-        dalfox = {"title": "XSS Vulnerability Detected", "severity": "high",
-                  "affected_asset": "http://172.20.0.5:3000/search",
-                  "cwe_id": 79, "tool": "dalfox"}
-        nuclei = {"title": "Cross-Site Scripting (XSS)", "severity": "high",
-                  "affected_asset": "unknown", "cwe_id": 79, "tool": "nuclei"}
+        dalfox = {
+            "title": "XSS Vulnerability Detected",
+            "severity": "high",
+            "affected_asset": "http://172.20.0.5:3000/search",
+            "cwe_id": 79,
+            "tool": "dalfox",
+        }
+        nuclei = {
+            "title": "Cross-Site Scripting (XSS)",
+            "severity": "high",
+            "affected_asset": "unknown",
+            "cwe_id": 79,
+            "tool": "nuclei",
+        }
         result = _deduplicate_findings([dalfox], [nuclei])
         assert result == []
 
     def test_cwe_dedup_includes_more_specific_new(self):
         """If existing has vague asset and new has URL, include the new one."""
-        nuclei = {"title": "Cross-Site Scripting (XSS)", "severity": "high",
-                  "affected_asset": "unknown", "cwe_id": 79, "tool": "nuclei"}
-        dalfox = {"title": "XSS Vulnerability Detected", "severity": "high",
-                  "affected_asset": "http://172.20.0.5:3000/search",
-                  "cwe_id": 79, "tool": "dalfox"}
+        nuclei = {
+            "title": "Cross-Site Scripting (XSS)",
+            "severity": "high",
+            "affected_asset": "unknown",
+            "cwe_id": 79,
+            "tool": "nuclei",
+        }
+        dalfox = {
+            "title": "XSS Vulnerability Detected",
+            "severity": "high",
+            "affected_asset": "http://172.20.0.5:3000/search",
+            "cwe_id": 79,
+            "tool": "dalfox",
+        }
         result = _deduplicate_findings([nuclei], [dalfox])
         assert len(result) == 1
         assert result[0]["tool"] == "dalfox"
@@ -681,27 +720,33 @@ class TestDeduplicateFindings:
     def test_cwe_dedup_different_severity_not_deduped(self):
         """Same CWE but different severity → both kept."""
         high = {"title": "XSS High", "severity": "high", "affected_asset": "unknown", "cwe_id": 79}
-        medium = {"title": "XSS Medium", "severity": "medium", "affected_asset": "unknown",
-                  "cwe_id": 79}
+        medium = {
+            "title": "XSS Medium",
+            "severity": "medium",
+            "affected_asset": "unknown",
+            "cwe_id": 79,
+        }
         result = _deduplicate_findings([], [high, medium])
         assert len(result) == 2
 
     def test_cwe_dedup_no_cwe_passes_through(self):
         """Findings without cwe_id are not affected by CWE dedup."""
-        existing = [{"title": "XSS", "severity": "high", "affected_asset": "unknown",
-                     "cwe_id": 79}]
-        new = [{"title": "Open Redirect", "severity": "medium",
-                "affected_asset": "http://example.com/redirect"}]
+        existing = [{"title": "XSS", "severity": "high", "affected_asset": "unknown", "cwe_id": 79}]
+        new = [
+            {
+                "title": "Open Redirect",
+                "severity": "medium",
+                "affected_asset": "http://example.com/redirect",
+            }
+        ]
         result = _deduplicate_findings(existing, new)
         assert len(result) == 1
         assert result[0]["title"] == "Open Redirect"
 
     def test_cwe_dedup_equal_specificity_keeps_first_in_new(self):
         """When two new findings share CWE-79 with same specificity, keep one."""
-        f1 = {"title": "XSS A", "severity": "high", "affected_asset": "http://host/a",
-              "cwe_id": 79}
-        f2 = {"title": "XSS B", "severity": "high", "affected_asset": "http://host/b",
-              "cwe_id": 79}
+        f1 = {"title": "XSS A", "severity": "high", "affected_asset": "http://host/a", "cwe_id": 79}
+        f2 = {"title": "XSS B", "severity": "high", "affected_asset": "http://host/b", "cwe_id": 79}
         result = _deduplicate_findings([], [f1, f2])
         # Only one kept (equal specificity, f2 wins as it replaces f1 in cwe_best)
         assert len(result) == 1
@@ -737,7 +782,7 @@ class TestBuildCallKey:
 
     def test_empty_args_produces_valid_key(self):
         key = _build_call_key("check_tools", {})
-        assert key == 'check_tools:{}'
+        assert key == "check_tools:{}"
 
 
 # ── _PTES_TOOL_NAME_MAP ───────────────────────────────────────────────────────
@@ -825,18 +870,23 @@ class TestDetectStagnation:
         assert "nmap_scan" in result
 
     def test_detects_high_error_rate(self):
-        history = (
-            [self._make_call("nmap_scan", error="timeout")] * 4
-            + [self._make_call("nuclei_scan", error="timeout")] * 4
-        )
+        history = [self._make_call("nmap_scan", error="timeout")] * 4 + [
+            self._make_call("nuclei_scan", error="timeout")
+        ] * 4
         result = _detect_stagnation(history)
         assert result is not None
         assert "failed" in result
 
     def test_no_stagnation_with_diverse_successful_tools(self):
         tools = [
-            "nmap_scan", "nuclei_scan", "nikto_scan", "ffuf_fuzz",
-            "sqlmap_scan", "whatweb_scan", "gobuster_scan", "subfinder_enum",
+            "nmap_scan",
+            "nuclei_scan",
+            "nikto_scan",
+            "ffuf_fuzz",
+            "sqlmap_scan",
+            "whatweb_scan",
+            "gobuster_scan",
+            "subfinder_enum",
         ]
         history = [self._make_call(t) for t in tools]
         assert _detect_stagnation(history) is None
@@ -969,8 +1019,13 @@ class TestBinaryToMcpTool:
 
 class TestPurePythonTools:
     def test_stealth_tools_included(self):
-        stealth = {"tor_check", "tor_new_identity", "check_anonymity",
-                   "proxy_check", "rotate_identity"}
+        stealth = {
+            "tor_check",
+            "tor_new_identity",
+            "check_anonymity",
+            "proxy_check",
+            "rotate_identity",
+        }
         assert stealth.issubset(_PURE_PYTHON_TOOLS)
 
     def test_shodan_included(self):

@@ -72,7 +72,11 @@ async def nmap_scan(
     ports = sanitize_port_spec(ports)
 
     if timing not in _TIMING_FLAGS:
-        timing = cfg.tools.defaults.nmap_timing if cfg.tools.defaults.nmap_timing in _TIMING_FLAGS else "T3"
+        timing = (
+            cfg.tools.defaults.nmap_timing
+            if cfg.tools.defaults.nmap_timing in _TIMING_FLAGS
+            else "T3"
+        )
 
     # Target allowlist check
     allowlist = make_allowlist_from_config()
