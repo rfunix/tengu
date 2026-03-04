@@ -68,25 +68,62 @@ blockquote { border-left: 4px solid #dc2626; padding: 0.5rem 1rem; margin: 0; ba
 }"""
 
 _INDEX_EXTRA_CSS = """\
-.report-list { list-style: none; padding: 0; }
+body { max-width: none; padding: 0; }
+.layout { display: flex; height: 100vh; overflow: hidden; }
+.sidebar {
+  width: 320px; min-width: 280px; max-width: 400px;
+  display: flex; flex-direction: column;
+  border-right: 1px solid #e2e8f0; background: #f8fafc; overflow: hidden;
+}
+.sidebar-header {
+  padding: 1.2rem 1.2rem 0.5rem;
+  border-bottom: 1px solid #e2e8f0; background: #0f172a;
+}
+.sidebar-header h1 {
+  color: white; font-size: 1.1em; margin: 0; border: none; padding: 0;
+}
+.sidebar-header .count { color: #94a3b8; font-size: 0.8em; margin-top: 0.2rem; }
+.report-list { list-style: none; padding: 0.5rem; margin: 0; overflow-y: auto; flex: 1; }
 .report-item {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 1rem 1.2rem; border: 1px solid #e2e8f0; border-radius: 8px;
-  margin-bottom: 0.75rem; transition: box-shadow 0.15s;
+  padding: 0.75rem 0.8rem; border-radius: 6px;
+  margin-bottom: 0.3rem; cursor: pointer; transition: background 0.1s;
+  border: 2px solid transparent;
 }
-.report-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-.report-name { font-weight: 600; color: #0f172a; text-decoration: none; font-size: 1.05em; }
-.report-name:hover { color: #dc2626; }
-.report-meta { color: #64748b; font-size: 0.85em; }
+.report-item:hover { background: #e2e8f0; }
+.report-item.active { background: #fef2f2; border-color: #dc2626; }
+.report-name { font-weight: 600; color: #0f172a; font-size: 0.9em; word-break: break-word; }
+.report-meta { color: #64748b; font-size: 0.75em; margin-top: 0.2rem; }
+.report-actions { margin-top: 0.4rem; display: none; }
+.report-item.active .report-actions { display: block; }
 .report-actions a {
-  display: inline-block; padding: 0.3rem 0.8rem; border-radius: 4px;
-  text-decoration: none; font-size: 0.85em; margin-left: 0.5rem;
+  display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px;
+  text-decoration: none; font-size: 0.75em; margin-right: 0.3rem;
 }
-.btn-view { background: #0f172a; color: white; }
-.btn-view:hover { background: #1e293b; }
-.btn-raw { background: #f1f5f9; color: #0f172a; }
-.btn-raw:hover { background: #e2e8f0; }
-.empty { text-align: center; color: #64748b; padding: 3rem 0; }"""
+.btn-open { background: #0f172a; color: white; }
+.btn-open:hover { background: #1e293b; }
+.btn-raw { background: #e2e8f0; color: #0f172a; }
+.btn-raw:hover { background: #cbd5e1; }
+.preview-pane { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.preview-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.5rem 1rem; background: #f1f5f9; border-bottom: 1px solid #e2e8f0;
+  font-size: 0.85em; color: #64748b; min-height: 38px;
+}
+.preview-toolbar .filename { font-weight: 600; color: #0f172a; }
+.preview-toolbar .actions a, .preview-toolbar .actions button {
+  display: inline-block; padding: 0.25rem 0.6rem; border-radius: 4px;
+  text-decoration: none; font-size: 0.8em; margin-left: 0.4rem;
+  cursor: pointer; border: none; background: #0f172a; color: white;
+}
+.preview-toolbar .actions a:hover, .preview-toolbar .actions button:hover { background: #1e293b; }
+.preview-frame {
+  flex: 1; border: none; background: white;
+}
+.empty-preview {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  color: #94a3b8; flex-direction: column; gap: 0.5rem;
+}
+.empty { text-align: center; color: #64748b; padding: 3rem 1rem; font-size: 0.9em; }"""
 
 _TOOLBAR_CSS = """\
 .toolbar {
@@ -146,27 +183,84 @@ def _render_index(report_dir: Path) -> str:
     reports = sorted(report_dir.glob("*.md"), key=lambda p: p.stat().st_mtime, reverse=True)
 
     if not reports:
-        items = '<div class="empty"><h2>No reports found</h2><p>Run a pentest first to generate reports.</p></div>'
+        sidebar_items = '<div class="empty">No reports found.<br>Run a pentest first.</div>'
+        preview_empty = '<div class="empty-preview"><span>No reports available</span></div>'
     else:
         lines = []
         for r in reports:
             stat = r.stat()
             name = r.name
+            enc = html_module.escape(name)
             size = _format_size(stat.st_size)
             mtime = _format_time(stat.st_mtime)
             lines.append(
-                f'<li class="report-item">'
-                f'<div><a class="report-name" href="/view/{html_module.escape(name)}">{html_module.escape(name)}</a>'
-                f'<div class="report-meta">{size} &middot; {mtime}</div></div>'
+                f'<li class="report-item" onclick="loadReport({enc!r}, this)">'
+                f'<div class="report-name">{enc}</div>'
+                f'<div class="report-meta">{size} &middot; {mtime}</div>'
                 f'<div class="report-actions">'
-                f'<a class="btn-view" href="/view/{html_module.escape(name)}">View</a>'
-                f'<a class="btn-raw" href="/raw/{html_module.escape(name)}">Download .md</a>'
+                f'<a class="btn-open" href="/view/{enc}" target="_blank">Open</a>'
+                f'<a class="btn-raw" href="/raw/{enc}">Download .md</a>'
                 f"</div></li>"
             )
-        items = f'<ul class="report-list">{"".join(lines)}</ul>'
+        sidebar_items = f'<ul class="report-list">{"".join(lines)}</ul>'
+        preview_empty = (
+            '<div class="empty-preview" id="empty-hint">'
+            "<span>Click a report to preview it</span></div>"
+        )
 
-    body = f"<h1>Tengu Report Viewer</h1><p>{len(reports)} report(s) found</p>{items}"
-    return _render_page("Tengu Report Viewer", body, _INDEX_EXTRA_CSS)
+    js = """\
+<script>
+function loadReport(name, el) {
+  document.querySelectorAll('.report-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  var frame = document.getElementById('preview');
+  var bar = document.getElementById('preview-bar');
+  var hint = document.getElementById('empty-hint');
+  if (hint) hint.style.display = 'none';
+  bar.style.display = 'flex';
+  frame.style.display = 'block';
+  frame.src = '/view/' + encodeURIComponent(name);
+  document.getElementById('preview-name').textContent = name;
+  document.getElementById('preview-open').href = '/view/' + encodeURIComponent(name);
+  document.getElementById('preview-dl').href = '/raw/' + encodeURIComponent(name);
+  document.getElementById('preview-print').onclick = function() { frame.contentWindow.print(); };
+}
+</script>"""
+
+    body = f"""<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="h1" style="color:white;font-size:1.1em;font-weight:700;">Tengu Reports</div>
+      <div class="count">{len(reports)} report(s)</div>
+    </div>
+    {sidebar_items}
+  </div>
+  <div class="preview-pane">
+    <div class="preview-toolbar" id="preview-bar" style="display:none">
+      <span class="filename" id="preview-name"></span>
+      <span class="actions">
+        <a id="preview-open" href="#" target="_blank">Open full</a>
+        <a id="preview-dl" href="#">Download .md</a>
+        <button id="preview-print">Print / PDF</button>
+      </span>
+    </div>
+    {preview_empty}
+    <iframe class="preview-frame" id="preview" style="display:none"></iframe>
+  </div>
+</div>
+{js}"""
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tengu Report Viewer</title>
+<style>{_CSS}
+{_INDEX_EXTRA_CSS}</style>
+</head>
+<body>{body}</body>
+</html>"""
 
 
 def _render_report(report_dir: Path, filename: str) -> str | None:
