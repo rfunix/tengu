@@ -4,6 +4,7 @@
 .PHONY: docker-build docker-up docker-down docker-logs docker-shell
 .PHONY: docker-lab docker-full docker-pentest docker-agent docker-agent-haiku docker-agent-sonnet docker-agent-logs docker-clean
 .PHONY: docker-agent-bg docker-agent-haiku-bg docker-agent-sonnet-bg docker-agent-stop
+.PHONY: docker-report-view docker-report-browse
 .PHONY: docker-rebuild docker-rebuild-tengu docker-reset
 
 # ============================================================
@@ -165,6 +166,25 @@ docker-reports: ## List reports generated inside Docker (stored in tengu-output 
 
 docker-report: ## Cat a specific report (REPORT=filename.md)
 	docker run --rm -v tengu-output:/app/output alpine cat /app/output/$(REPORT)
+
+REPORT_PORT ?= 8888
+
+docker-report-view: ## Browse all reports styled in browser (http://localhost:PORT)
+	@echo "Report viewer: http://localhost:$(REPORT_PORT)"
+	@echo "Press Ctrl+C to stop."
+	docker run --rm -it \
+		-v tengu-output:/app/output:ro \
+		-v $(CURDIR)/scripts/report-viewer.py:/app/report-viewer.py:ro \
+		-p $(REPORT_PORT):$(REPORT_PORT) \
+		--entrypoint python3 \
+		tengu:core \
+		/app/report-viewer.py --port $(REPORT_PORT)
+
+docker-report-browse: ## Browse reports (auto-opens browser)
+	@(sleep 1 && open http://localhost:$(REPORT_PORT) 2>/dev/null \
+		|| xdg-open http://localhost:$(REPORT_PORT) 2>/dev/null \
+		|| echo "Open http://localhost:$(REPORT_PORT)") &
+	@$(MAKE) docker-report-view
 
 docker-clean: ## Remove Docker images and volumes
 	docker compose down -v --rmi local
