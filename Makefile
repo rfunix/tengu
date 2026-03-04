@@ -176,7 +176,7 @@ docker-report-view: ## Browse all reports styled in browser (http://localhost:PO
 		-v tengu-output:/app/output:ro \
 		-v $(CURDIR)/scripts/report-viewer.py:/app/report-viewer.py:ro \
 		-p $(REPORT_PORT):$(REPORT_PORT) \
-		--entrypoint python3 \
+		--entrypoint /app/.venv/bin/python3 \
 		tengu:core \
 		/app/report-viewer.py --port $(REPORT_PORT)
 
