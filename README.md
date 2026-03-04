@@ -196,6 +196,14 @@ make docker-pentest
 make docker-agent
 ```
 
+**View reports in browser:**
+
+```bash
+make docker-report-view          # http://localhost:8888 — styled HTML, all reports
+make docker-report-browse        # same, auto-opens browser
+REPORT_PORT=9999 make docker-report-view   # custom port
+```
+
 **Without Docker:**
 
 ```bash
