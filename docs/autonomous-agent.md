@@ -219,67 +219,59 @@ sequenceDiagram
     participant API as Claude API
 
     %% ── Stage 1: Startup ──────────────────────────────────────────────────────
-    rect rgb(230, 245, 255)
-        Note over Op,API: Stage 1 — Startup
-        Op->>Ag: uv run python autonomous_tengu.py <target> [flags]
-        Ag->>Op: Print banner (target, model, timeout, iterations)
-        Op->>Ag: Confirm pentest start? (y/n)  [skipped with --yes]
-        Ag->>LG: graph.ainvoke(initial_state, config)
-        LG->>MCP: spawn via stdio (uv run tengu)
-        MCP-->>LG: MCP session initialized
-        LG->>MCP: read_resource ptes://phase/1 … ptes://phase/7
-        MCP-->>LG: 7 phase dicts (objectives, activities, tools)
-        LG->>MCP: call_tool check_tools {}
-        MCP-->>LG: {tools: [{name, available}, …]}
-        LG->>MCP: call_tool validate_target {target}
-        MCP-->>LG: {allowed: true} or abort
-    end
+    Note over Op,API: Stage 1 — Startup
+    Op->>Ag: uv run python autonomous_tengu.py <target> [flags]
+    Ag->>Op: Print banner (target, model, timeout, iterations)
+    Op->>Ag: Confirm pentest start? (y/n)  [skipped with --yes]
+    Ag->>LG: graph.ainvoke(initial_state, config)
+    LG->>MCP: spawn via stdio (uv run tengu)
+    MCP-->>LG: MCP session initialized
+    LG->>MCP: read_resource ptes://phase/1 … ptes://phase/7
+    MCP-->>LG: 7 phase dicts (objectives, activities, tools)
+    LG->>MCP: call_tool check_tools {}
+    MCP-->>LG: {tools: [{name, available}, …]}
+    LG->>MCP: call_tool validate_target {target}
+    MCP-->>LG: {allowed: true} or abort
 
     %% ── Stage 2: Main Loop ────────────────────────────────────────────────────
-    rect rgb(240, 255, 240)
-        Note over Op,API: Stage 2 — Main Loop (repeats until done)
-        loop strategist → executor → analyst
-            LG->>MCP: list_tools (cached after first call)
-            MCP-->>LG: [{name, description, input_schema}, …]
-            LG->>API: messages.create (system=PTES prompt, tools=all_tools)
-            API-->>LG: tool_use {name, input} or text PENTEST_COMPLETE
-            Note over LG: strategist sets next_tool, checks _is_destructive()
-            LG->>MCP: call_tool <chosen_tool> {args}
-            MCP-->>LG: tool output (JSON)
-            Note over LG: executor appends ToolCall to command_history
-            LG->>API: messages.create (analyst extraction prompt + tool output)
-            API-->>LG: JSON {open_ports, vulns, findings, should_advance_phase}
-            Note over LG: analyst appends discoveries, optionally advances phase
-        end
+    Note over Op,API: Stage 2 — Main Loop (repeats until done)
+    loop strategist → executor → analyst
+        LG->>MCP: list_tools (cached after first call)
+        MCP-->>LG: [{name, description, input_schema}, …]
+        LG->>API: messages.create (system=PTES prompt, tools=all_tools)
+        API-->>LG: tool_use {name, input} or text PENTEST_COMPLETE
+        Note over LG: strategist sets next_tool, checks _is_destructive()
+        LG->>MCP: call_tool <chosen_tool> {args}
+        MCP-->>LG: tool output (JSON)
+        Note over LG: executor appends ToolCall to command_history
+        LG->>API: messages.create (analyst extraction prompt + tool output)
+        API-->>LG: JSON {open_ports, vulns, findings, should_advance_phase}
+        Note over LG: analyst appends discoveries, optionally advances phase
     end
 
     %% ── Stage 3: Human Gate ───────────────────────────────────────────────────
-    rect rgb(255, 245, 230)
-        Note over Op,API: Stage 3 — Human Gate (when destructive tool selected)
-        LG->>API: messages.create → tool_use msf_run_module / hydra_attack / …
-        API-->>LG: tool_use {name: "msf_run_module", input: {…}}
-        Note over LG: strategist sets requires_human_approval = true
-        LG->>Op: interrupt() — display tool, args, warning
-        Op->>LG: Command(resume=True) or Command(resume=False)
-        alt approved
-            LG->>MCP: call_tool msf_run_module {args}
-            MCP-->>LG: exploitation result
-        else rejected
-            Note over LG: human_gate routes back to strategist, marks tool skipped
-        end
+    Note over Op,API: Stage 3 — Human Gate (when destructive tool selected)
+    LG->>API: messages.create → tool_use msf_run_module / hydra_attack / …
+    API-->>LG: tool_use {name: "msf_run_module", input: {…}}
+    Note over LG: strategist sets requires_human_approval = true
+    LG->>Op: interrupt() — display tool, args, warning
+    Op->>LG: Command(resume=True) or Command(resume=False)
+    alt approved
+        LG->>MCP: call_tool msf_run_module {args}
+        MCP-->>LG: exploitation result
+    else rejected
+        Note over LG: human_gate routes back to strategist, marks tool skipped
     end
 
     %% ── Stage 4: Reporting ────────────────────────────────────────────────────
-    rect rgb(245, 240, 255)
-        Note over Op,API: Stage 4 — Reporting
-        LG->>MCP: call_tool correlate_findings {findings}
-        MCP-->>LG: attack chains, compound risks
-        LG->>MCP: call_tool score_risk {findings, context}
-        MCP-->>LG: {overall_risk_score: 7.4}
-        LG->>MCP: call_tool generate_report {…}
-        MCP-->>LG: report saved to output/pentest-<target>-<date>.md
-        LG->>Op: Print summary banner (iterations, findings, risk score, report path)
-    end
+    Note over Op,API: Stage 4 — Reporting
+    LG->>MCP: call_tool correlate_findings {findings}
+    MCP-->>LG: attack chains, compound risks
+    LG->>MCP: call_tool score_risk {findings, context}
+    MCP-->>LG: {overall_risk_score: 7.4}
+    LG->>MCP: call_tool generate_report {…}
+    MCP-->>LG: report saved to output/pentest-<target>-<date>.md
+    LG->>Op: Print summary banner (iterations, findings, risk score, report path)
 ```
 
 ---
