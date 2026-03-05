@@ -116,7 +116,7 @@ The sanitizer validates every parameter type before it is used anywhere.
 | `sanitize_cidr(value)` | valid CIDR notation via `ipaddress.ip_network` |
 | `sanitize_port_spec(value)` | port number, range, or comma list (1-65535) |
 | `sanitize_wordlist_path(value)` | absolute path within allowed directories |
-| `sanitize_hash(value)` | hex characters only, max 512 chars |
+| `sanitize_hash(value)` | hex and structured hash chars (`[a-zA-Z0-9$*:./+\-_=@#!%^]+`), max 2048 chars |
 | `sanitize_cve_id(value)` | `CVE-YYYY-NNNNN` format |
 | `sanitize_free_text(value, field, max_length)` | strips metacharacters, enforces length |
 | `sanitize_scan_type(value, allowed, field)` | enum validation against allowlist |

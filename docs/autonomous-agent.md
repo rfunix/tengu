@@ -56,7 +56,7 @@ calls `correlate_findings` → `score_risk` → `generate_report` and prints the
 |-------|-----------|----------------|
 | **Orchestration** | LangGraph `StateGraph` | Controls flow — which node runs, when, and in what order |
 | **Reasoning** | Claude (`claude-sonnet-4-6` by default, configurable) | Decides what to do next and extracts structured intelligence from tool output |
-| **Execution** | Tengu MCP server (83 tools) | Runs the actual pentesting tools — Nmap, Nuclei, SQLMap, Metasploit, etc. |
+| **Execution** | Tengu MCP server (80 tools) | Runs the actual pentesting tools — Nmap, Nuclei, SQLMap, Metasploit, etc. |
 
 Think of it this way: **LangGraph is the skeleton, Claude is the brain, Tengu is the hands.**
 

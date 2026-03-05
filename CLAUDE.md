@@ -20,9 +20,9 @@ pentesting tools to AI assistants through a clean, secure interface.
 | Entry point     | `src/tengu/server.py` → `FastMCP("Tengu")`        |
 | Config file     | `tengu.toml` at project root                      |
 | Test suite      | 2562+ tests, 0 lint errors |
-| Tools           | 83 MCP tools                                      |
+| Tools           | 80 MCP tools                                      |
 | Resources       | 20 MCP resources                                  |
-| Prompts         | 34 MCP prompts                                    |
+| Prompts         | 35 MCP prompts                                    |
 
 ---
 
@@ -109,22 +109,25 @@ src/tengu/
 ├── tools/
 │   ├── utility.py         # check_tools, validate_target
 │   ├── recon/             # nmap, masscan, subfinder, dns, whois, amass, dnsrecon,
-│   │                      # subjack, gowitness, httrack
+│   │                      # subjack, gowitness, httrack,
+│   │                      # katana, httpx_probe, snmpwalk, rustscan
 │   ├── web/               # nuclei, nikto, ffuf, headers, cors, ssl_tls, gobuster,
-│   │                      # wpscan, testssl
-│   ├── osint/             # theharvester, shodan, whatweb
-│   ├── injection/         # sqlmap, xss
+│   │                      # wpscan, testssl, wafw00f, feroxbuster
+│   ├── osint/             # theharvester, shodan, whatweb, dnstwist
+│   ├── injection/         # sqlmap, xss, commix, crlfuzz
 │   ├── exploit/           # metasploit (msf_search, msf_module_info, msf_run_module,
-│   │                      # msf_sessions_list), searchsploit
+│   │                      # msf_sessions_list, msf_session_cmd), searchsploit
 │   ├── bruteforce/        # hydra, hash_tools (hash_crack, hash_identify), cewl
 │   ├── proxy/             # zap (zap_spider, zap_active_scan, zap_get_alerts)
 │   ├── analysis/          # correlate (correlate_findings, score_risk), cve_tools,
 │   │                      # reporting (generate_report)
 │   ├── secrets/           # trufflehog, gitleaks
 │   ├── container/         # trivy
-│   ├── cloud/             # scoutsuite
+│   ├── cloud/             # scoutsuite, prowler
 │   ├── api/               # arjun, graphql_security_check
-│   ├── ad/                # enum4linux, nxc, impacket (impacket_kerberoast)
+│   ├── ad/                # enum4linux, nxc, impacket (impacket_kerberoast,
+│   │                      # impacket_secretsdump, impacket_psexec, impacket_wmiexec,
+│   │                      # impacket_smbclient), bloodhound, responder, smbmap
 │   ├── wireless/          # aircrack
 │   ├── iac/               # checkov
 │   ├── social/            # set_toolkit (set_credential_harvester, set_qrcode_attack,
@@ -144,12 +147,13 @@ src/tengu/
     ├── pentest_workflow.py # full_pentest, quick_recon, web_app_assessment
     ├── vuln_assessment.py  # assess_injection, assess_access_control, assess_crypto, assess_misconfig
     ├── report_prompts.py   # executive_report, technical_report, full_pentest_report,
-    │                       # remediation_plan, finding_detail, risk_matrix, retest_report
+    │                       # remediation_plan, finding_detail, risk_matrix, retest_report,
+    │                       # save_report
     ├── osint_workflow.py   # osint_investigation
     ├── stealth_prompts.py  # stealth_assessment, opsec_checklist
     ├── api_assessment.py   # api_security_assessment
     ├── ad_assessment.py    # ad_assessment
-    ├── container_assessment.py # container_assessment
+    ├── container_assessment.py # container_assessment, cloud_assessment
     ├── bug_bounty.py       # bug_bounty_workflow
     ├── compliance_assessment.py # compliance_assessment
     ├── wireless_assessment.py   # wireless_assessment
@@ -175,7 +179,7 @@ enabled = true
 
 [stealth.proxy]
 enabled = true
-type = "socks5h"
+type = "socks5"
 host = "127.0.0.1"
 port = 9050
 ```
@@ -629,6 +633,9 @@ tengu/
 │   ├── configuration-reference.md
 │   ├── deployment-guide.md
 │   ├── api-reference.md
+│   ├── autonomous-agent.md
+│   ├── demo-script.md
+│   ├── hn-post.md
 │   └── contributing.md
 │
 ├── logs/                  ← Audit logs (gitignored)

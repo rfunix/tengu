@@ -7,18 +7,48 @@ Tengu uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-## [0.3.0] — Social Engineering
+## [0.3.0] — Expanded Tool Coverage
 
 ### Added
+
+**Reconnaissance Tools (4 new MCP tools)**
+- `katana_crawl` — fast web crawler for link discovery and endpoint mapping
+- `httpx_probe` — HTTP probe for status codes, tech stack, and redirect following
+- `snmpwalk_scan` — SNMP enumeration and MIB walking for network device discovery
+- `rustscan_scan` — ultra-fast port scanning (finds open ports, hands off to Nmap for detail)
+
+**Web Scanning Tools (2 new MCP tools)**
+- `wafw00f_scan` — Web Application Firewall detection and fingerprinting
+- `feroxbuster_scan` — fast, recursive content discovery via brute-force
+
+**OSINT Tools (1 new MCP tool)**
+- `dnstwist_scan` — domain permutation and typosquatting detection
+
+**Injection Tools (2 new MCP tools)**
+- `commix_scan` — automated command injection detection and exploitation
+- `crlfuzz_scan` — CRLF injection fuzzing for header injection vulnerabilities
+
+**Cloud Security Tools (1 new MCP tool)**
+- `prowler_scan` — AWS/GCP/Azure security best practices and compliance audit (CIS, GDPR, HIPAA, SOC2)
+
+**Active Directory Tools (7 new MCP tools)**
+- `impacket_secretsdump` — remote SAM/LSA/NTDS secrets dump via Impacket (requires explicit confirmation)
+- `impacket_psexec` — remote command execution via SMB PsExec-style (requires explicit confirmation)
+- `impacket_wmiexec` — remote command execution via WMI (requires explicit confirmation)
+- `impacket_smbclient` — SMB share enumeration and file access
+- `bloodhound_collect` — BloodHound AD data collection (SharpHound/bloodhound-python)
+- `responder_capture` — LLMNR/NBT-NS/MDNS poisoning for credential capture (requires explicit confirmation)
+- `smbmap_scan` — SMB share enumeration and access testing
 
 **Social Engineering Tools (3 new MCP tools)**
 - `set_credential_harvester` — clone a website and capture credentials via SET (authorized phishing simulations only; requires explicit human confirmation)
 - `set_qrcode_attack` — generate a QR code pointing to a target URL for physical social engineering assessments
 - `set_payload_generator` — generate social engineering payloads (PowerShell alphanumeric, reverse, HTA) for authorized red team engagements; requires explicit human confirmation
 
-**Prompts (2 new MCP prompts)**
+**Prompts (3 new MCP prompts)**
 - `social_engineering_assessment` — structured social engineering assessment workflow covering phishing, pretexting, and physical access
 - `msf_exploit_workflow` — step-by-step Metasploit module selection, configuration, and execution workflow
+- `save_report` — save a pentest report to the Docker output volume for the built-in report viewer
 
 ---
 

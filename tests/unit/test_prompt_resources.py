@@ -202,10 +202,10 @@ class TestGetPromptsByCategory:
         names = {p["name"] for p in result}
         assert "osint_investigation" in names
 
-    def test_reporting_has_seven_prompts(self) -> None:
+    def test_reporting_has_eight_prompts(self) -> None:
         result = get_prompts_by_category("reporting")
         assert result is not None
-        assert len(result) == 7
+        assert len(result) == 8
 
     def test_quick_has_nine_prompts(self) -> None:
         result = get_prompts_by_category("quick")

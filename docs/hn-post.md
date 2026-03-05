@@ -11,7 +11,7 @@ Show HN: Tengu – an open-source MCP server that turns Claude into a pentesting
 ```
 Hi HN,
 
-I built Tengu, an open-source MCP server (MIT) that connects Claude to 66 real
+I built Tengu, an open-source MCP server (MIT) that connects Claude to 80 real
 pentesting tools — Nmap, Metasploit, SQLMap, Nuclei, Hydra, ZAP, and more.
 
 You describe what you want ("do a full pentest on 192.168.1.100") and the LLM
@@ -33,7 +33,7 @@ What makes it different from "ChatGPT runs nmap":
 - Professional reporting: auto-correlates findings across tools, calculates CVSS
   risk scores, generates MD/HTML/PDF reports.
 
-- 2300+ tests, mypy strict, ruff, 90%+ coverage. Not a weekend hack.
+- 2562+ tests, mypy strict, ruff, 90%+ coverage. Not a weekend hack.
 
 It also ships with 35 guided workflow prompts (full PTES pentest, bug bounty,
 AD assessment, cloud audit, compliance checks) and 20 built-in resources

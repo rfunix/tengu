@@ -2,7 +2,7 @@
 
 ## Context
 
-Tengu is a pentesting MCP server (83 tools, 20 resources, 34 prompts) running in a Kali Linux Docker container. Key technical debt: no plugin system (165+ manual imports in `server.py`), unused `ToolExecutor` base class (83 tools duplicate ~20 lines of boilerplate), zero state persistence, and the LangGraph agent (`autonomous_tengu.py`) is a disconnected standalone script.
+Tengu is a pentesting MCP server (80 tools, 20 resources, 35 prompts) running in a Kali Linux Docker container. Key technical debt: no plugin system (165+ manual imports in `server.py`), unused `ToolExecutor` base class (80 tools duplicate ~20 lines of boilerplate), zero state persistence, and the LangGraph agent (`autonomous_tengu.py`) is a disconnected standalone script.
 
 This roadmap addresses: (1) modern Red Teaming gaps, (2) autonomous agent evolution, (3) infrastructure/isolation, (4) intelligent Resource usage by AI.
 
@@ -32,7 +32,7 @@ V2.0:  [9,10,11] ──▶ [21]    [9,10] ──▶ [22]    [15] ──▶ [23] 
 
 ### 1. `@tengu_tool` decorator — Eliminate boilerplate [Effort: L | Priority: P0]
 
-**Problem:** All 83 tools repeat the same ~20-line security pipeline manually. `ToolExecutor` in `src/tengu/executor/base.py` exists but is unused.
+**Problem:** All 80 tools repeat the same ~20-line security pipeline manually. `ToolExecutor` in `src/tengu/executor/base.py` exists but is unused.
 
 **Implementation steps:**
 
@@ -84,7 +84,7 @@ def tengu_tool(tool_name: str, requires_target: bool = True):
 - All other 82 tool files in `src/tengu/tools/*/`
 
 **Acceptance criteria:**
-- All 83 tools use `@tengu_tool`
+- All 80 tools use `@tengu_tool`
 - No manual calls to `get_config()`, `make_allowlist_from_config()`, `rate_limited()`, `audit.log_tool_call()`
 - `pytest tests/unit/ tests/security/` passes (2562+ tests)
 - `ruff check src/` and `mypy src/` pass
@@ -136,7 +136,7 @@ def register_all_tools(mcp):
 
 **Acceptance criteria:**
 - `server.py` has no manual tool imports
-- All 83 tools auto-discovered and registered
+- All 80 tools auto-discovered and registered
 - Adding a new tool requires only creating the file — no `server.py` edit
 
 **Dependency:** Item 1

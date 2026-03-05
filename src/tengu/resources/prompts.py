@@ -219,6 +219,17 @@ _PROMPTS: list[dict] = [
             {"name": "retest_results", "required": True, "default": None},
         ],
     },
+    {
+        "name": "save_report",
+        "category": "reporting",
+        "description": "Save a pentest report to the Docker output volume for the report viewer.",
+        "parameters": [
+            {"name": "target", "required": True, "default": None},
+            {"name": "client_name", "required": False, "default": ""},
+            {"name": "report_type", "required": False, "default": "full"},
+            {"name": "output_format", "required": False, "default": "markdown"},
+        ],
+    },
     # ── Stealth ──────────────────────────────────────────────────────────────
     {
         "name": "stealth_assessment",
@@ -310,6 +321,17 @@ _PROMPTS: list[dict] = [
         "parameters": [
             {"name": "target", "required": True, "default": None},
             {"name": "service", "required": False, "default": "ftp"},
+        ],
+    },
+    # ── Social engineering ───────────────────────────────────────────────────
+    {
+        "name": "social_engineering_assessment",
+        "category": "workflow",
+        "description": "Guided workflow for a corporate social engineering security assessment.",
+        "parameters": [
+            {"name": "target", "required": True, "default": None},
+            {"name": "scope", "required": False, "default": "full"},
+            {"name": "engagement_type", "required": False, "default": "phishing"},
         ],
     },
 ]

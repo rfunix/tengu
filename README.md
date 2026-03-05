@@ -17,14 +17,14 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
   <a href="https://python.org"><img src="https://img.shields.io/badge/python-3.12+-blue.svg" alt="Python"></a>
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-compatible-green.svg" alt="MCP"></a>
-  <img src="https://img.shields.io/badge/tools-63-orange.svg" alt="Tools">
-  <img src="https://img.shields.io/badge/version-0.2.1-brightgreen.svg" alt="Version">
+  <img src="https://img.shields.io/badge/tools-80-orange.svg" alt="Tools">
+  <img src="https://img.shields.io/badge/version-0.3.0-brightgreen.svg" alt="Version">
   <img src="https://img.shields.io/badge/agent-LangGraph-purple.svg" alt="Agent">
 </p>
 
 ---
 
-**Tengu** is an MCP server that turns Claude into a penetration testing copilot. It orchestrates 63 security tools — from Nmap to Metasploit — with built-in safety controls, audit logging, and professional reporting.
+**Tengu** is an MCP server that turns Claude into a penetration testing copilot. It orchestrates 80 security tools — from Nmap to Metasploit — with built-in safety controls, audit logging, and professional reporting.
 
 - **What is it?** An MCP server that connects Claude to industry-standard pentest tools
 - **Why use it?** Automates recon and scanning while keeping the human in control of exploits
@@ -32,11 +32,11 @@
 
 ### Key Features
 
-- **63 Tools** — Nmap, Metasploit, SQLMap, Nuclei, Hydra, Burp-compatible ZAP, and more
+- **80 Tools** — Nmap, Metasploit, SQLMap, Nuclei, Hydra, Burp-compatible ZAP, and more
 - **AI-Orchestrated** — Claude decides the next tool based on previous findings
 - **Safety First** — Allowlist, rate limiting, audit logs, and human-in-the-loop for destructive actions
 - **Auto Reports** — Correlate findings and generate professional pentest reports (MD/HTML/PDF)
-- **34 Workflows** — Pre-built prompts for full pentest, web app, AD, cloud, and more
+- **35 Workflows** — Pre-built prompts for full pentest, web app, AD, cloud, and more
 - **20 Resources** — Built-in OWASP Top 10, MITRE ATT&CK, PTES, and pentest checklists
 - **Stealth Layer** — Optional Tor/SOCKS5 proxy routing, UA rotation, and timing jitter
 
@@ -90,7 +90,7 @@ Choose the right size for your use case:
 |------|------|-----------|----------|
 | `minimal` | ~480MB | 17 | Lightweight analysis, CVE research, reporting |
 | `core` | ~7GB | 47 | Full pentest toolkit (default) |
-| `full` | ~8GB | 63 | Everything + AD, wireless, stealth/OPSEC |
+| `full` | ~8GB | 80 | Everything + AD, wireless, stealth/OPSEC |
 
 ```bash
 TENGU_TIER=minimal make docker-build   # lightweight
@@ -98,7 +98,7 @@ TENGU_TIER=core    make docker-build   # default
 TENGU_TIER=full    make docker-build   # everything
 ```
 
-> **All tiers include all 34 prompts and 20 resources** — only the binary tools differ.
+> **All tiers include all 35 prompts and 20 resources** — only the binary tools differ.
 
 <details>
 <summary>Manual Install (without Docker)</summary>
@@ -256,23 +256,23 @@ START → initializer → strategist ─┬─→ executor → analyst ─┬─
 
 ## Tool Catalog
 
-> `minimal` (17 tools, ~480MB) · `core` (47 tools, ~7GB, default) · `full` (63 tools, ~8GB)
-> Build with: `TENGU_TIER=<tier> make docker-build`. All tiers include all 34 prompts and 20 resources.
+> `minimal` (17 tools, ~480MB) · `core` (47 tools, ~7GB, default) · `full` (80 tools, ~8GB)
+> Build with: `TENGU_TIER=<tier> make docker-build`. All tiers include all 35 prompts and 20 resources.
 
 | Category | Tools | Count |
 |----------|-------|-------|
-| Reconnaissance | Nmap, Masscan, Amass, Subfinder, theHarvester, WhatWeb, Gowitness, HTTrack | 8 |
-| Web Scanning | Nikto, Nuclei, FFUF, Gobuster, WPScan, Arjun, OWASP ZAP | 7 |
+| Reconnaissance | Nmap, Masscan, Amass, Subfinder, Gowitness, HTTrack, Katana, httpx, SNMPwalk, RustScan | 10 |
+| Web Scanning | Nikto, Nuclei, FFUF, Gobuster, WPScan, Feroxbuster, OWASP ZAP, wafw00f | 8 |
 | SSL / TLS | sslyze, testssl.sh, HTTP headers analysis, CORS tester | 4 |
 | DNS | DNS Enumerate, DNSRecon, Subjack, WHOIS | 4 |
-| Injection Testing | SQLMap, Dalfox (XSS), GraphQL Security Check | 3 |
+| OSINT | theHarvester, Shodan, WhatWeb, DNStwist | 4 |
+| Injection Testing | SQLMap, Dalfox (XSS), Commix, CRLFuzz, GraphQL Security Check, Arjun | 6 |
 | Brute Force | Hydra, John the Ripper, Hashcat, CeWL | 4 |
 | Exploitation | Metasploit (search, info, run, sessions, cmd), SearchSploit | 6 |
 | Social Engineering | SET credential harvester, QR code attack, payload generator | 3 |
-| OSINT | theHarvester, Shodan, WHOIS | 3 |
 | Secrets & Code | TruffleHog, Gitleaks | 2 |
-| Container & Cloud | Trivy, Checkov, ScoutSuite | 3 |
-| Active Directory | NetExec, Enum4linux, Impacket Kerberoast | 3 |
+| Container & Cloud | Trivy, Checkov, ScoutSuite, Prowler | 4 |
+| Active Directory | NetExec, Enum4linux, Impacket (Kerberoast, secretsdump, psexec, wmiexec, smbclient), BloodHound, Responder, SMBMap | 10 |
 | Wireless | aircrack-ng / airodump-ng | 1 |
 | Anonymity & Stealth | Tor check/rotate, proxy check, identity rotation | 5 |
 | Analysis & Reporting | Finding correlation, CVSS risk scoring, report generation | 3 |
@@ -280,7 +280,7 @@ START → initializer → strategist ─┬─→ executor → analyst ─┬─
 | Utility | Tool checker, target validator | 2 |
 
 <details>
-<summary>Full tool list (63 tools)</summary>
+<summary>Full tool list (80 tools)</summary>
 
 ### Reconnaissance
 | Tool | Description |
@@ -295,6 +295,10 @@ START → initializer → strategist ─┬─→ executor → analyst ─┬─
 | `subjack_check` | Subdomain takeover detection |
 | `gowitness_screenshot` | Web screenshot capture for documentation |
 | `httrack_mirror` | Full website mirror for offline analysis and forensics |
+| `katana_crawl` | Fast web crawler for link discovery and endpoint mapping |
+| `httpx_probe` | HTTP probe — status codes, tech stack, redirects |
+| `snmpwalk_scan` | SNMP enumeration and MIB walking |
+| `rustscan_scan` | Ultra-fast port scanning (finds open ports for Nmap follow-up) |
 
 ### Web Scanning
 | Tool | Description |
@@ -308,6 +312,8 @@ START → initializer → strategist ─┬─→ executor → analyst ─┬─
 | `analyze_headers` | HTTP security headers analysis and grading |
 | `test_cors` | CORS misconfiguration detection |
 | `ssl_tls_check` | SSL/TLS certificate and cipher check (sslyze) |
+| `wafw00f_scan` | Web Application Firewall detection and fingerprinting |
+| `feroxbuster_scan` | Fast, recursive content discovery via brute-force |
 
 ### OSINT
 | Tool | Description |
@@ -315,12 +321,15 @@ START → initializer → strategist ─┬─→ executor → analyst ─┬─
 | `theharvester_scan` | Email, subdomain, and host enumeration from public sources |
 | `shodan_lookup` | Shodan host and asset search |
 | `whatweb_scan` | Web technology fingerprinting (CMS, WAF, frameworks) |
+| `dnstwist_scan` | Domain permutation and typosquatting detection |
 
 ### Injection Testing
 | Tool | Description |
 |------|-------------|
 | `sqlmap_scan` | Automated SQL injection detection and exploitation |
 | `xss_scan` | XSS detection via Dalfox |
+| `commix_scan` | Automated command injection detection and exploitation |
+| `crlfuzz_scan` | CRLF injection fuzzing for header injection vulnerabilities |
 | `graphql_security_check` | GraphQL introspection, batching, depth limit, field suggestions |
 | `arjun_discover` | Hidden HTTP parameter discovery |
 
@@ -371,6 +380,7 @@ START → initializer → strategist ─┬─→ executor → analyst ─┬─
 | Tool | Description |
 |------|-------------|
 | `scoutsuite_scan` | Cloud security audit (AWS, Azure, GCP) |
+| `prowler_scan` | AWS/GCP/Azure security best practices and compliance audit |
 
 ### Active Directory
 | Tool | Description |
@@ -378,6 +388,13 @@ START → initializer → strategist ─┬─→ executor → analyst ─┬─
 | `enum4linux_scan` | SMB/NetBIOS enumeration |
 | `nxc_enum` | Active Directory enumeration via NetExec |
 | `impacket_kerberoast` | Kerberoasting with Impacket GetUserSPNs |
+| `impacket_secretsdump` | Remote SAM/LSA/NTDS secrets dump via Impacket |
+| `impacket_psexec` | Remote command execution via SMB (PsExec-style) |
+| `impacket_wmiexec` | Remote command execution via WMI |
+| `impacket_smbclient` | SMB share enumeration and file access |
+| `bloodhound_collect` | BloodHound AD data collection (SharpHound/bloodhound-python) |
+| `responder_capture` | LLMNR/NBT-NS/MDNS poisoning for credential capture |
+| `smbmap_scan` | SMB share enumeration and access testing |
 
 ### Wireless
 | Tool | Description |
@@ -413,7 +430,7 @@ START → initializer → strategist ─┬─→ executor → analyst ─┬─
 
 ---
 
-## Workflows & Prompts (34)
+## Workflows & Prompts (35)
 
 Pre-built workflow templates that guide Claude through complete engagements.
 
@@ -422,7 +439,7 @@ Pre-built workflow templates that guide Claude through complete engagements.
 | **Pentest workflows** | `full_pentest`, `quick_recon`, `web_app_assessment` |
 | **Vulnerability assessment** | `assess_injection`, `assess_access_control`, `assess_crypto`, `assess_misconfig` |
 | **OSINT** | `osint_investigation` |
-| **Reports** | `executive_report`, `technical_report`, `full_pentest_report`, `finding_detail`, `risk_matrix`, `remediation_plan`, `retest_report` |
+| **Reports** | `executive_report`, `technical_report`, `full_pentest_report`, `finding_detail`, `risk_matrix`, `remediation_plan`, `retest_report`, `save_report` |
 | **Stealth/OPSEC** | `stealth_assessment`, `opsec_checklist` |
 | **Specialized** | `ad_assessment`, `api_security_assessment`, `container_assessment`, `cloud_assessment`, `wireless_assessment`, `bug_bounty_workflow`, `compliance_assessment` |
 | **Quick actions** | `explore_url`, `map_network`, `hunt_subdomains`, `find_vulns`, `find_secrets`, `go_stealth`, `crack_wifi`, `pwn_target`, `msf_exploit_workflow` |

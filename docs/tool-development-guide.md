@@ -81,7 +81,7 @@ logger = structlog.get_logger(__name__)
 
 ---
 
-## 8-Step Implementation Pattern
+## 9-Step Implementation Pattern
 
 ### Step 1: Create the file
 
@@ -89,12 +89,22 @@ logger = structlog.get_logger(__name__)
 # Choose the right category directory
 src/tengu/tools/recon/        # network reconnaissance tools
 src/tengu/tools/web/          # web scanning and analysis tools
+src/tengu/tools/osint/        # open-source intelligence tools
 src/tengu/tools/injection/    # injection testing tools
 src/tengu/tools/exploit/      # exploitation and vuln search tools
 src/tengu/tools/bruteforce/   # brute force and hash cracking tools
 src/tengu/tools/proxy/        # proxy-based web app testing
 src/tengu/tools/analysis/     # correlation and scoring (no external process)
 src/tengu/tools/reporting/    # report generation
+src/tengu/tools/secrets/      # secret and credential scanning
+src/tengu/tools/container/    # container and image security
+src/tengu/tools/cloud/        # cloud security auditing
+src/tengu/tools/api/          # API security testing
+src/tengu/tools/ad/           # Active Directory testing
+src/tengu/tools/wireless/     # wireless network testing
+src/tengu/tools/iac/          # Infrastructure-as-Code security
+src/tengu/tools/social/       # social engineering tools
+src/tengu/tools/stealth/      # anonymization and evasion
 ```
 
 ### Step 2: Load configuration and audit logger

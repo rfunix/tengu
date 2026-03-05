@@ -10,9 +10,9 @@ Tengu implements three MCP primitives:
 
 | Primitive | Count | Purpose |
 |-----------|-------|---------|
-| Tools     | 63    | Active operations: scanning, exploitation, analysis, stealth |
+| Tools     | 80    | Active operations: scanning, exploitation, analysis, stealth |
 | Resources | 20    | Read-only reference data: OWASP, PTES, MITRE ATT&CK, checklists, payloads |
-| Prompts   | 34    | Guided workflow templates for complex engagements |
+| Prompts   | 35    | Guided workflow templates for complex engagements |
 
 ---
 
@@ -57,10 +57,10 @@ graph TD
     SERVER["server.py<br/>(FastMCP instance)"]
 
     subgraph TOOLS["Tools Layer"]
-        RECON["recon/<br/>nmap, masscan, subfinder, dns, whois,<br/>amass, dnsrecon, subjack, gowitness"]
-        WEB["web/<br/>nuclei, nikto, ffuf, headers, cors,<br/>ssl_tls, gobuster, wpscan, testssl"]
-        OSINT["osint/<br/>theharvester, shodan, whatweb"]
-        INJ["injection/<br/>sqlmap, xss"]
+        RECON["recon/<br/>nmap, masscan, subfinder, dns, whois, amass,<br/>dnsrecon, subjack, gowitness, httrack,<br/>katana, httpx_probe, snmpwalk, rustscan"]
+        WEB["web/<br/>nuclei, nikto, ffuf, headers, cors,<br/>ssl_tls, gobuster, wpscan, testssl,<br/>wafw00f, feroxbuster"]
+        OSINT["osint/<br/>theharvester, shodan, whatweb, dnstwist"]
+        INJ["injection/<br/>sqlmap, xss, commix, crlfuzz"]
         EXP["exploit/<br/>metasploit, searchsploit"]
         BRF["bruteforce/<br/>hydra, hash_tools, cewl"]
         PRX["proxy/<br/>zap"]
@@ -68,9 +68,9 @@ graph TD
         REP["reporting/<br/>generate"]
         SEC["secrets/<br/>trufflehog, gitleaks"]
         CONT["container/<br/>trivy"]
-        CLD["cloud/<br/>scoutsuite"]
+        CLD["cloud/<br/>scoutsuite, prowler"]
         API["api/<br/>arjun, graphql"]
-        AD["ad/<br/>enum4linux, nxc, impacket"]
+        AD["ad/<br/>enum4linux, nxc, impacket (5),<br/>bloodhound, responder, smbmap"]
         WLS["wireless/<br/>aircrack"]
         IAC["iac/<br/>checkov"]
         STL["stealth/<br/>tor_check, tor_new_identity,<br/>check_anonymity, proxy_check, rotate_identity"]
@@ -123,11 +123,11 @@ graph TD
 
 ## Tool Categories and Coverage
 
-63 tools across 19 categories as of v0.3.0.
+80 tools across 19 categories as of v0.3.0.
 
 ```mermaid
 graph LR
-    subgraph RECON["Reconnaissance (9)"]
+    subgraph RECON["Reconnaissance (14)"]
         N["nmap_scan"]
         M["masscan_scan"]
         SF["subfinder_enum"]
@@ -137,9 +137,14 @@ graph LR
         DR["dnsrecon_scan"]
         SJ["subjack_check"]
         GW["gowitness_screenshot"]
+        HT["httrack_mirror"]
+        KA["katana_crawl"]
+        HX["httpx_probe"]
+        SN["snmpwalk_scan"]
+        RS["rustscan_scan"]
     end
 
-    subgraph WEB["Web Scanning (9)"]
+    subgraph WEB["Web Scanning (11)"]
         NUC["nuclei_scan"]
         NIK["nikto_scan"]
         FFU["ffuf_fuzz"]
@@ -149,17 +154,22 @@ graph LR
         GOB["gobuster_scan"]
         WPS["wpscan_scan"]
         TSS["testssl_check"]
+        WAF["wafw00f_scan"]
+        FRX["feroxbuster_scan"]
     end
 
-    subgraph OSINT["OSINT (3)"]
+    subgraph OSINT["OSINT (4)"]
         THV["theharvester_scan"]
         SHO["shodan_lookup"]
         WW["whatweb_scan"]
+        DTW["dnstwist_scan"]
     end
 
-    subgraph INJ["Injection (2)"]
+    subgraph INJ["Injection (4)"]
         SQL["sqlmap_scan"]
         XSS["xss_scan"]
+        CMX["commix_scan"]
+        CRF["crlfuzz_scan"]
     end
 
     subgraph EXP["Exploitation (6)"]
@@ -210,8 +220,9 @@ graph LR
         TRV["trivy_scan"]
     end
 
-    subgraph CLD["Cloud (1)"]
+    subgraph CLD["Cloud (2)"]
         SCT["scoutsuite_scan"]
+        PRW["prowler_scan"]
     end
 
     subgraph API["API Security (2)"]
@@ -219,10 +230,17 @@ graph LR
         GQL["graphql_security_check"]
     end
 
-    subgraph AD["Active Directory (3)"]
+    subgraph AD["Active Directory (10)"]
         E4L["enum4linux_scan"]
         NXC["nxc_enum"]
         IMP["impacket_kerberoast"]
+        ISD["impacket_secretsdump"]
+        IPX["impacket_psexec"]
+        IWM["impacket_wmiexec"]
+        ISM["impacket_smbclient"]
+        BHD["bloodhound_collect"]
+        RSP["responder_capture"]
+        SMB["smbmap_scan"]
     end
 
     subgraph WLS["Wireless (1)"]
@@ -298,6 +316,10 @@ httpx.AsyncClient(
 | nikto | `-useproxy <url>` |
 | gobuster | `--proxy <url>` |
 | wpscan | `--proxy <url>` |
+| feroxbuster | `--proxy <url>` |
+| commix | `--proxy <url>` |
+| wafw00f | `--proxy <url>` |
+| wget (httrack) | `-e use_proxy=on -e http_proxy=<url>` |
 | curl (internal) | `-x <url>` |
 | httpx (internal) | `proxies=` kwarg |
 
@@ -372,7 +394,7 @@ implementation without changing any tool code.
 
 | Module | Description |
 |--------|-------------|
-| `server.py` | FastMCP server instance. Imports and registers all 63 tools, 20 resources, and 34 prompts. Contains the `main()` entry point. |
+| `server.py` | FastMCP server instance. Imports and registers all 80 tools, 20 resources, and 35 prompts. Contains the `main()` entry point. |
 | `config.py` | Loads `tengu.toml` with `tomllib`, applies env var overrides, returns a `TenguConfig` singleton. Contains default blocked hosts list. |
 | `types.py` | All shared Pydantic v2 models: network scan models (`Host`, `Port`, `ScanResult`), web models (`SecurityHeader`, `CORSResult`, `SSLResult`), finding models (`Finding`, `Evidence`), report models (`PentestReport`, `RiskMatrix`), CVE models (`CVERecord`, `CVSSMetrics`), tool status models (`ToolStatus`, `ToolsCheckResult`). |
 | `exceptions.py` | Custom exception hierarchy rooted at `TenguError`. Each exception carries structured data (tool name, target, returncode, etc.) for programmatic handling. |

@@ -1,13 +1,14 @@
 # API Reference
 
-Complete reference for all 63 tools, 20 resources, and 34 prompts in Tengu.
+Complete reference for all 80 tools, 20 resources, and 35 prompts in Tengu.
 
 All tools require the target to be in the `[targets].allowed_hosts` allowlist
 configured in `tengu.toml`, unless explicitly noted otherwise.
 
 > **Note**: This document covers all tool categories. The core 29 tools from v0.1.0
 > are fully documented below with parameter tables and example responses. The 27 tools
-> added in v0.2.0 and v0.2.1 are listed in the [v0.2 Tools](#v02-tools) section
+> added in v0.2.0 and v0.2.1 are listed in the [v0.2 Tools](#v02-tools) section,
+> and the 17 tools added in v0.3.0 are in the [v0.3 Tools](#v03-tools) section,
 > at the end of this document. Resources added in v0.2.0 are included in the
 > [Resources](#resources) section.
 
@@ -1199,6 +1200,74 @@ structure without continuous active interaction.
 
 ---
 
+## v0.3 Tools
+
+The following 17 tools were added in v0.3.0. All follow the same security pipeline.
+
+### Reconnaissance Tools (v0.3.0)
+
+| Tool | Description |
+|------|-------------|
+| `katana_crawl` | Fast web crawler for link discovery and endpoint mapping; outputs all discovered URLs |
+| `httpx_probe` | HTTP probe — follows redirects, detects tech stack, status codes, titles, and content-length |
+| `snmpwalk_scan` | SNMP enumeration and MIB walking for network device discovery and configuration retrieval |
+| `rustscan_scan` | Ultra-fast port scanner that finds open ports and optionally hands them off to Nmap for service detection |
+
+### Web Scanning Tools (v0.3.0)
+
+| Tool | Description |
+|------|-------------|
+| `wafw00f_scan` | Web Application Firewall detection and fingerprinting — identifies 180+ WAF vendors |
+| `feroxbuster_scan` | Fast, recursive content discovery via brute-force with auto-filtering of false positives |
+
+### OSINT Tools (v0.3.0)
+
+| Tool | Description |
+|------|-------------|
+| `dnstwist_scan` | Domain permutation and typosquatting detection — finds look-alike domains registered by adversaries |
+
+### Injection Tools (v0.3.0)
+
+| Tool | Description |
+|------|-------------|
+| `commix_scan` | Automated command injection detection and exploitation (GET/POST parameters, headers, cookies) |
+| `crlfuzz_scan` | CRLF injection fuzzing — detects header injection vulnerabilities in HTTP responses |
+
+### Cloud Security Tools (v0.3.0)
+
+| Tool | Description |
+|------|-------------|
+| `prowler_scan` | AWS/GCP/Azure security best practices and compliance audit (CIS, GDPR, HIPAA, PCI-DSS, SOC2) |
+
+### Active Directory Tools (v0.3.0)
+
+| Tool | Description |
+|------|-------------|
+| `impacket_secretsdump` | Remote SAM/LSA/NTDS secrets dump via Impacket — extracts NTLM hashes from domain controllers |
+| `impacket_psexec` | Remote command execution via SMB PsExec-style using Impacket (requires explicit confirmation) |
+| `impacket_wmiexec` | Remote command execution via WMI using Impacket (semi-interactive shell) |
+| `impacket_smbclient` | SMB share enumeration and file access using Impacket smbclient |
+| `bloodhound_collect` | BloodHound AD data collection using SharpHound or bloodhound-python — maps AD attack paths |
+| `responder_capture` | LLMNR/NBT-NS/MDNS poisoning for credential capture (requires explicit confirmation) |
+| `smbmap_scan` | SMB share enumeration and read/write access testing across the domain |
+
+### Social Engineering Tools (v0.3.0)
+
+| Tool | Description |
+|------|-------------|
+| `set_credential_harvester` | Clone a website and capture submitted credentials via SET (authorized simulations only) |
+| `set_qrcode_attack` | Generate a QR code pointing to a target URL for physical social engineering assessments |
+| `set_payload_generator` | Generate social engineering payloads (PowerShell, HTA) for authorized red team engagements |
+
+### New Prompts (v0.3.0)
+
+| Prompt | Description | Key Arguments |
+|--------|-------------|---------------|
+| `social_engineering_assessment` | Guided corporate social engineering assessment: phishing, pretexting, and physical access | `target: str`, `scope: str`, `engagement_type: str` |
+| `save_report` | Save the current session pentest report to the Docker output volume for the report viewer | `target: str`, `client_name: str`, `report_type: str`, `output_format: str` |
+
+---
+
 ## Resources
 
 Resources provide read-only reference data. Access via their URI.
@@ -1471,3 +1540,4 @@ Compare original findings against retest results to measure remediation effectiv
 | Prompt | Description | Key Arguments |
 |--------|-------------|---------------|
 | `social_engineering_assessment` | Structured social engineering assessment covering phishing, pretexting, and physical access simulations | `target: str`, `scope: str` |
+| `save_report` | Save pentest report to the Docker output volume for the built-in report viewer | `target: str`, `report_type: str` |

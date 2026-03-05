@@ -127,25 +127,54 @@ enabled = false
 # Enable proxy routing for supported tools (nmap, nuclei, ffuf, etc.)
 enabled = false
 
-# Proxy type: socks5h, socks5, http
-type = "socks5h"
+# Proxy type: socks5, socks4, http, https
+type = "socks5"
 
 # Proxy host and port
 host = "127.0.0.1"
 port = 9050
 
+[stealth.wrapper]
+
+# Wrapper mode: none, proxychains, torsocks
+# Wraps tool process with a proxy wrapper for tools that don't support native proxy flags
+mode = "none"
+
 [stealth.timing]
 
-# Minimum jitter delay (seconds) added between requests
-min_delay = 0.5
+# Enable timing jitter between requests
+enabled = false
 
-# Maximum jitter delay (seconds)
-max_delay = 3.0
+# Minimum jitter delay in milliseconds
+min_delay_ms = 100
+
+# Maximum jitter delay in milliseconds
+max_delay_ms = 3000
+
+# Random variation percentage applied to delay (0-100)
+jitter_percent = 30
 
 [stealth.user_agent]
 
-# Rotate User-Agent header on each HTTP request
-rotate = true
+# Enable User-Agent rotation
+enabled = false
+
+# Rotate User-Agent every N requests
+rotate_every = 10
+
+# Browser type: chrome, firefox, safari, edge, random
+browser_type = "random"
+
+[stealth.dns]
+
+# Enable DNS privacy (route DNS through Tor or DoH)
+enabled = false
+
+# DNS method: system, doh, tor
+method = "system"
+
+# DNS-over-HTTPS resolver URL (used when method = "doh")
+doh_url = "https://cloudflare-dns.com/dns-query"
 
 
 # =============================================================================
@@ -186,7 +215,9 @@ cache_ttl_hours = 24
 |----------|-------------|---------|
 | `TENGU_CONFIG_PATH` | Absolute path to `tengu.toml`. Overrides the default (`./tengu.toml`). | `/opt/tengu/tengu.toml` |
 | `TENGU_LOG_LEVEL` | Log level. Overrides `[server].log_level`. | `DEBUG` |
+| `TENGU_ALLOWED_HOSTS` | Comma-separated allowed hosts/CIDRs. Overrides `[targets].allowed_hosts`. | `192.168.1.0/24,10.0.0.0/8` |
 | `NVD_API_KEY` | NVD API key for CVE lookups. Overrides `[cve].nvd_api_key`. | `your-key-here` |
+| `TENGU_SHODAN_API_KEY` | Shodan API key for `shodan_lookup`. | `your-key-here` |
 
 Environment variables take precedence over `tengu.toml` values.
 
