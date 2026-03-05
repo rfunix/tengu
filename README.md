@@ -47,7 +47,7 @@
 Use Claude as an interactive pentest copilot — you direct the engagement, Claude picks the right tools and chains them together automatically.
 
 <p align="center">
-  <img src="assets/tengu-copiloto-4x-web.mp4" alt="Tengu demo" width="800"/>
+  <img src="https://github.com/user-attachments/assets/fd286cf3-800c-4c42-a954-de02e481baab" alt="Tengu demo" width="800"/>
 </p>
 
 ### Quick Start
