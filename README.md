@@ -46,9 +46,7 @@
 
 Use Claude as an interactive pentest copilot — you direct the engagement, Claude picks the right tools and chains them together automatically.
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/fd286cf3-800c-4c42-a954-de02e481baab" alt="Tengu demo" width="800"/>
-</p>
+![Tengu copilot demo](https://github.com/user-attachments/assets/fd286cf3-800c-4c42-a954-de02e481baab)
 
 ### Quick Start
 
@@ -169,9 +167,7 @@ See [docs/configuration-reference.md](docs/configuration-reference.md) for the f
 
 Run a fully autonomous pentest without manual tool invocation. The agent uses Claude as its strategic brain and Tengu as its execution toolset, following the PTES methodology from recon through reporting.
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/2a5b96d7-986d-40e1-a08f-bdfc11cf5ba8" alt="Tengu autonomous agent demo" width="800"/>
-</p>
+![Tengu autonomous agent demo](https://github.com/user-attachments/assets/2a5b96d7-986d-40e1-a08f-bdfc11cf5ba8)
 
 ### Quick Start
 
