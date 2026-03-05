@@ -47,9 +47,7 @@
 Use Claude as an interactive pentest copilot — you direct the engagement, Claude picks the right tools and chains them together automatically.
 
 <p align="center">
-  <a href="https://asciinema.org/a/ZdvkN5ZHOynmfjTO">
-    <img src="https://asciinema.org/a/ZdvkN5ZHOynmfjTO.svg" alt="Tengu demo" width="800"/>
-  </a>
+  <img src="https://github.com/user-attachments/assets/fd286cf3-800c-4c42-a954-de02e481baab" alt="Tengu demo" width="800"/>
 </p>
 
 ### Quick Start
@@ -171,7 +169,9 @@ See [docs/configuration-reference.md](docs/configuration-reference.md) for the f
 
 Run a fully autonomous pentest without manual tool invocation. The agent uses Claude as its strategic brain and Tengu as its execution toolset, following the PTES methodology from recon through reporting.
 
-<p align="center">🎬 Demo coming soon</p>
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2a5b96d7-986d-40e1-a08f-bdfc11cf5ba8" alt="Tengu autonomous agent demo" width="800"/>
+</p>
 
 ### Quick Start
 
@@ -203,6 +203,10 @@ make docker-report-view          # http://localhost:8888 — styled HTML, all re
 make docker-report-browse        # same, auto-opens browser
 REPORT_PORT=9999 make docker-report-view   # custom port
 ```
+
+<p align="center">
+  <img src="assets/report.png" alt="Tengu report viewer" width="800"/>
+</p>
 
 **Without Docker:**
 
