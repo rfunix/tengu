@@ -55,7 +55,8 @@ class StealthLayer:
         """Inject proxy flags for tools that support native proxy.
 
         Supports: nmap, nuclei, ffuf, sqlmap, subfinder, nikto, gobuster,
-                  wpscan, hydra, curl, wget
+                  wpscan, hydra, amass, rustscan, cewl, katana, httpx,
+                  curl, wget, commix, feroxbuster, wafw00f, testssl
 
         Returns modified args list (copy, not mutated).
         """
@@ -81,6 +82,15 @@ class StealthLayer:
             "commix": ["--proxy", proxy],
             "feroxbuster": ["--proxy", proxy],
             "wafw00f": ["--proxy", proxy],
+            # v0.4 tools — expanded stealth coverage
+            "hydra": ["-p", proxy],
+            "amass": ["-proxy", proxy],
+            "rustscan": ["--proxy", proxy],
+            "katana": ["-proxy", proxy],
+            "httpx": ["-proxy", proxy],
+            "testssl": ["--proxy", proxy],
+            "dalfox": ["--proxy", proxy],
+            "crlfuzz": ["-x", proxy],
         }
 
         flags = injections.get(tool)

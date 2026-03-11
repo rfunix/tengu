@@ -24,7 +24,7 @@ async def tor_check() -> dict:
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.get("https://api.ipify.org?format=json")
             real_ip = resp.json().get("ip", "unknown")
-    except Exception:
+    except (httpx.RequestError, TimeoutError):
         pass
 
     # Check Tor exit IP
@@ -42,7 +42,7 @@ async def tor_check() -> dict:
             data = resp.json()
             exit_ip = data.get("IP")
             tor_connected = data.get("IsTor", False)
-    except Exception as exc:
+    except (httpx.RequestError, TimeoutError) as exc:
         logger.warning("Tor check failed", error=str(exc))
 
     return {

@@ -19,7 +19,7 @@ pentesting tools to AI assistants through a clean, secure interface.
 | Logging         | structlog (JSON, structured)                      |
 | Entry point     | `src/tengu/server.py` → `FastMCP("Tengu")`        |
 | Config file     | `tengu.toml` at project root                      |
-| Test suite      | 2562+ tests, 0 lint errors |
+| Test suite      | 2643+ tests, 0 lint errors |
 | Tools           | 80 MCP tools                                      |
 | Resources       | 20 MCP resources                                  |
 | Prompts         | 35 MCP prompts                                    |
@@ -107,6 +107,7 @@ src/tengu/
 │   └── http_client.py     # create_http_client() — httpx with proxy + UA injection
 │
 ├── tools/
+│   ├── pipeline.py        # tool_pipeline() — reusable security pipeline helper
 │   ├── utility.py         # check_tools, validate_target
 │   ├── recon/             # nmap, masscan, subfinder, dns, whois, amass, dnsrecon,
 │   │                      # subjack, gowitness, httrack,
@@ -205,6 +206,17 @@ port = 9050
 | nikto | `-useproxy` |
 | gobuster | `--proxy` |
 | wpscan | `--proxy` |
+| commix | `--proxy` |
+| feroxbuster | `--proxy` |
+| wafw00f | `--proxy` |
+| hydra | `-p` |
+| amass | `-proxy` |
+| rustscan | `--proxy` |
+| katana | `-proxy` |
+| httpx | `-proxy` |
+| testssl | `--proxy` |
+| dalfox | `--proxy` |
+| crlfuzz | `-x` |
 | curl (internal) | `-x` |
 | httpx (internal) | `proxies=` kwarg |
 

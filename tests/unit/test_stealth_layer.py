@@ -152,6 +152,56 @@ class TestInjectProxyFlags:
         assert "443" in result
         assert "10.0.0.1" in result
 
+    # v0.4 expanded stealth coverage
+    def test_hydra_proxy_injected(self):
+        layer = StealthLayer(_proxy_config())
+        args = ["hydra", "-l", "admin", "10.0.0.1"]
+        result = layer.inject_proxy_flags("hydra", args)
+        assert "-p" in result
+        assert "socks5://127.0.0.1:9050" in result
+
+    def test_amass_proxy_injected(self):
+        layer = StealthLayer(_proxy_config())
+        args = ["amass", "enum", "-d", "example.com"]
+        result = layer.inject_proxy_flags("amass", args)
+        assert "-proxy" in result
+
+    def test_rustscan_proxy_injected(self):
+        layer = StealthLayer(_proxy_config())
+        args = ["rustscan", "-a", "10.0.0.1"]
+        result = layer.inject_proxy_flags("rustscan", args)
+        assert "--proxy" in result
+
+    def test_katana_proxy_injected(self):
+        layer = StealthLayer(_proxy_config())
+        args = ["katana", "-u", "https://example.com"]
+        result = layer.inject_proxy_flags("katana", args)
+        assert "-proxy" in result
+
+    def test_httpx_proxy_injected(self):
+        layer = StealthLayer(_proxy_config())
+        args = ["httpx", "-l", "targets.txt"]
+        result = layer.inject_proxy_flags("httpx", args)
+        assert "-proxy" in result
+
+    def test_testssl_proxy_injected(self):
+        layer = StealthLayer(_proxy_config())
+        args = ["testssl", "example.com:443"]
+        result = layer.inject_proxy_flags("testssl", args)
+        assert "--proxy" in result
+
+    def test_dalfox_proxy_injected(self):
+        layer = StealthLayer(_proxy_config())
+        args = ["dalfox", "url", "https://example.com"]
+        result = layer.inject_proxy_flags("dalfox", args)
+        assert "--proxy" in result
+
+    def test_crlfuzz_proxy_injected(self):
+        layer = StealthLayer(_proxy_config())
+        args = ["crlfuzz", "-u", "https://example.com"]
+        result = layer.inject_proxy_flags("crlfuzz", args)
+        assert "-x" in result
+
 
 # ---------------------------------------------------------------------------
 # TestUserAgent

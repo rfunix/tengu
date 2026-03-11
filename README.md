@@ -550,7 +550,7 @@ make inspect        # Open MCP Inspector
 make doctor         # Check which pentest tools are installed
 ```
 
-Tengu has 1931+ tests covering unit logic, security (command injection, input validation), and integration scenarios. See [CLAUDE.md](CLAUDE.md) for the full contributor guide.
+Tengu has 2643+ tests covering unit logic, security (command injection, input validation), and integration scenarios. See [CLAUDE.md](CLAUDE.md) for the full contributor guide.
 
 ---
 
