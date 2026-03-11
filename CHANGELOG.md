@@ -22,15 +22,13 @@ Tengu uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `mock_allowlist`, `_reset_singletons`) to reduce setup boilerplate across 90+ test files.
   Autouse `_reset_singletons` prevents state leakage between tests.
 
-**Expanded Stealth Proxy Injection (8 new tools)**
-- `hydra` — `-p` proxy flag for brute-force routing
+**Expanded Stealth Proxy Injection (5 new CLI tools + 1 env var)**
 - `amass` — `-proxy` flag for subdomain enumeration
-- `rustscan` — `--proxy` flag for fast port scanning
 - `katana` — `-proxy` flag for web crawling
-- `httpx` — `-proxy` flag for HTTP probing
-- `testssl` — `--proxy` flag for SSL/TLS analysis
+- `httpx` (CLI) — `-http-proxy` flag for HTTP probing
 - `dalfox` — `--proxy` flag for XSS scanning
 - `crlfuzz` — `-x` proxy flag for CRLF injection fuzzing
+- `hydra` — `HYDRA_PROXY` env var via `get_proxy_env()` (no CLI flag support)
 
 ### Improved
 

@@ -209,16 +209,23 @@ port = 9050
 | commix | `--proxy` |
 | feroxbuster | `--proxy` |
 | wafw00f | `--proxy` |
-| hydra | `-p` |
 | amass | `-proxy` |
-| rustscan | `--proxy` |
 | katana | `-proxy` |
-| httpx | `-proxy` |
-| testssl | `--proxy` |
+| httpx (CLI) | `-http-proxy` |
 | dalfox | `--proxy` |
 | crlfuzz | `-x` |
 | curl (internal) | `-x` |
 | httpx (internal) | `proxies=` kwarg |
+
+**Tools using env vars instead of CLI flags:**
+
+| Tool | Env var | Notes |
+|------|---------|-------|
+| hydra | `HYDRA_PROXY` | Set automatically via `get_proxy_env()` |
+
+**Tools without proxy support** (use `get_wrapper_prefix()` for proxychains/torsocks):
+- `rustscan` — no native proxy, wrap with proxychains4
+- `testssl` — accepts only `host:port` HTTP proxy, incompatible with socks5:// URLs
 
 ### HTTP Tools
 
