@@ -59,10 +59,10 @@ def calculate_risk_score(
     ]
 
     # Coerce to float safely
-    safe_scores = []
+    safe_scores: list[float] = []
     for s in cvss_scores:
         try:
-            safe_scores.append(float(s))
+            safe_scores.append(float(s))  # type: ignore[arg-type]
         except (ValueError, TypeError):
             safe_scores.append(0.0)
 
