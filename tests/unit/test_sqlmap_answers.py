@@ -18,11 +18,15 @@ class TestSqlmapAnswers:
 
         answers_found = False
         for node in ast.walk(tree):
-            if isinstance(node, ast.Constant) and isinstance(node.value, str) and "--answers=" in node.value:
-                    assert "How many=a" in node.value, (
-                        f"--answers flag missing 'How many=a': {node.value}"
-                    )
-                    answers_found = True
+            if (
+                isinstance(node, ast.Constant)
+                and isinstance(node.value, str)
+                and "--answers=" in node.value
+            ):
+                assert "How many=a" in node.value, (
+                    f"--answers flag missing 'How many=a': {node.value}"
+                )
+                answers_found = True
 
         assert answers_found, "--answers flag not found in sqlmap_scan source"
 

@@ -246,7 +246,8 @@ async def score_risk(
 
     # Use unified scoring algorithm
     final_score = calculate_risk_score(
-        findings, context_multiplier=context_multiplier,
+        findings,
+        context_multiplier=context_multiplier,
     )
 
     await ctx.report_progress(2, 2, "Done")

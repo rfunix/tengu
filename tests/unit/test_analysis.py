@@ -30,14 +30,16 @@ class TestRiskScoring:
         findings = [{"severity": "high", "cvss_score": 7.0}]
         score_no_chain = _calculate_risk_score(findings)
         score_with_chain = _calculate_risk_score(
-            findings, attack_chains=[{"name": "Chain 1"}],
+            findings,
+            attack_chains=[{"name": "Chain 1"}],
         )
         assert score_with_chain > score_no_chain
 
     def test_score_capped_at_10(self):
         findings = [{"severity": "critical", "cvss_score": 10.0} for _ in range(20)]
         score = _calculate_risk_score(
-            findings, attack_chains=[{"name": c} for c in range(10)],
+            findings,
+            attack_chains=[{"name": c} for c in range(10)],
         )
         assert score <= 10.0
 

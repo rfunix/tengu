@@ -73,20 +73,55 @@ class TestSeverityNormalization:
     def test_seven_findings_all_preserved(self) -> None:
         """Regression: 7 findings including Critical must all be preserved."""
         raw_findings = [
-            {"title": "SQLi", "severity": "Critical", "cvss_score": 9.8,
-             "description": "d", "affected_asset": "a"},
-            {"title": "MD5", "severity": "High", "cvss_score": 7.5,
-             "description": "d", "affected_asset": "a"},
-            {"title": "Files", "severity": "HIGH", "cvss_score": 7.5,
-             "description": "d", "affected_asset": "a"},
-            {"title": "XSS", "severity": "high", "cvss_score": 7.1,
-             "description": "d", "affected_asset": "a"},
-            {"title": "CORS", "severity": "MEDIUM", "cvss_score": 5.3,
-             "description": "d", "affected_asset": "a"},
-            {"title": "Headers", "severity": "medium", "cvss_score": 5.0,
-             "description": "d", "affected_asset": "a"},
-            {"title": "Version", "severity": "Medium", "cvss_score": 5.3,
-             "description": "d", "affected_asset": "a"},
+            {
+                "title": "SQLi",
+                "severity": "Critical",
+                "cvss_score": 9.8,
+                "description": "d",
+                "affected_asset": "a",
+            },
+            {
+                "title": "MD5",
+                "severity": "High",
+                "cvss_score": 7.5,
+                "description": "d",
+                "affected_asset": "a",
+            },
+            {
+                "title": "Files",
+                "severity": "HIGH",
+                "cvss_score": 7.5,
+                "description": "d",
+                "affected_asset": "a",
+            },
+            {
+                "title": "XSS",
+                "severity": "high",
+                "cvss_score": 7.1,
+                "description": "d",
+                "affected_asset": "a",
+            },
+            {
+                "title": "CORS",
+                "severity": "MEDIUM",
+                "cvss_score": 5.3,
+                "description": "d",
+                "affected_asset": "a",
+            },
+            {
+                "title": "Headers",
+                "severity": "medium",
+                "cvss_score": 5.0,
+                "description": "d",
+                "affected_asset": "a",
+            },
+            {
+                "title": "Version",
+                "severity": "Medium",
+                "cvss_score": 5.3,
+                "description": "d",
+                "affected_asset": "a",
+            },
         ]
         parsed = []
         for i, raw_f in enumerate(raw_findings):

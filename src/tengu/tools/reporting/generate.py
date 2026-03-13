@@ -99,10 +99,7 @@ def _build_risk_matrix(findings: list[Finding]) -> RiskMatrix:
     )
 
     if findings:
-        finding_dicts = [
-            {"severity": f.severity, "cvss_score": f.cvss_score}
-            for f in findings
-        ]
+        finding_dicts = [{"severity": f.severity, "cvss_score": f.cvss_score} for f in findings]
         matrix.risk_score = calculate_risk_score(finding_dicts)
 
     return matrix
@@ -175,8 +172,7 @@ async def generate_report(
     # Calculate overall risk score using the unified algorithm
     if parsed_findings:
         finding_dicts = [
-            {"severity": f.severity, "cvss_score": f.cvss_score}
-            for f in parsed_findings
+            {"severity": f.severity, "cvss_score": f.cvss_score} for f in parsed_findings
         ]
         overall_score = calculate_risk_score(finding_dicts)
     else:

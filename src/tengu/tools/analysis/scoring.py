@@ -52,7 +52,8 @@ def calculate_risk_score(
     scored_or_all = scored if scored else findings
 
     cvss_scores = [
-        f.get("cvss_score") if f.get("cvss_score")
+        f.get("cvss_score")
+        if f.get("cvss_score")
         else SEVERITY_WEIGHTS.get(f.get("severity", "info").lower(), 0)
         for f in scored_or_all
     ]
@@ -74,9 +75,7 @@ def calculate_risk_score(
         chain_boost = min(len(attack_chains) * 0.5, 2.0)
 
     # Step 5: critical boost
-    critical_count = sum(
-        1 for f in findings if f.get("severity", "").lower() == "critical"
-    )
+    critical_count = sum(1 for f in findings if f.get("severity", "").lower() == "critical")
     critical_boost = min(critical_count * 0.3, 1.5)
 
     # Step 6-7: apply context multiplier and clamp

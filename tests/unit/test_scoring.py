@@ -68,7 +68,9 @@ class TestCalculateRiskScore:
         ]
         chains = [{"name": "c1"}, {"name": "c2"}, {"name": "c3"}, {"name": "c4"}]
         score = calculate_risk_score(
-            findings, attack_chains=chains, context_multiplier=1.5,
+            findings,
+            attack_chains=chains,
+            context_multiplier=1.5,
         )
         assert score == 10.0
 
