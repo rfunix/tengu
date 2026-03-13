@@ -2,37 +2,43 @@
 
 from __future__ import annotations
 
-from tengu.tools.analysis.correlate import (
-    _calculate_risk_score,
-    _score_to_rating,
+from tengu.tools.analysis.scoring import (
+    calculate_risk_score as _calculate_risk_score,
+)
+from tengu.tools.analysis.scoring import (
+    score_to_rating as _score_to_rating,
 )
 from tengu.tools.bruteforce.hash_tools import _HASH_PATTERNS
 
 
 class TestRiskScoring:
     def test_empty_findings_score_zero(self):
-        score = _calculate_risk_score([], [])
+        score = _calculate_risk_score([])
         assert score == 0.0
 
     def test_critical_finding_high_score(self):
         findings = [{"severity": "critical", "cvss_score": 9.8}]
-        score = _calculate_risk_score(findings, [])
+        score = _calculate_risk_score(findings)
         assert score > 7.0
 
     def test_info_finding_low_score(self):
         findings = [{"severity": "info", "cvss_score": 0.0}]
-        score = _calculate_risk_score(findings, [])
+        score = _calculate_risk_score(findings)
         assert score < 3.0
 
     def test_attack_chain_boosts_score(self):
         findings = [{"severity": "high", "cvss_score": 7.0}]
-        score_no_chain = _calculate_risk_score(findings, [])
-        score_with_chain = _calculate_risk_score(findings, [{"name": "Chain 1"}])
+        score_no_chain = _calculate_risk_score(findings)
+        score_with_chain = _calculate_risk_score(
+            findings, attack_chains=[{"name": "Chain 1"}],
+        )
         assert score_with_chain > score_no_chain
 
     def test_score_capped_at_10(self):
         findings = [{"severity": "critical", "cvss_score": 10.0} for _ in range(20)]
-        score = _calculate_risk_score(findings, [{"name": c} for c in range(10)])
+        score = _calculate_risk_score(
+            findings, attack_chains=[{"name": c} for c in range(10)],
+        )
         assert score <= 10.0
 
 

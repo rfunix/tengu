@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from fastmcp import Context
 
-# CVSS-based severity weights for risk score calculation
-_SEVERITY_WEIGHTS = {
-    "critical": 10.0,
-    "high": 7.5,
-    "medium": 5.0,
-    "low": 2.5,
-    "info": 0.5,
-}
+from tengu.tools.analysis.scoring import (
+    SEVERITY_WEIGHTS as _SEVERITY_WEIGHTS,
+)
+from tengu.tools.analysis.scoring import (
+    calculate_risk_score,
+    score_to_rating,
+)
 
 # Attack chain patterns — combinations of findings that suggest a viable attack path
 _ATTACK_CHAINS: list[dict] = [
@@ -126,7 +125,7 @@ async def correlate_findings(
     await ctx.report_progress(2, 3, "Calculating compound risk score...")
 
     # Calculate overall risk score (0-10)
-    risk_score = _calculate_risk_score(parsed, attack_chains)
+    risk_score = calculate_risk_score(parsed, attack_chains=attack_chains)
 
     # Cross-tool correlations
     tools_used = list({f.get("tool", "unknown") for f in parsed})
@@ -162,49 +161,9 @@ async def correlate_findings(
         "exploitable_findings_count": len(exploitable_findings),
         "high_risk_assets": high_risk_assets,
         "overall_risk_score": round(risk_score, 1),
-        "risk_rating": _score_to_rating(risk_score),
+        "risk_rating": score_to_rating(risk_score),
         "remediation_priority": _build_remediation_priority(parsed),
     }
-
-
-def _calculate_risk_score(
-    findings: list[dict],
-    attack_chains: list[dict],
-) -> float:
-    """Calculate an overall risk score (0-10) from findings and attack chains."""
-    if not findings:
-        return 0.0
-
-    # Base score from CVSS average — exclude informational findings to avoid dilution
-    info_sevs = {"info", "informational"}
-    scored = [f for f in findings if f.get("severity", "info").lower() not in info_sevs]
-    scored_or_all = scored if scored else findings
-    cvss_scores = [
-        f.get("cvss_score", _SEVERITY_WEIGHTS.get(f.get("severity", "info"), 0))
-        for f in scored_or_all
-    ]
-    base_score = sum(cvss_scores) / len(cvss_scores) if cvss_scores else 0.0
-
-    # Boost for attack chains (each chain adds 0.5, max 2.0)
-    chain_boost = min(len(attack_chains) * 0.5, 2.0)
-
-    # Count criticals
-    critical_count = sum(1 for f in findings if f.get("severity") == "critical")
-    critical_boost = min(critical_count * 0.3, 1.5)
-
-    return min(base_score + chain_boost + critical_boost, 10.0)
-
-
-def _score_to_rating(score: float) -> str:
-    if score >= 9.0:
-        return "CRITICAL"
-    if score >= 7.0:
-        return "HIGH"
-    if score >= 4.0:
-        return "MEDIUM"
-    if score >= 1.0:
-        return "LOW"
-    return "INFORMATIONAL"
 
 
 def _build_remediation_priority(findings: list[dict]) -> list[dict]:
@@ -276,18 +235,6 @@ async def score_risk(
 
     avg_cvss = cvss_total / cvss_count if cvss_count > 0 else 0.0
 
-    # Exclude informational findings from the risk score — they dilute severity
-    info_sevs = {"info", "informational"}
-    scoring_counts = {s: c for s, c in severity_counts.items() if s not in info_sevs}
-    scoring_total = sum(scoring_counts.values())
-
-    weighted_score = sum(
-        count * _SEVERITY_WEIGHTS.get(sev, 0) for sev, count in scoring_counts.items()
-    )
-
-    # Normalize against non-info findings; fall back to 0 if all are informational
-    normalized = min(weighted_score / scoring_total, 10.0) if scoring_total > 0 else 0.0
-
     # Apply context multiplier
     context_multiplier = 1.0
     if context:
@@ -297,7 +244,10 @@ async def score_risk(
         elif any(word in context_lower for word in ["internal", "intranet", "vpn"]):
             context_multiplier = 0.9
 
-    final_score = min(normalized * context_multiplier, 10.0)
+    # Use unified scoring algorithm
+    final_score = calculate_risk_score(
+        findings, context_multiplier=context_multiplier,
+    )
 
     await ctx.report_progress(2, 2, "Done")
 
@@ -305,7 +255,7 @@ async def score_risk(
         "tool": "score_risk",
         "findings_count": len(findings),
         "overall_risk_score": round(final_score, 1),
-        "risk_rating": _score_to_rating(final_score),
+        "risk_rating": score_to_rating(final_score),
         "average_cvss": round(avg_cvss, 1),
         "severity_distribution": severity_counts,
         "risk_matrix": {
