@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from tengu.exceptions import TargetNotAllowedError
-from tengu.security.allowlist import TargetAllowlist
+from tengu.security.allowlist import TargetAllowlist, _suggest_wildcard
 
 
 class TestTargetAllowlist:
@@ -92,3 +92,56 @@ class TestTargetAllowlist:
         assert al.is_allowed("example.com") is True
         assert al.is_allowed("evil.com") is False
         assert al.is_allowed("other.com") is False
+
+    def test_wildcard_hint_when_subdomain_rejected(self):
+        """Rejecting a subdomain of an allowed domain should suggest wildcard."""
+        al = TargetAllowlist(
+            allowed_hosts=["mulesoft.com"],
+            blocked_hosts=[],
+        )
+        with pytest.raises(TargetNotAllowedError, match=r"\*\.mulesoft\.com"):
+            al.check("stgx.anypoint.mulesoft.com")
+
+    def test_no_wildcard_hint_for_unrelated_domain(self):
+        """Unrelated domains should get the standard message, no wildcard hint."""
+        al = TargetAllowlist(
+            allowed_hosts=["mulesoft.com"],
+            blocked_hosts=[],
+        )
+        with pytest.raises(TargetNotAllowedError, match="not in allowed_hosts") as exc_info:
+            al.check("evil.com")
+        assert "*." not in str(exc_info.value)
+
+    def test_exact_match_still_works_with_allowlist(self):
+        """Exact match should pass without needing wildcard."""
+        al = TargetAllowlist(
+            allowed_hosts=["mulesoft.com"],
+            blocked_hosts=[],
+        )
+        al.check("mulesoft.com")  # Should not raise
+
+
+class TestSuggestWildcard:
+    def test_suggests_wildcard_for_subdomain(self):
+        assert _suggest_wildcard("sub.example.com", ["example.com"]) == "*.example.com"
+
+    def test_suggests_wildcard_for_deep_subdomain(self):
+        assert _suggest_wildcard("a.b.c.example.com", ["example.com"]) == "*.example.com"
+
+    def test_no_suggestion_for_exact_match(self):
+        assert _suggest_wildcard("example.com", ["example.com"]) is None
+
+    def test_no_suggestion_for_unrelated_domain(self):
+        assert _suggest_wildcard("evil.com", ["example.com"]) is None
+
+    def test_no_suggestion_for_ip_in_allowlist(self):
+        assert _suggest_wildcard("sub.example.com", ["192.168.1.1"]) is None
+
+    def test_no_suggestion_for_cidr_in_allowlist(self):
+        assert _suggest_wildcard("sub.example.com", ["192.168.1.0/24"]) is None
+
+    def test_skips_existing_wildcards(self):
+        assert _suggest_wildcard("sub.example.com", ["*.example.com"]) is None
+
+    def test_no_suggestion_for_single_label(self):
+        assert _suggest_wildcard("localhost", ["com"]) is None

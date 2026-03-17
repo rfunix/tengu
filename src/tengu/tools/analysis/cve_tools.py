@@ -70,11 +70,15 @@ async def cve_search(
 ) -> dict:
     """Search CVEs by keyword, product, CPE, or severity.
 
+    IMPORTANT: The search term parameter is named 'keyword' (not 'query').
+    Call as: cve_search(keyword="apache log4j")
+
     Queries the NVD database for matching CVEs. Results are cached
     locally for 24 hours to respect API rate limits.
 
     Args:
         keyword: Search term (e.g. "apache log4j", "OpenSSL", "nginx 1.18").
+                 MUST be named 'keyword' (not 'query').
         cpe_name: CPE 2.3 identifier (e.g. "cpe:2.3:a:apache:log4j:2.14.0:*:*:*:*:*:*:*").
         severity: Filter by CVSS severity: LOW, MEDIUM, HIGH, CRITICAL.
         days_back: Only return CVEs published in the last N days.

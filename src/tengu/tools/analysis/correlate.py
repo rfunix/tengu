@@ -12,6 +12,119 @@ from tengu.tools.analysis.scoring import (
     score_to_rating,
 )
 
+# Per-tool confidence weights — how reliable is each tool's finding?
+# 1.0 = confirmed exploitable, 0.5 = informational / high false-positive rate
+_TOOL_CONFIDENCE: dict[str, float] = {
+    "sqlmap": 0.95,
+    "nuclei": 0.85,
+    "dalfox": 0.80,
+    "nmap": 0.90,
+    "nikto": 0.50,
+    "ffuf": 0.70,
+    "feroxbuster": 0.70,
+    "commix": 0.85,
+    "hydra": 0.90,
+    "wpscan": 0.75,
+    "gobuster": 0.65,
+    "trivy": 0.80,
+    "gitleaks": 0.75,
+    "trufflehog": 0.85,
+    "testssl": 0.80,
+    "wafw00f": 0.70,
+    "crlfuzz": 0.75,
+    "whatweb": 0.60,
+    "arjun": 0.65,
+    "katana": 0.60,
+    "searchsploit": 0.70,
+    "metasploit": 0.95,
+    "zap": 0.75,
+}
+
+DEFAULT_CONFIDENCE = 0.60
+
+
+def _deduplicate_findings(
+    findings: list[dict],
+) -> tuple[list[dict], list[dict]]:
+    """Deduplicate findings reported by multiple tools on the same asset.
+
+    Groups findings by ``(affected_asset, owasp_category)`` or
+    ``(affected_asset, cve_id)``.  When multiple tools report the same
+    finding, the one with the highest tool confidence is kept; the others
+    are recorded as *conflicts*.
+
+    Returns:
+        ``(deduplicated, conflicts)`` — *conflicts* lists cases where
+        tools disagreed or duplicated a finding.
+    """
+    # Build groups keyed by (asset, category_or_cve)
+    groups: dict[tuple[str, str], list[dict]] = {}
+
+    for f in findings:
+        asset = f.get("affected_asset", f.get("url", "unknown"))
+        # Try CVE ID first (most precise), then OWASP category
+        cve_ids = f.get("cve_ids") or f.get("cve_id")
+        owasp = f.get("owasp_category", "")
+        if isinstance(owasp, list):
+            owasp = owasp[0] if owasp else ""
+
+        if cve_ids:
+            if isinstance(cve_ids, list):
+                for cve in cve_ids:
+                    key = (str(asset), str(cve))
+                    groups.setdefault(key, []).append(f)
+            else:
+                key = (str(asset), str(cve_ids))
+                groups.setdefault(key, []).append(f)
+        elif owasp:
+            key = (str(asset), str(owasp))
+            groups.setdefault(key, []).append(f)
+        else:
+            # No grouping key — keep as-is in a unique bucket
+            key = (str(asset), f"_unique_{id(f)}")
+            groups[key] = [f]
+
+    deduplicated: list[dict] = []
+    conflicts: list[dict] = []
+
+    for (asset, group_key), group in groups.items():
+        if len(group) == 1:
+            deduplicated.append(group[0])
+            continue
+
+        # Multiple tools — pick the one with highest confidence
+        scored = sorted(
+            group,
+            key=lambda f: _TOOL_CONFIDENCE.get(f.get("tool", ""), DEFAULT_CONFIDENCE),
+            reverse=True,
+        )
+        best = scored[0]
+        deduplicated.append(best)
+
+        # Record the conflict
+        conflicts.append(
+            {
+                "affected_asset": asset,
+                "group_key": group_key,
+                "kept": {
+                    "tool": best.get("tool", "unknown"),
+                    "severity": best.get("severity", "info"),
+                    "confidence": _TOOL_CONFIDENCE.get(best.get("tool", ""), DEFAULT_CONFIDENCE),
+                },
+                "duplicates": [
+                    {
+                        "tool": f.get("tool", "unknown"),
+                        "severity": f.get("severity", "info"),
+                        "confidence": _TOOL_CONFIDENCE.get(f.get("tool", ""), DEFAULT_CONFIDENCE),
+                    }
+                    for f in scored[1:]
+                ],
+            }
+        )
+
+    return deduplicated, conflicts
+
+
 # Attack chain patterns — combinations of findings that suggest a viable attack path
 _ATTACK_CHAINS: list[dict] = [
     {
@@ -82,8 +195,9 @@ async def correlate_findings(
             "message": "No findings to correlate.",
         }
 
-    # Parse findings into Finding objects where possible
-    parsed: list[dict] = findings
+    # Deduplicate findings from multiple tools on the same asset
+    parsed, dedup_conflicts = _deduplicate_findings(findings)
+    deduplicated_count = len(findings) - len(parsed)
 
     # Count by severity
     severity_counts: dict[str, int] = {}
@@ -154,6 +268,9 @@ async def correlate_findings(
     return {
         "tool": "correlate_findings",
         "findings_analyzed": len(parsed),
+        "original_findings_count": len(findings),
+        "deduplicated_count": deduplicated_count,
+        "conflicts": dedup_conflicts,
         "severity_breakdown": severity_counts,
         "tools_used": tools_used,
         "owasp_categories_present": sorted(owasp_present),

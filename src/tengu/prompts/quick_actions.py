@@ -94,19 +94,24 @@ def explore_url(url: str, depth: str = "normal") -> str:
 ## Phase 2 — Technology Fingerprint (always)
 5. `whatweb_scan(url="{url}")` — detect CMS, frameworks, server version, JavaScript libraries
 6. Based on detected tech, check for CMS-specific vulnerabilities:
-   - WordPress: `wpscan_scan(url="{url}")`
-   - Testssl: `testssl_check(host="{url.split("//")[-1].split("/")[0]}")`
+   - WordPress detected? → `wpscan_scan(url="{url}")`
+   - No CMS detected? → Skip this step (do NOT run wpscan on non-WordPress sites)
 {
-        '''
-## Phase 3 — Directory and File Fuzzing (normal + deep)
+        f'''
+## Phase 3 — Discovery (normal + deep — 2 tools, not 3)
 7. `ffuf_fuzz(url="{url}/FUZZ", wordlist="/usr/share/seclists/Discovery/Web-Content/common.txt")` — hidden paths
-8. `feroxbuster_scan(target="{url}", depth=3)` — recursive discovery (finds /api/v1/users/profile that ffuf misses)
-9. `katana_crawl(target="{url}", depth=3)` — crawl all reachable links and form actions
-10. Look for: admin panels, backup files (.bak, .old), config files, API endpoints
+   Note: ffuf uses 'url' parameter with FUZZ placeholder
+8. `katana_crawl(target="{url}", depth=3)` — crawl all reachable links and form actions
+   (Skip feroxbuster — ffuf + katana cover the same ground with less noise)
 
-## Phase 4 — Vulnerability Scanning (normal + deep)
-11. `nuclei_scan(target="{url}", severity=["medium","high","critical"])` — known CVEs and misconfigs
-12. `nikto_scan(url="{url}")` — web server misconfigurations, dangerous files
+## Phase 4 — Vulnerability Scanning (normal + deep — 1 tool)
+9. `nuclei_scan(target="{url}", severity=["medium","high","critical"])` — known CVEs and misconfigs
+   (Skip nikto — nuclei covers most nikto checks with higher accuracy and lower false positives)
+
+## Conditional Decisions
+- WAF detected in Phase 1? → Note it, expect false negatives in Phase 4
+- No web server on target? → Skip Phases 3-4 entirely
+- API-only endpoint? → Replace ffuf with `arjun_discover(url="{url}")`
 '''
         if depth in ("normal", "deep")
         else ""
@@ -138,11 +143,21 @@ def explore_url(url: str, depth: str = "normal") -> str:
 - `correlate_findings(findings=[...])` — identify attack chains
 
 ## Quick Reference
-| Depth | Tools Used |
-|-------|-----------|
-| quick | wafw00f_scan, analyze_headers, test_cors, ssl_tls_check, whatweb_scan |
-| normal | + ffuf_fuzz, feroxbuster_scan, katana_crawl, nuclei_scan, nikto_scan |
-| deep | + sqlmap_scan, xss_scan, commix_scan, crlfuzz_scan, arjun_discover, graphql_security_check, httrack_mirror |"""
+| Depth | Tools Used | Count |
+|-------|-----------|-------|
+| quick | wafw00f_scan, analyze_headers, test_cors, ssl_tls_check, whatweb_scan | 5 |
+| normal | + ffuf_fuzz, katana_crawl, nuclei_scan | 8 |
+| deep | + sqlmap_scan, xss_scan, commix_scan, crlfuzz_scan, arjun_discover, graphql_security_check, httrack_mirror | 15 |
+
+## Parameter Quick Reference
+| Tool | URL param name | Example |
+|------|---------------|---------|
+| feroxbuster_scan | `target` | `feroxbuster_scan(target="https://...")` |
+| sqlmap_scan | `url` | `sqlmap_scan(url="https://...?q=test")` |
+| xss_scan | `url` | `xss_scan(url="https://...?q=test")` |
+| commix_scan | `url` | `commix_scan(url="https://...?host=test")` |
+| cve_search | `keyword` | `cve_search(keyword="nginx 1.18")` |
+| nmap_scan | `target` | `nmap_scan(target="example.com")` |"""
 
 
 def go_stealth(proxy_url: str = "") -> str:

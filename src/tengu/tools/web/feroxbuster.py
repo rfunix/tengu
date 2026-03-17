@@ -54,11 +54,15 @@ async def feroxbuster_scan(
 ) -> dict:
     """Perform recursive content discovery using Feroxbuster.
 
+    IMPORTANT: The URL parameter is named 'target' (not 'url').
+    Pass the full URL with scheme: target="https://example.com".
+
     Unlike Gobuster or FFuf, Feroxbuster recursively discovers directories,
     automatically crawling into discovered paths to find nested content.
 
     Args:
         target: Target URL to scan (e.g. "https://example.com").
+                MUST be named 'target' (not 'url').
         wordlist: Path to wordlist file.
         extensions: Comma-separated file extensions (e.g. "php,html,txt").
         threads: Number of concurrent threads (default 50, max 100).
