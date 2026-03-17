@@ -7,6 +7,40 @@ Tengu uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.4.0] — Code Quality and DX Improvements
+
+### Added
+
+**Tool Pipeline Helper**
+- `src/tengu/tools/pipeline.py` — `tool_pipeline()` function that encapsulates the full
+  security pipeline (sanitize → allowlist → stealth → rate_limit → audit → execute),
+  reducing ~20 lines of boilerplate per tool while preserving all security guarantees.
+  Returns a `PipelineResult` with stdout, stderr, returncode, and duration_seconds.
+
+**Shared Test Fixtures**
+- `tests/conftest.py` — centralized fixtures (`mock_config`, `mock_ctx`, `mock_audit`,
+  `mock_allowlist`, `_reset_singletons`) to reduce setup boilerplate across 90+ test files.
+  Autouse `_reset_singletons` prevents state leakage between tests.
+
+**Expanded Stealth Proxy Injection (5 new CLI tools + 1 env var)**
+- `amass` — `-proxy` flag for subdomain enumeration
+- `katana` — `-proxy` flag for web crawling
+- `httpx` (CLI) — `-http-proxy` flag for HTTP probing
+- `dalfox` — `--proxy` flag for XSS scanning
+- `crlfuzz` — `-x` proxy flag for CRLF injection fuzzing
+- `hydra` — `HYDRA_PROXY` env var via `get_proxy_env()` (no CLI flag support)
+
+### Improved
+
+- **`from __future__ import annotations`**: added to 24 `__init__.py` files for consistent
+  forward compatibility across the codebase
+- **Exception narrowing**: `tor_check.py` now catches `(httpx.RequestError, TimeoutError)`
+  instead of bare `Exception`; `metasploit.py` catches `InvalidInputError` for `sanitize_target`
+- **Test coverage**: 2643+ tests (up from 2562+), including 7 new pipeline tests and 8 new
+  stealth injection tests
+
+---
+
 ## [0.3.0] — Expanded Tool Coverage
 
 ### Added
@@ -317,6 +351,7 @@ abstraction layer over industry-standard pentesting tools.
 
 ---
 
+[0.4.0]: https://github.com/rfunix/tengu/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/rfunix/tengu/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/rfunix/tengu/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/rfunix/tengu/compare/v0.1.0...v0.2.0

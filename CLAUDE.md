@@ -19,7 +19,7 @@ pentesting tools to AI assistants through a clean, secure interface.
 | Logging         | structlog (JSON, structured)                      |
 | Entry point     | `src/tengu/server.py` → `FastMCP("Tengu")`        |
 | Config file     | `tengu.toml` at project root                      |
-| Test suite      | 2562+ tests, 0 lint errors |
+| Test suite      | 2643+ tests, 0 lint errors |
 | Tools           | 80 MCP tools                                      |
 | Resources       | 20 MCP resources                                  |
 | Prompts         | 35 MCP prompts                                    |
@@ -107,6 +107,7 @@ src/tengu/
 │   └── http_client.py     # create_http_client() — httpx with proxy + UA injection
 │
 ├── tools/
+│   ├── pipeline.py        # tool_pipeline() — reusable security pipeline helper
 │   ├── utility.py         # check_tools, validate_target
 │   ├── recon/             # nmap, masscan, subfinder, dns, whois, amass, dnsrecon,
 │   │                      # subjack, gowitness, httrack,
@@ -205,8 +206,26 @@ port = 9050
 | nikto | `-useproxy` |
 | gobuster | `--proxy` |
 | wpscan | `--proxy` |
+| commix | `--proxy` |
+| feroxbuster | `--proxy` |
+| wafw00f | `--proxy` |
+| amass | `-proxy` |
+| katana | `-proxy` |
+| httpx (CLI) | `-http-proxy` |
+| dalfox | `--proxy` |
+| crlfuzz | `-x` |
 | curl (internal) | `-x` |
 | httpx (internal) | `proxies=` kwarg |
+
+**Tools using env vars instead of CLI flags:**
+
+| Tool | Env var | Notes |
+|------|---------|-------|
+| hydra | `HYDRA_PROXY` | Set automatically via `get_proxy_env()` |
+
+**Tools without proxy support** (use `get_wrapper_prefix()` for proxychains/torsocks):
+- `rustscan` — no native proxy, wrap with proxychains4
+- `testssl` — accepts only `host:port` HTTP proxy, incompatible with socks5:// URLs
 
 ### HTTP Tools
 

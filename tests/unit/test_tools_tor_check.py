@@ -128,7 +128,9 @@ class TestTorCheckConnected:
     async def test_real_ip_is_unknown_on_failure(self):
         """real_ip='unknown' when the ipify request raises an exception."""
         reset_stealth_layer()
-        make_client = _make_http_client(ipify_error=Exception("connection error"))
+        import httpx
+
+        make_client = _make_http_client(ipify_error=httpx.ConnectError("connection error"))
 
         with (
             patch(
@@ -146,7 +148,9 @@ class TestTorCheckConnected:
     async def test_exit_ip_none_on_tor_failure(self):
         """exit_ip=None and tor_connected=False when Tor check raises."""
         reset_stealth_layer()
-        make_client = _make_http_client(tor_error=Exception("SOCKS error"))
+        import httpx
+
+        make_client = _make_http_client(tor_error=httpx.ConnectError("SOCKS error"))
 
         with (
             patch(

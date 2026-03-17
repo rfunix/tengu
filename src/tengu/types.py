@@ -136,8 +136,10 @@ class Finding(BaseModel):
     @field_validator("severity", mode="before")
     @classmethod
     def normalise_severity(cls, v: object) -> object:
-        if isinstance(v, str) and v.lower() == "informational":
-            return "info"
+        if isinstance(v, str):
+            v = v.strip().lower()
+            if v == "informational":
+                return "info"
         return v
 
     cvss_score: float = 0.0

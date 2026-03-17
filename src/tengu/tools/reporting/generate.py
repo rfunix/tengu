@@ -11,6 +11,7 @@ from typing import Literal
 import structlog
 from fastmcp import Context
 
+from tengu.tools.analysis.scoring import calculate_risk_score, score_to_rating
 from tengu.types import Finding, PentestReport, RiskMatrix, ToolInfo
 
 logger = structlog.get_logger(__name__)
@@ -36,6 +37,19 @@ def _normalize_finding(f: dict, index: int) -> dict:
     as plain strings) and maps them to the Finding model's field names.
     """
     out = dict(f)
+
+    # Normalize severity to lowercase (AI may send "Critical", "HIGH", etc.)
+    if "severity" in out and isinstance(out["severity"], str):
+        out["severity"] = out["severity"].strip().lower()
+        if out["severity"] == "informational":
+            out["severity"] = "info"
+
+    # Coerce cvss_score to float
+    if "cvss_score" in out:
+        try:
+            out["cvss_score"] = float(out["cvss_score"])
+        except (ValueError, TypeError):
+            out["cvss_score"] = 0.0
 
     # Auto-generate ID if missing
     if not out.get("id"):
@@ -73,18 +87,6 @@ def _normalize_finding(f: dict, index: int) -> dict:
     return out
 
 
-def _score_to_rating(score: float) -> str:
-    if score >= 9.0:
-        return "CRITICAL"
-    if score >= 7.0:
-        return "HIGH"
-    if score >= 4.0:
-        return "MEDIUM"
-    if score >= 1.0:
-        return "LOW"
-    return "INFORMATIONAL"
-
-
 def _build_risk_matrix(findings: list[Finding]) -> RiskMatrix:
     """Build a RiskMatrix from a list of findings."""
     matrix = RiskMatrix(
@@ -97,10 +99,8 @@ def _build_risk_matrix(findings: list[Finding]) -> RiskMatrix:
     )
 
     if findings:
-        scoring = [f for f in findings if f.severity not in ("info", "informational")]
-        scoring_or_all = scoring if scoring else findings
-        weighted = sum(_SEVERITY_WEIGHTS.get(f.severity, 0) for f in scoring_or_all)
-        matrix.risk_score = round(min(weighted / len(scoring_or_all), 10.0), 1)
+        finding_dicts = [{"severity": f.severity, "cvss_score": f.cvss_score} for f in findings]
+        matrix.risk_score = calculate_risk_score(finding_dicts)
 
     return matrix
 
@@ -154,7 +154,12 @@ async def generate_report(
             normalized = _normalize_finding(raw_f, len(parsed_findings) + 1)
             parsed_findings.append(Finding(**normalized))
         except Exception as exc:
-            logger.warning("Skipping invalid finding", error=str(exc))
+            logger.warning(
+                "Skipping invalid finding",
+                title=raw_f.get("title", "unknown"),
+                severity=raw_f.get("severity", "unknown"),
+                error=str(exc),
+            )
 
     # Sort by CVSS descending
     parsed_findings.sort(key=lambda f: f.cvss_score, reverse=True)
@@ -164,12 +169,12 @@ async def generate_report(
 
     risk_matrix = _build_risk_matrix(parsed_findings)
 
-    # Calculate overall risk score — exclude informational findings to avoid dilution
+    # Calculate overall risk score using the unified algorithm
     if parsed_findings:
-        scoring = [f for f in parsed_findings if f.severity not in ("info", "informational")]
-        scoring_or_all = scoring if scoring else parsed_findings
-        weighted = sum(_SEVERITY_WEIGHTS.get(f.severity, 0) for f in scoring_or_all)
-        overall_score = round(min(weighted / len(scoring_or_all), 10.0), 1)
+        finding_dicts = [
+            {"severity": f.severity, "cvss_score": f.cvss_score} for f in parsed_findings
+        ]
+        overall_score = calculate_risk_score(finding_dicts)
     else:
         overall_score = 0.0
 
@@ -200,7 +205,7 @@ async def generate_report(
     template_context = {
         "report": report,
         "risk_matrix": risk_matrix,
-        "risk_rating": _score_to_rating(overall_score),
+        "risk_rating": score_to_rating(overall_score),
         "owasp_distribution": owasp_distribution,
         # For risk_matrix template
         "client_name": client_name,
@@ -259,7 +264,7 @@ async def generate_report(
         "client_name": client_name,
         "findings_count": len(parsed_findings),
         "overall_risk_score": overall_score,
-        "risk_rating": _score_to_rating(overall_score),
+        "risk_rating": score_to_rating(overall_score),
         "saved_to": saved_path,
         "content": final_content if output_format != "pdf" else "[PDF binary — saved to file]",
     }

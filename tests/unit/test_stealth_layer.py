@@ -152,6 +152,65 @@ class TestInjectProxyFlags:
         assert "443" in result
         assert "10.0.0.1" in result
 
+    # v0.4 expanded stealth coverage (verified against official docs)
+    def test_hydra_no_flag_injection(self):
+        """Hydra uses HYDRA_PROXY env var, not CLI flags — inject_proxy_flags is a no-op."""
+        layer = StealthLayer(_proxy_config())
+        args = ["hydra", "-l", "admin", "10.0.0.1"]
+        result = layer.inject_proxy_flags("hydra", args)
+        assert result == args  # unchanged
+
+    def test_hydra_proxy_via_env(self):
+        """Hydra proxy is available via get_proxy_env() → HYDRA_PROXY."""
+        layer = StealthLayer(_proxy_config())
+        env = layer.get_proxy_env()
+        assert "HYDRA_PROXY" in env
+        assert env["HYDRA_PROXY"] == "socks5://127.0.0.1:9050"
+
+    def test_amass_proxy_injected(self):
+        layer = StealthLayer(_proxy_config())
+        args = ["amass", "enum", "-d", "example.com"]
+        result = layer.inject_proxy_flags("amass", args)
+        assert "-proxy" in result
+
+    def test_rustscan_no_proxy_support(self):
+        """RustScan has no proxy support — inject_proxy_flags is a no-op."""
+        layer = StealthLayer(_proxy_config())
+        args = ["rustscan", "-a", "10.0.0.1"]
+        result = layer.inject_proxy_flags("rustscan", args)
+        assert result == args  # unchanged
+
+    def test_katana_proxy_injected(self):
+        layer = StealthLayer(_proxy_config())
+        args = ["katana", "-u", "https://example.com"]
+        result = layer.inject_proxy_flags("katana", args)
+        assert "-proxy" in result
+
+    def test_httpx_proxy_injected(self):
+        layer = StealthLayer(_proxy_config())
+        args = ["httpx", "-l", "targets.txt"]
+        result = layer.inject_proxy_flags("httpx", args)
+        assert "-http-proxy" in result
+
+    def test_testssl_no_proxy_injection(self):
+        """testssl.sh only accepts host:port HTTP proxy, not socks5:// URLs — skip."""
+        layer = StealthLayer(_proxy_config())
+        args = ["testssl", "example.com:443"]
+        result = layer.inject_proxy_flags("testssl", args)
+        assert result == args  # unchanged
+
+    def test_dalfox_proxy_injected(self):
+        layer = StealthLayer(_proxy_config())
+        args = ["dalfox", "url", "https://example.com"]
+        result = layer.inject_proxy_flags("dalfox", args)
+        assert "--proxy" in result
+
+    def test_crlfuzz_proxy_injected(self):
+        layer = StealthLayer(_proxy_config())
+        args = ["crlfuzz", "-u", "https://example.com"]
+        result = layer.inject_proxy_flags("crlfuzz", args)
+        assert "-x" in result
+
 
 # ---------------------------------------------------------------------------
 # TestUserAgent

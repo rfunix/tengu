@@ -55,7 +55,13 @@ class StealthLayer:
         """Inject proxy flags for tools that support native proxy.
 
         Supports: nmap, nuclei, ffuf, sqlmap, subfinder, nikto, gobuster,
-                  wpscan, hydra, curl, wget
+                  wpscan, amass, katana, httpx, dalfox, crlfuzz,
+                  curl, wget, commix, feroxbuster, wafw00f
+
+        Tools WITHOUT native proxy support (use get_proxy_env() or get_wrapper_prefix()):
+        - hydra: uses HYDRA_PROXY env var, not CLI flag
+        - rustscan: no proxy support at all (use proxychains wrapper)
+        - testssl: accepts only host:port HTTP proxy, not socks5:// URLs
 
         Returns modified args list (copy, not mutated).
         """
@@ -81,6 +87,12 @@ class StealthLayer:
             "commix": ["--proxy", proxy],
             "feroxbuster": ["--proxy", proxy],
             "wafw00f": ["--proxy", proxy],
+            # v0.4 tools — verified against official docs
+            "amass": ["-proxy", proxy],
+            "katana": ["-proxy", proxy],
+            "httpx": ["-http-proxy", proxy],
+            "dalfox": ["--proxy", proxy],
+            "crlfuzz": ["-x", proxy],
         }
 
         flags = injections.get(tool)
@@ -124,7 +136,10 @@ class StealthLayer:
         )
 
     def get_proxy_env(self) -> dict[str, str]:
-        """Return environment variables for proxy-aware tools."""
+        """Return environment variables for proxy-aware tools.
+
+        Includes standard proxy vars plus tool-specific ones (e.g. HYDRA_PROXY).
+        """
         if not self.proxy_url:
             return {}
         proxy = self.proxy_url
@@ -134,6 +149,7 @@ class StealthLayer:
             "HTTP_PROXY": proxy,
             "HTTPS_PROXY": proxy,
             "ALL_PROXY": proxy,
+            "HYDRA_PROXY": proxy,
         }
 
 

@@ -8,11 +8,11 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from tengu.tools.analysis.scoring import SEVERITY_WEIGHTS as _SEVERITY_WEIGHTS
+from tengu.tools.analysis.scoring import score_to_rating as _score_to_rating
 from tengu.tools.reporting.generate import (
-    _SEVERITY_WEIGHTS,
     _build_risk_matrix,
     _normalize_finding,
-    _score_to_rating,
 )
 from tengu.types import Finding
 

@@ -140,7 +140,7 @@ async def sqlmap_scan(
         f"--level={level}",
         f"--risk={risk}",
         "--output-dir=/tmp/sqlmap_tengu",
-        "--answers=quit=N,crack=N,reduce the number of requests=N",
+        "--answers=quit=N,crack=N,reduce the number of requests=N,How many=a,follow=Y,keep testing=Y",
         "--flush-session",
         "--no-cast",
         "--no-logging",

@@ -8,12 +8,18 @@ import pytest
 
 from tengu.tools.analysis.correlate import (
     _ATTACK_CHAINS,
-    _SEVERITY_WEIGHTS,
     _build_remediation_priority,
-    _calculate_risk_score,
-    _score_to_rating,
     correlate_findings,
     score_risk,
+)
+from tengu.tools.analysis.scoring import (
+    SEVERITY_WEIGHTS as _SEVERITY_WEIGHTS,
+)
+from tengu.tools.analysis.scoring import (
+    calculate_risk_score as _calculate_risk_score,
+)
+from tengu.tools.analysis.scoring import (
+    score_to_rating as _score_to_rating,
 )
 
 # ---------------------------------------------------------------------------
@@ -113,45 +119,46 @@ class TestScoreToRating:
 
 class TestCalculateRiskScore:
     def test_empty_findings_returns_zero(self):
-        assert _calculate_risk_score([], []) == 0.0
+        assert _calculate_risk_score([]) == 0.0
 
     def test_single_critical_finding(self):
         findings = [{"severity": "critical", "cvss_score": 9.8}]
-        score = _calculate_risk_score(findings, [])
+        score = _calculate_risk_score(findings)
         # base ~9.8, critical_boost = 0.3 → total ~10.0 (capped)
         assert score > 9.0
         assert score <= 10.0
 
     def test_attack_chain_boosts_score(self):
         findings = [{"severity": "medium", "cvss_score": 5.0}]
-        score_without = _calculate_risk_score(findings, [])
-        score_with = _calculate_risk_score(findings, [{"name": "chain"}])
+        score_without = _calculate_risk_score(findings)
+        score_with = _calculate_risk_score(findings, attack_chains=[{"name": "chain"}])
         assert score_with > score_without
 
     def test_multiple_attack_chains_capped_at_two(self):
         findings = [{"severity": "medium", "cvss_score": 5.0}]
         # 5 chains: boost should be min(5*0.5, 2.0) = 2.0
         chains = [{"name": f"chain{i}"} for i in range(5)]
-        score = _calculate_risk_score(findings, chains)
+        score = _calculate_risk_score(findings, attack_chains=chains)
         # max chain boost is 2.0
         score_single = _calculate_risk_score(
-            findings, [{"name": "c1"}, {"name": "c2"}, {"name": "c3"}, {"name": "c4"}]
+            findings,
+            attack_chains=[{"name": "c1"}, {"name": "c2"}, {"name": "c3"}, {"name": "c4"}],
         )
         assert score == score_single  # both should hit the 2.0 cap
 
     def test_critical_boost_capped_at_one_five(self):
         findings = [{"severity": "critical", "cvss_score": 5.0}] * 10
-        score = _calculate_risk_score(findings, [])
+        score = _calculate_risk_score(findings)
         assert score <= 10.0
 
     def test_score_never_exceeds_ten(self):
         findings = [{"severity": "critical", "cvss_score": 10.0}] * 20
         chains = [{"name": f"c{i}"} for i in range(10)]
-        assert _calculate_risk_score(findings, chains) == 10.0
+        assert _calculate_risk_score(findings, attack_chains=chains) == 10.0
 
     def test_info_severity_gives_low_score(self):
         findings = [{"severity": "info", "cvss_score": 0.0}]
-        score = _calculate_risk_score(findings, [])
+        score = _calculate_risk_score(findings)
         assert score < 2.0
 
 
