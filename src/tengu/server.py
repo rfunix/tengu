@@ -18,7 +18,7 @@ from starlette.responses import JSONResponse
 from tengu.executor.registry import check_all
 from tengu.prompts.ad_assessment import ad_assessment
 from tengu.prompts.api_assessment import api_security_assessment
-from tengu.prompts.bug_bounty import bug_bounty_workflow
+from tengu.prompts.bug_bounty import bug_bounty_focused, bug_bounty_workflow
 from tengu.prompts.compliance_assessment import compliance_assessment
 from tengu.prompts.container_assessment import cloud_assessment, container_assessment
 
@@ -26,7 +26,12 @@ from tengu.prompts.container_assessment import cloud_assessment, container_asses
 from tengu.prompts.osint_workflow import osint_investigation
 
 # Workflow prompts
-from tengu.prompts.pentest_workflow import full_pentest, quick_recon, web_app_assessment
+from tengu.prompts.pentest_workflow import (
+    focused_pentest,
+    full_pentest,
+    quick_recon,
+    web_app_assessment,
+)
 
 # Quick action prompts (v0.2.1)
 from tengu.prompts.quick_actions import (
@@ -748,6 +753,8 @@ mcp.prompt()(ad_assessment)
 mcp.prompt()(container_assessment)
 mcp.prompt()(cloud_assessment)
 mcp.prompt()(bug_bounty_workflow)
+mcp.prompt()(bug_bounty_focused)
+mcp.prompt()(focused_pentest)
 mcp.prompt()(compliance_assessment)
 mcp.prompt()(wireless_assessment)
 

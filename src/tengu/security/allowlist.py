@@ -17,6 +17,34 @@ from tengu.exceptions import TargetNotAllowedError
 logger = structlog.get_logger(__name__)
 
 
+def _suggest_wildcard(host: str, allowed: list[str]) -> str | None:
+    """Suggest a wildcard pattern if *host* is a subdomain of an allowed entry.
+
+    Returns a hint string like ``"*.example.com"`` when the rejected host is
+    ``sub.example.com`` and ``"example.com"`` is already in the allowlist.
+    Returns ``None`` when no useful suggestion can be made.
+    """
+    parts = host.split(".")
+    if len(parts) < 2:
+        return None
+
+    for pattern in allowed:
+        # Skip patterns that are already wildcards, CIDRs, or IPs
+        if pattern.startswith("*") or "/" in pattern:
+            continue
+        try:
+            ipaddress.ip_address(pattern)
+            continue  # it's an IP, not a domain
+        except ValueError:
+            pass
+
+        # Check if the host is a subdomain of this allowed domain
+        if host != pattern and host.endswith(f".{pattern}"):
+            return f"*.{pattern}"
+
+    return None
+
+
 def _extract_host(target: str) -> str:
     """Extract the hostname/IP from a target (URL, IP, domain, CIDR)."""
     target = target.strip()
@@ -111,10 +139,15 @@ class TargetAllowlist:
                     log.debug("Target allowed", pattern=pattern)
                     return
             log.warning("Target not in allowlist")
-            raise TargetNotAllowedError(
-                target,
-                "not in allowed_hosts. Add it to tengu.toml [targets].allowed_hosts",
-            )
+            hint = _suggest_wildcard(host, self._allowed)
+            if hint:
+                msg = (
+                    f"not in allowed_hosts. Hint: use '{hint}' to allow all "
+                    f"subdomains. Add to tengu.toml [targets].allowed_hosts"
+                )
+            else:
+                msg = "not in allowed_hosts. Add it to tengu.toml [targets].allowed_hosts"
+            raise TargetNotAllowedError(target, msg)
 
         # Allowlist is empty — warn but allow (useful for initial setup)
         log.warning(

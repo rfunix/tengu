@@ -33,11 +33,15 @@ async def commix_scan(
 ) -> dict:
     """Test a URL for OS command injection vulnerabilities using Commix.
 
+    IMPORTANT: The target parameter is named 'url' (not 'target').
+    Always call as: commix_scan(url="https://example.com/ping?host=test")
+
     Commix (command injection exploiter) automates the detection of OS command
     injection flaws in web applications. Requires explicit authorization.
 
     Args:
         url: Target URL to test (e.g. "https://example.com/ping?host=test").
+             MUST be named 'url' (not 'target').
         method: HTTP method: GET or POST.
         data: POST data string (e.g. "param=value").
         level: Detection level (1-3). Default: 1.

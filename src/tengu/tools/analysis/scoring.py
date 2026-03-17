@@ -21,6 +21,7 @@ def calculate_risk_score(
     *,
     attack_chains: list[dict] | None = None,
     context_multiplier: float = 1.0,
+    tool_confidence: dict[str, float] | None = None,
 ) -> float:
     """Calculate a unified risk score (0-10) from findings.
 
@@ -28,7 +29,8 @@ def calculate_risk_score(
         1. For each finding, use its ``cvss_score`` if present, otherwise
            fall back to the fixed severity weight.
         2. Exclude informational findings to avoid diluting the score.
-        3. Compute the weighted average of all scored findings.
+        3. Compute the weighted average of all scored findings, optionally
+           weighted by per-tool confidence when ``tool_confidence`` is given.
         4. Add a boost for identified attack chains (0.5 per chain, max 2.0).
         5. Add a boost for each critical finding (0.3 each, max 1.5).
         6. Apply the optional context multiplier (e.g. 1.2 for external targets).
@@ -39,6 +41,9 @@ def calculate_risk_score(
                   ``cvss_score`` is optional but preferred.
         attack_chains: Optional list of identified attack chain dicts.
         context_multiplier: Multiplier for engagement context (default 1.0).
+        tool_confidence: Optional mapping of tool name → confidence weight
+                         (0.0–1.0). When provided, each finding's score is
+                         multiplied by its tool's confidence before averaging.
 
     Returns:
         Risk score between 0.0 and 10.0.
@@ -58,15 +63,22 @@ def calculate_risk_score(
         for f in scored_or_all
     ]
 
-    # Coerce to float safely
+    # Coerce to float safely and apply tool confidence scaling
     safe_scores: list[float] = []
-    for s in cvss_scores:
+    for i, s in enumerate(cvss_scores):
         try:
-            safe_scores.append(float(s))  # type: ignore[arg-type]
+            score = float(s)  # type: ignore[arg-type]
         except (ValueError, TypeError):
-            safe_scores.append(0.0)
+            score = 0.0
 
-    # Step 3: weighted average
+        # Scale each score by tool confidence when provided
+        if tool_confidence:
+            tool_name = scored_or_all[i].get("tool", "")
+            score *= tool_confidence.get(tool_name, 1.0)
+
+        safe_scores.append(score)
+
+    # Step 3: average of (optionally confidence-scaled) scores
     base_score = sum(safe_scores) / len(safe_scores) if safe_scores else 0.0
 
     # Step 4: attack chain boost

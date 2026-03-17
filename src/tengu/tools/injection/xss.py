@@ -31,11 +31,15 @@ async def xss_scan(
 ) -> dict:
     """Test for Cross-Site Scripting (XSS) vulnerabilities using Dalfox.
 
+    IMPORTANT: The target parameter is named 'url' (not 'target').
+    Always call as: xss_scan(url="https://example.com/search?q=test")
+
     Dalfox is a powerful XSS scanner that detects reflected, stored, and
     DOM-based XSS vulnerabilities using pattern analysis and DOM parsing.
 
     Args:
         url: Target URL to test (e.g. "https://example.com/search?q=test").
+             MUST be named 'url' (not 'target').
         parameter: Specific parameter to focus testing on.
                    If empty, tests all parameters found in the URL.
         cookie: Session cookie for authenticated testing

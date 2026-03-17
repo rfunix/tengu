@@ -45,6 +45,10 @@ async def nmap_scan(
 ) -> dict:
     """Scan a target for open ports, services, and versions using Nmap.
 
+    IMPORTANT: Available parameters are: target, ports, scan_type, timing,
+    os_detection, scripts, timeout. There is NO 'flags' parameter — use
+    scan_type for scan technique and scripts for NSE scripts.
+
     Args:
         target: IP address, hostname, CIDR range, or URL to scan.
         ports: Port specification (e.g. "80", "22-443", "22,80,443", "1-65535").

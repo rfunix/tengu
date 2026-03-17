@@ -5,7 +5,14 @@ audit_log_path = "./logs/tengu-audit.log"
 
 [targets]
 # Allowed hosts/CIDRs for scanning — REQUIRED before running any scan
-# Examples: "example.com", "*.example.com", "192.168.1.0/24", "10.0.0.0/8"
+#
+# Matching rules:
+#   "example.com"        → exact match only (sub.example.com will be BLOCKED)
+#   "*.example.com"      → wildcard: matches any subdomain (sub.example.com, a.b.example.com)
+#   "192.168.1.0/24"     → CIDR: matches any IP in the range
+#   "10.0.0.1"           → exact IP match
+#
+# Tip: For bug bounty, use "*.target.com" to allow all discovered subdomains.
 allowed_hosts = ["juice-shop", "juice-shop.local", "172.20.0.0/24"]
 
 # Always blocked, even if listed in allowed_hosts
