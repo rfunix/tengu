@@ -40,7 +40,7 @@ metasploit = [
     "pymetasploit3>=1.0",
 ]
 agent = [
-    "langgraph>=1.0",
+    "langgraph>=1.1.6",
     "mcp>=1.0",
     "anthropic>=0.40",
     "python-dotenv>=1.0",
