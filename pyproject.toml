@@ -37,7 +37,7 @@ reporting = [
     "weasyprint>=62.0",
 ]
 metasploit = [
-    "pymetasploit3>=1.0",
+    "pymetasploit3>=1.0.6",
 ]
 agent = [
     "langgraph>=1.0",
